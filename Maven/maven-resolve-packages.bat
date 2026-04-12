@@ -38,6 +38,17 @@ if exist "packages-lock.xml" (
   del packages-lock.xml
 )
 
+REM 初始化 packages-lock-start/end
+copy /y pom.xml pom.xml.temp >nul
+> pom.xml (
+	for /f "usebackq delims=" %%A in ("pom.xml.temp") do (
+		set "line=%%A"    
+		set "line=!line:<!-- packages-lock-start -->=<!-- packages-lock-start!"
+		set "line=!line:<!-- packages-lock-end -->=packages-lock-end -->!"
+		echo(!line!
+	)
+)
+
 
 REM ===== 執行區 =====
 echo ========================================
