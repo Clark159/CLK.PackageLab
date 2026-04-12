@@ -89,6 +89,7 @@ REM 產生 packages-lock.xml
   echo     ^<artifactId^>%PROJECT_ARTIFACTID%-lock^</artifactId^>
   echo     ^<version^>%PROJECT_VERSION%^</version^>
   echo     ^<modelVersion^>%PROJECT_MODELVERSION%^</modelVersion^>
+  echo     ^<packaging^>pom^</packaging^>
   echo.
   echo     ^<dependencyManagement^>
   echo         ^<dependencies^>

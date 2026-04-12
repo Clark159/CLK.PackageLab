@@ -7,6 +7,13 @@
     <version>1.0</version>
     <modelVersion>4.0.0</modelVersion>
 	
+	<parent>
+		<groupId>com.example</groupId>
+		<artifactId>demo-lock</artifactId>
+		<version>1.0</version>
+		<relativePath>./packages-lock.xml</relativePath>
+	</parent>
+	
     <dependencies>
         <dependency>
             <groupId>org.apache.httpcomponents.client5</groupId>
