@@ -33,9 +33,9 @@ if exist "dependency.list.txt" (
   del dependency.list.txt
 )
 
-REM 初始化 packages.lock.xml
-if exist "packages.lock.xml" (
-  del packages.lock.xml
+REM 初始化 packages-lock.xml
+if exist "packages-lock.xml" (
+  del packages-lock.xml
 )
 
 
@@ -78,22 +78,21 @@ echo [INFO] artifactId: %PROJECT_ARTIFACTID%
 echo [INFO] version: %PROJECT_VERSION%
 echo [INFO] ------------------------------------------------------------------------
 
-REM 產生 packages.lock.xml
+REM 產生 packages-lock.xml
 
 (
   echo ^<project xmlns="http://maven.apache.org/POM/4.0.0"
   echo          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   echo          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd"^>
   echo.
-  echo     ^<packaging^>pom^</packaging^>
-  echo     ^<modelVersion^>%PROJECT_MODELVERSION%^</modelVersion^>
   echo     ^<groupId^>%PROJECT_GROUPID%^</groupId^>
-  echo     ^<artifactId^>%PROJECT_ARTIFACTID%^</artifactId^>
+  echo     ^<artifactId^>%PROJECT_ARTIFACTID%-lock^</artifactId^>
   echo     ^<version^>%PROJECT_VERSION%^</version^>
+  echo     ^<modelVersion^>%PROJECT_MODELVERSION%^</modelVersion^>
   echo.
   echo     ^<dependencyManagement^>
   echo         ^<dependencies^>
-) > packages.lock.xml
+) > packages-lock.xml
 
 for /f "usebackq tokens=1-5 delims=:" %%A in ("dependency.list.txt") do (
   (
@@ -103,7 +102,7 @@ for /f "usebackq tokens=1-5 delims=:" %%A in ("dependency.list.txt") do (
     echo                 ^<version^>%%D^</version^>
     echo             ^</dependency^>
     echo.
-  ) >> packages.lock.xml
+  ) >> packages-lock.xml
 )
 
 (
@@ -111,7 +110,7 @@ for /f "usebackq tokens=1-5 delims=:" %%A in ("dependency.list.txt") do (
   echo     ^</dependencyManagement^>
   echo.
   echo ^</project^>
-) >> packages.lock.xml
+) >> packages-lock.xml
 
 
 REM 移除 dependency.list.tmp
@@ -124,7 +123,7 @@ del dependency.list.txt
 REM ===== 結束區 =====
 :END
 echo.
-if "%EXIT_CODE%"=="0" echo [SUCCESS] 解析套件清單成功 packages.lock.xml
+if "%EXIT_CODE%"=="0" echo [SUCCESS] 解析套件清單成功 packages-lock.xml
 echo.
 echo.
 if "%NO_PAUSE%"=="0" pause
