@@ -7,14 +7,14 @@
     <version>1.0</version>
     <modelVersion>4.0.0</modelVersion>
 	
-	<!-- packages-lock-start -->
+    <!-- packages-lock-start
 	<parent>
 		<groupId>com.example</groupId>
 		<artifactId>demo-lock</artifactId>
 		<version>1.0</version>
 		<relativePath>./packages-lock.xml</relativePath>
 	</parent>
-	<!-- packages-lock-end -->
+    packages-lock-end -->
 	
     <dependencies>
         <dependency>
