@@ -6,7 +6,7 @@ setlocal enabledelayedexpansion
 
 REM ===== 設定區 =====
 
-REM 參數處理
+REM 設定 arguments
 set NO_PAUSE=0
 for %%a in (%*) do (
   if /i "%%~a"=="--no-pause" set NO_PAUSE=1
@@ -57,7 +57,7 @@ echo ========================================
 echo 套件專案: %CSPROJ_FILE%
 echo ========================================
 
-REM 套件清單建立
+REM 建立 packages.lock.json
 dotnet restore "%CSPROJ_FILE%" ^
   --use-lock-file ^
   --force-evaluate
@@ -77,7 +77,7 @@ if exist "obj" (
 REM ===== 結束區 =====
 :END
 echo.
-if "%EXIT_CODE%"=="0" echo [SUCCESS] 套件清單建立成功 packages.lock.json
+if "%EXIT_CODE%"=="0" echo [SUCCESS] 解析套件清單成功 packages.lock.json
 echo.
 echo.
 if "%NO_PAUSE%"=="0" pause

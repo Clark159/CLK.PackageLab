@@ -6,7 +6,7 @@ setlocal enabledelayedexpansion
 
 REM ===== 設定區 =====
 
-REM 參數處理
+REM 設定 arguments
 set NO_PAUSE=0
 for %%a in (%*) do (
   if /i "%%~a"=="--no-pause" set NO_PAUSE=1
@@ -44,7 +44,7 @@ echo ========================================
 echo 套件專案: pom.xml
 echo ========================================
 
-REM 套件清單建立
+REM 解析套件清單
 call mvn dependency:list ^
   -DoutputFile="dependency.list.tmp" ^
   -DincludeScope=compile ^
@@ -56,7 +56,7 @@ if not "%ERRORLEVEL%"=="0" (
   goto END
 )
 
-REM 套件清單過濾
+REM 過濾套件清單
 > "dependency.list.txt" (
   for /f "usebackq delims=" %%A in ("dependency.list.tmp") do (
     set "line=%%A"
@@ -68,7 +68,7 @@ REM 套件清單過濾
   )
 )
 
-REM 套件專案參數
+REM 讀取專案參數
 for /f "delims=" %%a in ('mvn help:evaluate -Dexpression^=project.modelVersion -q -DforceStdout 2^>nul') do set "PROJECT_MODELVERSION=%%a"
 for /f "delims=" %%a in ('mvn help:evaluate -Dexpression^=project.groupId -q -DforceStdout 2^>nul') do set "PROJECT_GROUPID=%%a"
 for /f "delims=" %%a in ('mvn help:evaluate -Dexpression^=project.artifactId -q -DforceStdout 2^>nul') do set "PROJECT_ARTIFACTID=%%a"
@@ -124,7 +124,7 @@ del dependency.list.txt
 REM ===== 結束區 =====
 :END
 echo.
-if "%EXIT_CODE%"=="0" echo [SUCCESS] 套件清單建立成功 packages.lock.xml
+if "%EXIT_CODE%"=="0" echo [SUCCESS] 解析套件清單成功 packages.lock.xml
 echo.
 echo.
 if "%NO_PAUSE%"=="0" pause

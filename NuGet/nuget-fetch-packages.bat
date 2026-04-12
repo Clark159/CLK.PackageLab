@@ -8,7 +8,7 @@ REM ===== 設定區 =====
 set NUGET_SOURCE=https://api.nuget.org/v3/index.json
 set PACKAGES_DIR=packages
 
-REM 參數處理
+REM 設定 arguments
 set NO_PAUSE=0
 for %%a in (%*) do (
   if /i "%%~a"=="--no-pause" set NO_PAUSE=1
@@ -63,7 +63,7 @@ echo 套件目錄: %CD%\%PACKAGES_DIR%
 echo 套件來源: %NUGET_SOURCE%
 echo ========================================
 
-REM 套件清單下載
+REM 下載套件清單
 dotnet restore "%CSPROJ_FILE%" ^
   --locked-mode ^
   --no-cache ^
@@ -86,7 +86,7 @@ if exist "obj" (
 REM ===== 結束區 =====
 :END
 echo.
-if "%EXIT_CODE%"=="0" echo [SUCCESS] 套件清單下載成功 %CD%\%PACKAGES_DIR%
+if "%EXIT_CODE%"=="0" echo [SUCCESS] 下載套件清單成功 %CD%\%PACKAGES_DIR%
 echo.
 echo.
 if "%NO_PAUSE%"=="0" pause
