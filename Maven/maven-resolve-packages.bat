@@ -23,9 +23,9 @@ if not exist "pom.xml" (
   goto END
 )
 
-REM 初始化 dependency.list.temp
-if exist "dependency.list.temp" (
-  del dependency.list.temp
+REM 初始化 dependency.list.tmp
+if exist "dependency.list.tmp" (
+  del dependency.list.tmp
 )
 
 REM 初始化 dependency.list.txt
@@ -39,9 +39,9 @@ if exist "packages-lock.xml" (
 )
 
 REM 初始化 packages-lock-start/end
-copy /y pom.xml pom.xml.temp >nul
+copy /y pom.xml pom.xml.tmp >nul
 > pom.xml (
-    for /f "tokens=1,* delims=]" %%A in ('find /v /n "" ^< pom.xml.temp') do (
+    for /f "tokens=1,* delims=]" %%A in ('find /v /n "" ^< pom.xml.tmp') do (
         set "line=%%B"
         set "check=!line: =!"
         if /i "!check!"=="<!--packages-lock-start-->" (
@@ -59,6 +59,7 @@ REM ===== 執行區 =====
 echo ========================================
 echo 套件專案: pom.xml
 echo ========================================
+echo.
 
 REM 解析套件清單
 call mvn dependency:list ^
@@ -137,10 +138,10 @@ REM 移除 dependency.list.txt
 del dependency.list.txt
 
 REM 還原 pom.xml
-copy /y pom.xml.temp pom.xml >nul
+copy /y pom.xml.tmp pom.xml >nul
 
-REM 移除 pom.xml.temp
-del pom.xml.temp
+REM 移除 pom.xml.tmp
+del pom.xml.tmp
 
 
 REM ===== 結束區 =====
