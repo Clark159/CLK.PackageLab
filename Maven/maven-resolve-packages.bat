@@ -136,6 +136,12 @@ del dependency.list.tmp
 REM 移除 dependency.list.txt
 del dependency.list.txt
 
+REM 還原 pom.xml
+copy /y pom.xml.temp pom.xml >nul
+
+REM 移除 pom.xml.temp
+del pom.xml.temp
+
 
 REM ===== 結束區 =====
 :END
