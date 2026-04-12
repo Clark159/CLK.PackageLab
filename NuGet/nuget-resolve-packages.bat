@@ -56,6 +56,7 @@ REM ===== 執行區 =====
 echo ========================================
 echo 套件專案: %CSPROJ_FILE%
 echo ========================================
+echo.
 
 REM 建立 packages.lock.json
 dotnet restore "%CSPROJ_FILE%" ^
