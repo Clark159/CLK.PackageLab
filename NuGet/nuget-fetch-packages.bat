@@ -59,8 +59,8 @@ if exist "%PACKAGES_DIR%" (
 REM ===== 執行區 =====
 echo ========================================
 echo 套件專案: %CSPROJ_FILE%
-echo 套件目錄: %CD%\%PACKAGES_DIR%
 echo 套件來源: %NUGET_SOURCE%
+echo 套件目錄: %CD%\%PACKAGES_DIR%
 echo ========================================
 
 REM 下載套件清單
