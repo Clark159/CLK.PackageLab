@@ -45,9 +45,9 @@ copy /y pom.xml pom.xml.temp >nul
         set "line=%%B"
         set "check=!line: =!"
         if /i "!check!"=="<!--packages-lock-start-->" (
-            echo(    ^<^^!-- packages-lock-start
+            echo(^<^^!-- packages-lock-start
         ) else if /i "!check!"=="<!--packages-lock-end-->" (
-            echo(    packages-lock-end --^>
+            echo(packages-lock-end --^>
         ) else (
             echo(!line!
         )
