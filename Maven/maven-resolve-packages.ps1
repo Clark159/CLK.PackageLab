@@ -15,6 +15,15 @@ do {
         break
     }
 
+    # 移除 pom.xml 的 <parent>
+    $pomDocument = [xml](Get-Content 'pom.xml' -Raw -Encoding UTF8)
+    $parentNode = $pomDocument.project.parent
+    if ($parentNode) {
+        $pomDocument.project.RemoveChild($parentNode) | Out-Null
+        $pomDocument.Save((Resolve-Path 'pom.xml').Path)
+        Write-Host "[INFO] 已移除 pom.xml 的 <parent> 區塊"
+    }
+
     # 清理暫存檔
     foreach ($f in 'packages-lock.txt', 'packages-lock.xml') {
         if (Test-Path $f) {
@@ -45,13 +54,13 @@ do {
     }
 
     # 過濾套件清單
-    $packagesLockString = Get-Content 'packages-lock.txt' -Raw -Encoding UTF8
-    $packagesLockString = $packagesLockString -split "`n" |
+    $dependencyList = Get-Content 'packages-lock.txt' -Raw -Encoding UTF8
+    $dependencyList = $dependencyList -split "`n" |
     Where-Object { $_ -match '-- module' } |
     ForEach-Object {
         ($_ -replace '\s*-- module.*', '').Trim()
     }
-    $packagesLockString | Set-Content 'packages-lock.txt' -Encoding UTF8
+    $dependencyList | Set-Content 'packages-lock.txt' -Encoding UTF8
 
     # 讀取專案參數
     $PROJECT_MODELVERSION = ((& mvn help:evaluate '-Dexpression=project.modelVersion' -q '-DforceStdout') | Where-Object { $_ } | Select-Object -Last 1).Trim()
@@ -64,48 +73,48 @@ do {
     Write-Host "[INFO] version: $PROJECT_VERSION"
     Write-Host "[INFO] ------------------------------------------------------------------------"
 
-    # 產生 BOM XML
-    $bomLines = [System.Collections.Generic.List[string]]::new()
-    $bomLines.Add('<?xml version="1.0" encoding="UTF-8"?>')
-    $bomLines.Add('<project xmlns="http://maven.apache.org/POM/4.0.0"')
-    $bomLines.Add('         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"')
-    $bomLines.Add('         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">')
-    $bomLines.Add('')
-    $bomLines.Add("    <modelVersion>$PROJECT_MODELVERSION</modelVersion>")
-    $bomLines.Add("    <groupId>$PROJECT_GROUPID</groupId>")
-    $bomLines.Add("    <artifactId>$PROJECT_ARTIFACTID</artifactId>")
-    $bomLines.Add("    <version>$PROJECT_VERSION</version>")
-    $bomLines.Add('    <packaging>pom</packaging>')
-    $bomLines.Add('')
+    # 產生 packages-lock.xml
+    $bomContent = [System.Collections.Generic.List[string]]::new()
+    $bomContent.Add('<?xml version="1.0" encoding="UTF-8"?>')
+    $bomContent.Add('<project xmlns="http://maven.apache.org/POM/4.0.0"')
+    $bomContent.Add('         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"')
+    $bomContent.Add('         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">')
+    $bomContent.Add('')
+    $bomContent.Add("    <modelVersion>$PROJECT_MODELVERSION</modelVersion>")
+    $bomContent.Add("    <groupId>$PROJECT_GROUPID</groupId>")
+    $bomContent.Add("    <artifactId>$PROJECT_ARTIFACTID-lock</artifactId>")
+    $bomContent.Add("    <version>$PROJECT_VERSION</version>")
+    $bomContent.Add('    <packaging>pom</packaging>')
+    $bomContent.Add('')
 
-    $bomLines.Add('    <dependencyManagement>')
-    $bomLines.Add('        <dependencies>')
-    foreach ($depLine in $packagesLockString) {
-        $parts = $depLine -split ':'
+    $bomContent.Add('    <dependencyManagement>')
+    $bomContent.Add('        <dependencies>')
+    foreach ($dependency in $dependencyList) {
+        $parts = $dependency -split ':'
         if ($parts.Count -ge 4) {
             $depGroupId    = $parts[0]
             $depArtifactId = $parts[1]
             $depType       = $parts[2]
             $depVersion    = $parts[3]
             $depScope      = if ($parts.Count -ge 5) { $parts[4].Trim() } else { 'compile' }
-            $bomLines.Add('            <dependency>')
-            $bomLines.Add("                <groupId>$depGroupId</groupId>")
-            $bomLines.Add("                <artifactId>$depArtifactId</artifactId>")
-            $bomLines.Add("                <version>$depVersion</version>")
+            $bomContent.Add('            <dependency>')
+            $bomContent.Add("                <groupId>$depGroupId</groupId>")
+            $bomContent.Add("                <artifactId>$depArtifactId</artifactId>")
+            $bomContent.Add("                <version>$depVersion</version>")
             if ($depType -ne 'jar') { 
-                $bomLines.Add("                <type>$depType</type>") 
+                $bomContent.Add("                <type>$depType</type>") 
             }
             if ($depScope -ne 'compile') { 
-                $bomLines.Add("                <scope>$depScope</scope>") 
+                $bomContent.Add("                <scope>$depScope</scope>") 
             }
-            $bomLines.Add('            </dependency>')
+            $bomContent.Add('            </dependency>')
         }
     }
-    $bomLines.Add('        </dependencies>')
-    $bomLines.Add('    </dependencyManagement>')
+    $bomContent.Add('        </dependencies>')
+    $bomContent.Add('    </dependencyManagement>')
 
-    $bomLines.Add('</project>')
-    $bomLines | Set-Content 'packages-lock.xml' -Encoding UTF8
+    $bomContent.Add('</project>')
+    $bomContent | Set-Content 'packages-lock.xml' -Encoding UTF8
     Write-Host "[INFO] 已產生 packages-lock.xml"
     Write-Host "[INFO] ------------------------------------------------------------------------"
 
