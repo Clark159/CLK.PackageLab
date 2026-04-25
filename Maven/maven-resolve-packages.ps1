@@ -126,7 +126,8 @@ do {
 
     # 安裝 packages-lock.xml
     & mvn install:install-file `
-        "-Dfile=packages-lock.xml"
+        "-Dfile=packages-lock.xml" `
+        "-DpomFile=packages-lock.xml"
     if ($LASTEXITCODE -ne 0) {
         Write-Host "[ERROR] mvn install:install-file 執行失敗"
         $exitCode = 1
