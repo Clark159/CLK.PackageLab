@@ -111,7 +111,7 @@ do {
 # ===== End =====
 } while ($false)
 if ($exitCode -eq 0) {
-    Write-Host '[SUCCESS] 所有作業已全部完成'
+    Write-Host '[SUCCESS] 所有作業已完成'
 }
 if ($Pause) {
     Write-Host

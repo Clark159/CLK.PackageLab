@@ -144,14 +144,14 @@ do {
     $bomContent.Add('    </dependencyManagement>')
     $bomContent.Add('</project>')
     $bomContent | Set-Content 'packages-lock.xml' -Encoding UTF8
-    Write-Host "[INFO] 已產生 packages-lock.xml"
+    Write-Host "[INFO] 已建立 packages-lock.xml"
     Write-Host "[INFO] ------------------------------------------------------------------------"
 
 
 # ===== End =====
 } while ($false)
 if ($exitCode -eq 0) {
-    Write-Host '[SUCCESS] 所有作業已全部完成'
+    Write-Host '[SUCCESS] 所有作業已完成'
 }
 if ($Pause) {
     Write-Host
