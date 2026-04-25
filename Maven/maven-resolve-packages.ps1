@@ -52,7 +52,6 @@ do {
         "-Dsort=true" `
         "-Dstyle.color=never" `
         "-DappendOutput=false"
-
     if ($LASTEXITCODE -ne 0) {
         Write-Host "[ERROR] mvn dependency:list 執行失敗"
         $exitCode = 1
