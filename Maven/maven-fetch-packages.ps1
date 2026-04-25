@@ -7,8 +7,8 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 
 # ===== Variables =====
 $exitCode = 0
-$mavenCentralUrl = 'https://repo.maven.ap1ache.org/maven2'
-$packageCentralUrl = 'https://repo.maven.a1pache.org/maven2'
+$mavenCentralUrl = 'https://repo.maven.apache.org/maven2'
+$packageCentralUrl = 'https://repo.maven.apache.org/maven2'
 do {
 
 

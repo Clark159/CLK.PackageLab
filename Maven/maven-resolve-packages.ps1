@@ -46,8 +46,8 @@ do {
     $pomContent.Add('<project xmlns="http://maven.apache.org/POM/4.0.0"')
     $pomContent.Add('         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"')
     $pomContent.Add('         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">')
-    $pomContent.Add('')
     $pomContent.Add("    <modelVersion>4.0.0</modelVersion>")
+    $pomContent.Add('')
     $pomContent.Add("    <groupId>$projectGroupId</groupId>")
     $pomContent.Add("    <artifactId>$projectArtifactId</artifactId>")
     $pomContent.Add("    <version>$projectVersion</version>")
@@ -77,7 +77,8 @@ do {
     }
     $pomContent.Add('    </dependencies>')
     $pomContent.Add('</project>')
-    $pomContent | Set-Content 'pom.xml' -Encoding UTF8    
+    $pomContent | Set-Content 'pom.xml' -Encoding UTF8
+    Write-Host "[INFO] 已建立 pom.xml"
 
     # 解析套件清單
     & mvn dependency:list `
@@ -92,12 +93,11 @@ do {
         $exitCode = 1
         break
     }
-    Write-Host "[INFO] 已建立 pom.xml"
 
     # 過濾套件清單
     $dependencyList = Get-Content 'packages-lock.txt' -Raw -Encoding UTF8
     $dependencyList = $dependencyList -split "`n" |
-    Where-Object { $_ -match '-- module' } |
+    Where-Object { $_ -match '^\s+\S+:\S+:\S+:\S+' } |
         ForEach-Object {
             ($_ -replace '\s*-- module.*', '').Trim()
         }
@@ -110,8 +110,8 @@ do {
     $bomContent.Add('<project xmlns="http://maven.apache.org/POM/4.0.0"')
     $bomContent.Add('         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"')
     $bomContent.Add('         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">')
-    $bomContent.Add('')
     $bomContent.Add("    <modelVersion>4.0.0</modelVersion>")
+    $bomContent.Add('')
     $bomContent.Add("    <groupId>$projectGroupId</groupId>")
     $bomContent.Add("    <artifactId>$projectArtifactId-lock</artifactId>")
     $bomContent.Add("    <version>$projectVersion</version>")
@@ -155,7 +155,7 @@ do {
     $childNode = $pomDocument.CreateElement('artifactId',   $pomNamespace); $childNode.InnerText = "$projectArtifactId-lock"; $pomParentNode.AppendChild($childNode) | Out-Null
     $childNode = $pomDocument.CreateElement('version',      $pomNamespace); $childNode.InnerText = $projectVersion;           $pomParentNode.AppendChild($childNode) | Out-Null
     $childNode = $pomDocument.CreateElement('relativePath', $pomNamespace); $childNode.InnerText = 'packages-lock.xml';       $pomParentNode.AppendChild($childNode) | Out-Null
-    $pomDocument.DocumentElement.AppendChild($pomParentNode) | Out-Null    
+    $pomDocument.DocumentElement.InsertAfter($pomParentNode, $pomDocument.GetElementsByTagName('modelVersion', $pomNamespace)[0]) | Out-Null
     $pomDocumentWriter = [System.Xml.XmlWriter]::Create((Resolve-Path 'pom.xml').Path, $xmlWriterSettings); 
     $pomDocument.Save($pomDocumentWriter); 
     $pomDocumentWriter.Dispose() 
