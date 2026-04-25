@@ -76,7 +76,7 @@ do {
     # 刪除套件快取
     foreach ($dependency in $dependencyList) {
         $parts = $dependency -split ':'
-        if ($parts.Count -lt 4) {
+        if ($parts.Count -ge 4) {
             $groupId    = $parts[0]
             $artifactId = $parts[1]
             $version    = $parts[3]
@@ -86,6 +86,7 @@ do {
 
                  Write-Host "Remove-Item -Path $dependencyPath -Recurse -Force"
             }
+            Write-Host $dependencyPath
         }
     }
 
