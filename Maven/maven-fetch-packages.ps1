@@ -98,7 +98,7 @@ do {
         Write-Host "[INFO] 套件下載完成，取得 $($dependencyList.Count) 個套件"
         $dependencyList | ForEach-Object { Write-Host "[INFO] $_" }
         Write-Host "[INFO] ------------------------------------------------------------------------"
-    }    
+    }
 
     # 移除資料夾
     foreach ($d in './.m2') {

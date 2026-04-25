@@ -56,22 +56,14 @@ do {
     $pomContent.Add('    <dependencies>')
     foreach ($package in $packageList) {
         $parts = $package -split ':'
-        if ($parts.Count -ge 4) {
+        if ($parts.Count -ge 3) {
             $packageGroupId    = $parts[0]
             $packageArtifactId = $parts[1]
-            $packageType       = $parts[2]
-            $packageVersion    = $parts[3]
-            $packageScope      = if ($parts.Count -ge 5) { $parts[4].Trim() } else { 'compile' }
+            $packageVersion    = $parts[2]
             $pomContent.Add('        <dependency>')
             $pomContent.Add("            <groupId>$packageGroupId</groupId>")
             $pomContent.Add("            <artifactId>$packageArtifactId</artifactId>")
             $pomContent.Add("            <version>$packageVersion</version>")
-            if ($packageType -ne 'jar') {
-                $pomContent.Add("            <type>$packageType</type>")
-            }
-            if ($packageScope -ne 'compile') {
-                $pomContent.Add("            <scope>$packageScope</scope>")
-            }
             $pomContent.Add('        </dependency>')
         }
     }
@@ -92,7 +84,7 @@ do {
         $exitCode = 1
         break
     }
-    Write-Host "[INFO] 已建立 pom.xml"
+    Write-Host "[INFO] 已建立 pom.xml" # 為了排版好看，改放這邊。
 
     # 過濾套件清單
     $dependencyList = Get-Content 'packages-lock.txt' -Raw -Encoding UTF8
@@ -122,20 +114,20 @@ do {
     foreach ($dependency in $dependencyList) {
         $parts = $dependency -split ':'
         if ($parts.Count -ge 4) {
-            $depGroupId    = $parts[0]
-            $depArtifactId = $parts[1]
-            $depType       = $parts[2]
-            $depVersion    = $parts[3]
-            $depScope      = if ($parts.Count -ge 5) { $parts[4].Trim() } else { 'compile' }
+            $dependencyGroupId    = $parts[0]
+            $dependencyArtifactId = $parts[1]
+            $dependencyType       = $parts[2]
+            $dependencyVersion    = $parts[3]
+            $dependencyScope      = if ($parts.Count -ge 5) { $parts[4].Trim() } else { 'compile' }
             $bomContent.Add('            <dependency>')
-            $bomContent.Add("                <groupId>$depGroupId</groupId>")
-            $bomContent.Add("                <artifactId>$depArtifactId</artifactId>")
-            $bomContent.Add("                <version>$depVersion</version>")
-            if ($depType -ne 'jar') { 
-                $bomContent.Add("                <type>$depType</type>") 
+            $bomContent.Add("                <groupId>$dependencyGroupId</groupId>")
+            $bomContent.Add("                <artifactId>$dependencyArtifactId</artifactId>")
+            $bomContent.Add("                <version>$dependencyVersion</version>")
+            if ($dependencyType -ne 'jar') {
+                $bomContent.Add("                <type>$dependencyType</type>")
             }
-            if ($depScope -ne 'compile') { 
-                $bomContent.Add("                <scope>$depScope</scope>") 
+            if ($dependencyScope -ne 'compile') {
+                $bomContent.Add("                <scope>$dependencyScope</scope>")
             }
             $bomContent.Add('            </dependency>')
         }
