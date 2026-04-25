@@ -1,4 +1,7 @@
-﻿Set-Location -Path $PSScriptRoot
+﻿param(
+    [switch]$Pause
+)
+Set-Location -Path $PSScriptRoot
 $OutputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
@@ -139,5 +142,9 @@ do {
 if ($exitCode -eq 0) {
     Write-Host '[SUCCESS] pom.xml 處理完成'
 }
-Write-Host
+if ($Pause) {
+    Write-Host
+    Write-Host '按任意鍵繼續...'
+    $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
+}
 exit $exitCode
