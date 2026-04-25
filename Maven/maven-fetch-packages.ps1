@@ -87,18 +87,18 @@ do {
         if (-not (Test-Path "./packages/$fileName")) {
             $missingList += $dependency
         }
-    }
-    Write-Host "[INFO] ------------------------------------------------------------------------"
+    }    
     if ($missingList.Count -gt 0) {
         Write-Host "[ERROR] 套件下載失敗，缺少 $($missingList.Count) 個套件"
-        $missingList | ForEach-Object { Write-Host "  $_" }
+        $missingList | ForEach-Object { Write-Host "[ERROR] $_" }
+        Write-Host "[ERROR] ------------------------------------------------------------------------"
         $exitCode = 1
         break
     } else {
         Write-Host "[INFO] 套件下載完成，取得 $($dependencyList.Count) 個套件"
-        $dependencyList | ForEach-Object { Write-Host "  $_" }
-    }
-    Write-Host "[INFO] ------------------------------------------------------------------------"
+        $dependencyList | ForEach-Object { Write-Host "[INFO] $_" }
+        Write-Host "[INFO] ------------------------------------------------------------------------"
+    }    
 
     # 移除資料夾
     foreach ($d in './.m2') {
