@@ -12,13 +12,23 @@ do {
 
 
     # ===== Require =====
-    # 檢查 pom.xml
-    if (-not (Test-Path 'pom.xml')) {
-        Write-Host '[ERROR] 找不到 pom.xml'
-        $exitCode = 1
-        break
+    # 檢查檔案
+    foreach ($f in 'pom.xml') {
+        if (-not (Test-Path $f)) {
+            Write-Host "[ERROR] 找不到 $f"
+            $exitCode = 1
+            break
+        }
     }
+    if ($exitCode -ne 0) { break }
 
+    # 移除檔案
+    foreach ($f in 'packages.txt', 'packages-lock.xml') {
+        if (Test-Path $f) {
+            Remove-Item $f -Force
+        }
+    }
+    
     # 移除 pom.xml 的 <parent>
     $pomDocument = [System.Xml.XmlDocument]::new()
     $pomDocument.Load((Resolve-Path 'pom.xml').Path)
@@ -30,23 +40,16 @@ do {
         $pomDocumentWriter.Dispose()
     }
 
-    # 清理暫存檔
-    foreach ($f in 'packages-lock.txt', 'packages-lock.xml') {
-        if (Test-Path $f) {
-            Remove-Item $f -Force
-        }
-    }
-
 
     # ===== Execute =====
     Write-Host "========================================"
-    Write-Host "套件專案: pom.xml"
+    Write-Host "maven-resolve-packages"
     Write-Host "========================================"
     Write-Host
 
     # 解析套件清單
     & mvn dependency:list `
-        "-DoutputFile=packages-lock.txt" `
+        "-DoutputFile=packages.txt" `
         "-DincludeScope=runtime" `
         "-DexcludeTransitive=false" `
         "-Dsort=true" `
@@ -70,14 +73,14 @@ do {
     Write-Host "[INFO] ------------------------------------------------------------------------"
 
     # 過濾套件清單
-    $dependencyList = Get-Content 'packages-lock.txt' -Raw -Encoding UTF8
+    $dependencyList = Get-Content 'packages.txt' -Raw -Encoding UTF8
     $dependencyList = $dependencyList -split "`n" |
     Where-Object { $_ -match '-- module' } |
         ForEach-Object {
             ($_ -replace '\s*-- module.*', '').Trim()
         }
-        $dependencyList | Set-Content 'packages-lock.txt' -Encoding UTF8
-    Write-Host "[INFO] 已產生 packages-lock.txt"
+        $dependencyList | Set-Content 'packages.txt' -Encoding UTF8
+    Write-Host "[INFO] 已產生 packages.txt"
 
     # 產生 packages-lock.xml
     $bomContent = [System.Collections.Generic.List[string]]::new()

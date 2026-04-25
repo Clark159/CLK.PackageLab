@@ -13,22 +13,19 @@ do {
 
 
     # ===== Require =====
-    # 檢查 pom.xml
-    if (-not (Test-Path 'pom.xml')) {
-        Write-Host '[ERROR] 找不到 pom.xml'
-        $exitCode = 1
-        break
-    }
-
-    # 移除暫存檔
-    foreach ($f in 'packages-fetch.txt') {
-        if (Test-Path $f) {
-            Remove-Item $f -Force
+    
+    # 檢查檔案
+    foreach ($f in 'pom.xml', 'packages-lock.xml', 'packages.txt') {
+        if (-not (Test-Path $f)) {
+            Write-Host "[ERROR] 找不到 $f"
+            $exitCode = 1
+            break
         }
     }
+    if ($exitCode -ne 0) { break }
 
     # 移除資料夾
-    foreach ($d in './.m2', './packages-fetch') {
+    foreach ($d in './.m2', './packages') {
         if (Test-Path $d) {
             Remove-Item -Path $d -Recurse -Force
         }
@@ -36,7 +33,11 @@ do {
 
 
     # ===== Execute =====
-    
+    Write-Host "========================================"
+    Write-Host "maven-fetch-packages"
+    Write-Host "========================================"
+    Write-Host
+
     # 下載基礎環境
     mvn dependency:go-offline `
         "-Dmaven.repo.local=./.m2" `
@@ -47,40 +48,15 @@ do {
         break
     }
 
-    # 解析套件清單
-    & mvn dependency:list `
-        "-DoutputFile=packages-fetch.txt" `
-        "-DincludeScope=runtime" `
-        "-DexcludeTransitive=false" `
-        "-Dsort=true" `
-        "-Dstyle.color=never" `
-        "-DappendOutput=false" `
-        "-Dmaven.repo.local=./.m2"
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "[ERROR] mvn dependency:list 執行失敗"
-        $exitCode = 1
-        break
-    }
-
-    # 過濾套件清單
-    $dependencyList = Get-Content 'packages-fetch.txt' -Raw -Encoding UTF8
-    $dependencyList = $dependencyList -split "`n" |
-    Where-Object { $_ -match '-- module' } |
-        ForEach-Object {
-            ($_ -replace '\s*-- module.*', '').Trim()
-        }
-        $dependencyList | Set-Content 'packages-fetch.txt' -Encoding UTF8
-    Write-Host "[INFO] 已產生 packages-fetch.txt"
-    Write-Host "[INFO] ------------------------------------------------------------------------"
-
     # 刪除套件快取
+    $dependencyList = Get-Content 'packages.txt' -Encoding UTF8 | Where-Object { $_.Trim() -ne '' }
     foreach ($dependency in $dependencyList) {
         $parts = $dependency -split ':'
         if ($parts.Count -ge 4) {
             $groupId    = $parts[0]
             $artifactId = $parts[1]
             $version    = $parts[3]
-            $dependencyPath    = "./.m2/$($groupId -replace '\.', '/')/$artifactId/$version"
+            $dependencyPath = "./.m2/$($groupId -replace '\.', '/')/$artifactId/$version"
             if (Test-Path $dependencyPath) {
                 Remove-Item -Path $dependencyPath -Recurse -Force
             }
@@ -89,19 +65,40 @@ do {
 
     # 下載套件清單
     mvn dependency:copy-dependencies `
-        "-DoutputDirectory=./packages-fetch" `
+        "-DoutputDirectory=./packages" `
         "-Dmaven.repo.local=./.m2" `
         "-DincludeScope=runtime" `
         "-DremoteRepositories=central::default::$packageCentralUrl"
-
-    mvn dependency:go-offline `
-        "-Dmaven.repo.local=./.m2" `
-        "-DremoteRepositories=central::default::$packageCentralUrl"
     if ($LASTEXITCODE -ne 0) {
-        Write-Host "[ERROR] mvn dependency:go-offline 執行失敗 ($packageCentralUrl)"
+        Write-Host "[ERROR] mvn dependency:copy-dependencies 執行失敗 ($packageCentralUrl)"
         $exitCode = 1
         break
     }
+
+    # 比對套件清單
+    $missingList = @()
+    foreach ($dependency in $dependencyList) {
+        $parts = $dependency -split ':'
+        if ($parts.Count -lt 4) { continue }
+        $artifactId = $parts[1]
+        $packaging  = $parts[2]
+        $version    = $parts[3]
+        $fileName   = "$artifactId-$version.$packaging"
+        if (-not (Test-Path "./packages/$fileName")) {
+            $missingList += $dependency
+        }
+    }
+    Write-Host "[INFO] ------------------------------------------------------------------------"
+    if ($missingList.Count -gt 0) {
+        Write-Host "[ERROR] 套件下載失敗，缺少 $($missingList.Count) 個套件"
+        $missingList | ForEach-Object { Write-Host "  $_" }
+        $exitCode = 1
+        break
+    } else {
+        Write-Host "[INFO] 套件下載完成，取得 $($dependencyList.Count) 個套件"
+        $dependencyList | ForEach-Object { Write-Host "  $_" }
+    }
+    Write-Host "[INFO] ------------------------------------------------------------------------"
 
     # 移除資料夾
     foreach ($d in './.m2') {
