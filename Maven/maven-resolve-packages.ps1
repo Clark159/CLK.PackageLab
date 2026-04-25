@@ -93,7 +93,7 @@ do {
         ForEach-Object {
             ($_ -replace '\s*-- module.*', '').Trim()
         }
-        $dependencyList | Set-Content 'packages-lock.txt' -Encoding UTF8
+    $dependencyList | Set-Content 'packages-lock.txt' -Encoding UTF8
     Write-Host "[INFO] 已建立 packages-lock.txt"
 
     # 建立 packages-lock.xml
