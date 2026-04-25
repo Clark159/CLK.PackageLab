@@ -78,7 +78,6 @@ do {
     $pomContent.Add('    </dependencies>')
     $pomContent.Add('</project>')
     $pomContent | Set-Content 'pom.xml' -Encoding UTF8
-    Write-Host "[INFO] 已建立 pom.xml"
 
     # 解析套件清單
     & mvn dependency:list `
@@ -93,6 +92,7 @@ do {
         $exitCode = 1
         break
     }
+    Write-Host "[INFO] 已建立 pom.xml"
 
     # 過濾套件清單
     $dependencyList = Get-Content 'packages-lock.txt' -Raw -Encoding UTF8
