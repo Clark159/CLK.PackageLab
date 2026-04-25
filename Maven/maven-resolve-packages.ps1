@@ -140,7 +140,7 @@ do {
 # ===== End =====
 } while ($false)
 if ($exitCode -eq 0) {
-    Write-Host '[SUCCESS] pom.xml 處理完成'
+    Write-Host '[SUCCESS] packages-lock.xml 建立完成'
 }
 if ($Pause) {
     Write-Host
