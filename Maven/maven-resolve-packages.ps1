@@ -16,12 +16,17 @@ do {
     }
 
     # 移除 pom.xml 的 <parent>
-    $pomDocument = [xml](Get-Content 'pom.xml' -Raw -Encoding UTF8)
-    $parentNode = $pomDocument.project.parent
-    if ($parentNode) {
-        $pomDocument.project.RemoveChild($parentNode) | Out-Null
+    $pomDocument = [System.Xml.XmlDocument]::new()
+    $pomDocument.PreserveWhitespace = $true
+    $pomDocument.Load((Resolve-Path 'pom.xml').Path)
+    $oldParentNode = $pomDocument.DocumentElement.ChildNodes | Where-Object { $_.LocalName -eq 'parent' } | Select-Object -First 1
+    if ($oldParentNode) {
+        $prevSibling = $oldParentNode.PreviousSibling
+        if ($prevSibling -and $prevSibling.NodeType -eq [System.Xml.XmlNodeType]::Text) {
+            $pomDocument.DocumentElement.RemoveChild($prevSibling) | Out-Null
+        }
+        $pomDocument.DocumentElement.RemoveChild($oldParentNode) | Out-Null
         $pomDocument.Save((Resolve-Path 'pom.xml').Path)
-        Write-Host "[INFO] 已移除 pom.xml 的 <parent> 區塊"
     }
 
     # 清理暫存檔
@@ -53,15 +58,6 @@ do {
         break
     }
 
-    # 過濾套件清單
-    $dependencyList = Get-Content 'packages-lock.txt' -Raw -Encoding UTF8
-    $dependencyList = $dependencyList -split "`n" |
-    Where-Object { $_ -match '-- module' } |
-    ForEach-Object {
-        ($_ -replace '\s*-- module.*', '').Trim()
-    }
-    $dependencyList | Set-Content 'packages-lock.txt' -Encoding UTF8
-
     # 讀取專案參數
     $PROJECT_MODELVERSION = ((& mvn help:evaluate '-Dexpression=project.modelVersion' -q '-DforceStdout') | Where-Object { $_ } | Select-Object -Last 1).Trim()
     $PROJECT_GROUPID      = ((& mvn help:evaluate '-Dexpression=project.groupId'      -q '-DforceStdout') | Where-Object { $_ } | Select-Object -Last 1).Trim()
@@ -72,6 +68,16 @@ do {
     Write-Host "[INFO] artifactId: $PROJECT_ARTIFACTID"
     Write-Host "[INFO] version: $PROJECT_VERSION"
     Write-Host "[INFO] ------------------------------------------------------------------------"
+
+    # 過濾套件清單
+    $dependencyList = Get-Content 'packages-lock.txt' -Raw -Encoding UTF8
+    $dependencyList = $dependencyList -split "`n" |
+    Where-Object { $_ -match '-- module' } |
+    ForEach-Object {
+        ($_ -replace '\s*-- module.*', '').Trim()
+    }
+    $dependencyList | Set-Content 'packages-lock.txt' -Encoding UTF8
+    Write-Host "[INFO] 已產生 packages-lock.txt"
 
     # 產生 packages-lock.xml
     $bomContent = [System.Collections.Generic.List[string]]::new()
@@ -116,6 +122,17 @@ do {
     $bomContent.Add('</project>')
     $bomContent | Set-Content 'packages-lock.xml' -Encoding UTF8
     Write-Host "[INFO] 已產生 packages-lock.xml"
+
+    # 掛載 packages-lock.xml 為 pom.xml 的 <parent>
+    $pomNamespace = $pomDocument.DocumentElement.NamespaceURI
+    $pomParentNode = $pomDocument.CreateElement('parent', $pomNamespace)
+    $childNode = $pomDocument.CreateElement('groupId',      $pomNamespace); $childNode.InnerText = $PROJECT_GROUPID;           $pomParentNode.AppendChild($childNode) | Out-Null
+    $childNode = $pomDocument.CreateElement('artifactId',   $pomNamespace); $childNode.InnerText = "$PROJECT_ARTIFACTID-lock"; $pomParentNode.AppendChild($childNode) | Out-Null
+    $childNode = $pomDocument.CreateElement('version',      $pomNamespace); $childNode.InnerText = $PROJECT_VERSION;           $pomParentNode.AppendChild($childNode) | Out-Null
+    $childNode = $pomDocument.CreateElement('relativePath', $pomNamespace); $childNode.InnerText = 'packages-lock.xml';        $pomParentNode.AppendChild($childNode) | Out-Null
+    $pomDocument.DocumentElement.AppendChild($pomParentNode) | Out-Null
+    $pomDocument.Save((Resolve-Path 'pom.xml').Path)
+    Write-Host "[INFO] 已掛載 packages-lock.xml 為 pom.xml 的 <parent>"
     Write-Host "[INFO] ------------------------------------------------------------------------"
 
 
