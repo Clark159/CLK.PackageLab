@@ -53,6 +53,18 @@ do {
     }
     $packagesLockString | Set-Content 'packages-lock.txt' -Encoding UTF8
 
+    # 讀取專案參數
+    $PROJECT_MODELVERSION = ((& mvn help:evaluate '-Dexpression=project.modelVersion' -q '-DforceStdout') | Where-Object { $_ } | Select-Object -Last 1).Trim()
+    $PROJECT_GROUPID      = ((& mvn help:evaluate '-Dexpression=project.groupId'      -q '-DforceStdout') | Where-Object { $_ } | Select-Object -Last 1).Trim()
+    $PROJECT_ARTIFACTID   = ((& mvn help:evaluate '-Dexpression=project.artifactId'   -q '-DforceStdout') | Where-Object { $_ } | Select-Object -Last 1).Trim()
+    $PROJECT_VERSION      = ((& mvn help:evaluate '-Dexpression=project.version'      -q '-DforceStdout') | Where-Object { $_ } | Select-Object -Last 1).Trim()    
+    Write-Host "[INFO] modelVersion: $PROJECT_MODELVERSION"
+    Write-Host "[INFO] groupId: $PROJECT_GROUPID"
+    Write-Host "[INFO] artifactId: $PROJECT_ARTIFACTID"
+    Write-Host "[INFO] version: $PROJECT_VERSION"
+    Write-Host "[INFO] ------------------------------------------------------------------------"
+
+    
 # ===== End =====
 } while ($false)
 if ($exitCode -eq 0) {
