@@ -125,12 +125,11 @@ do {
 
     # 掛載 packages-lock.xml 為 pom.xml 的 <parent>
     $pomNamespace = $pomDocument.DocumentElement.NamespaceURI
-    $pomParentNode = $pomDocument.CreateElement('parent', $pomNamespace)
-    $childNode = $pomDocument.CreateElement('groupId',      $pomNamespace); $childNode.InnerText = $PROJECT_GROUPID;           $pomParentNode.AppendChild($childNode) | Out-Null
-    $childNode = $pomDocument.CreateElement('artifactId',   $pomNamespace); $childNode.InnerText = "$PROJECT_ARTIFACTID-lock"; $pomParentNode.AppendChild($childNode) | Out-Null
-    $childNode = $pomDocument.CreateElement('version',      $pomNamespace); $childNode.InnerText = $PROJECT_VERSION;           $pomParentNode.AppendChild($childNode) | Out-Null
-    $childNode = $pomDocument.CreateElement('relativePath', $pomNamespace); $childNode.InnerText = 'packages-lock.xml';        $pomParentNode.AppendChild($childNode) | Out-Null
-    $pomDocument.DocumentElement.AppendChild($pomParentNode) | Out-Null
+    $pomParentNode = $pomDocument.CreateElement('parent', $pomNamespace); $pomDocument.DocumentElement.AppendChild($pomDocument.CreateTextNode("`n    ")) | Out-Null; $pomDocument.DocumentElement.AppendChild($pomParentNode) | Out-Null;  $pomParentNode.AppendChild($pomDocument.CreateTextNode("`n        ")) | Out-Null; $pomDocument.DocumentElement.AppendChild($pomDocument.CreateTextNode("`n")) | Out-Null;
+    $childNode = $pomDocument.CreateElement('groupId',      $pomNamespace); $childNode.InnerText = $PROJECT_GROUPID;           $pomParentNode.AppendChild($childNode) | Out-Null; $pomParentNode.AppendChild($pomDocument.CreateTextNode("`n        ")) | Out-Null;
+    $childNode = $pomDocument.CreateElement('artifactId',   $pomNamespace); $childNode.InnerText = "$PROJECT_ARTIFACTID-lock"; $pomParentNode.AppendChild($childNode) | Out-Null; $pomParentNode.AppendChild($pomDocument.CreateTextNode("`n        ")) | Out-Null;
+    $childNode = $pomDocument.CreateElement('version',      $pomNamespace); $childNode.InnerText = $PROJECT_VERSION;           $pomParentNode.AppendChild($childNode) | Out-Null; $pomParentNode.AppendChild($pomDocument.CreateTextNode("`n        ")) | Out-Null;
+    $childNode = $pomDocument.CreateElement('relativePath', $pomNamespace); $childNode.InnerText = 'packages-lock.xml';        $pomParentNode.AppendChild($childNode) | Out-Null; $pomParentNode.AppendChild($pomDocument.CreateTextNode("`n    ")) | Out-Null;
     $pomDocument.Save((Resolve-Path 'pom.xml').Path)
     Write-Host "[INFO] 已掛載 packages-lock.xml 為 pom.xml 的 <parent>"
     Write-Host "[INFO] ------------------------------------------------------------------------"
