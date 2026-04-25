@@ -28,23 +28,12 @@ do {
             Remove-Item $f -Force
         }
     }
-    
-    # 移除 pom.xml 的 <parent>
-    $pomDocument = [System.Xml.XmlDocument]::new()
-    $pomDocument.Load((Resolve-Path 'pom.xml').Path)
-    $oldParentNode = $pomDocument.DocumentElement.ChildNodes | Where-Object { $_.LocalName -eq 'parent' } | Select-Object -First 1
-    if ($oldParentNode) {
-        $pomDocument.DocumentElement.RemoveChild($oldParentNode) | Out-Null        
-        $pomDocumentWriter = [System.Xml.XmlWriter]::Create((Resolve-Path 'pom.xml').Path, $xmlWriterSettings); 
-        $pomDocument.Save($pomDocumentWriter); 
-        $pomDocumentWriter.Dispose()
-    }
 
 
     # ===== Execute =====
-    Write-Host "========================================"
+    Write-Host "-------------------------------------------------------------------------------"
     Write-Host "maven-resolve-packages"
-    Write-Host "========================================"
+    Write-Host "-------------------------------------------------------------------------------"
     Write-Host
 
     # 解析套件清單
@@ -123,54 +112,13 @@ do {
     $bomContent.Add('</project>')
     $bomContent | Set-Content 'packages-lock.xml' -Encoding UTF8
     Write-Host "[INFO] 已產生 packages-lock.xml"
-
-    # 安裝 packages-lock.xml
-    & mvn install:install-file `
-        "-Dfile=packages-lock.xml" `
-        "-DpomFile=packages-lock.xml"
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "[ERROR] mvn install:install-file 執行失敗"
-        $exitCode = 1
-        break
-    }
-    Write-Host "[INFO] 已產生 packages.txt"
-    Write-Host "[INFO] 已產生 packages-lock.xml"
-    Write-Host "[INFO] 已安裝 packages-lock.xml"
-
-    # 掛載 packages-lock.xml 為 pom.xml 的 BOM
-    $pomNamespace = $pomDocument.DocumentElement.NamespaceURI
-
-    $dependencyManagementNode = $pomDocument.DocumentElement.ChildNodes | Where-Object { $_.LocalName -eq 'dependencyManagement' } | Select-Object -First 1
-    if (-not $dependencyManagementNode) {
-        $dependencyManagementNode = $pomDocument.CreateElement('dependencyManagement', $pomNamespace)
-        $pomDocument.DocumentElement.AppendChild($dependencyManagementNode) | Out-Null
-    }
-    $dependencyListNode = $dependencyManagementNode.ChildNodes | Where-Object { $_.LocalName -eq 'dependencies' } | Select-Object -First 1
-    if (-not $dependencyListNode) {
-        $dependencyListNode = $pomDocument.CreateElement('dependencies', $pomNamespace)
-        $dependencyManagementNode.AppendChild($dependencyListNode) | Out-Null
-    }
-
-    $dependencyNode = $pomDocument.CreateElement('dependency', $pomNamespace)
-    $childNode = $pomDocument.CreateElement('groupId',    $pomNamespace); $childNode.InnerText = $PROJECT_GROUPID;           $dependencyNode.AppendChild($childNode) | Out-Null
-    $childNode = $pomDocument.CreateElement('artifactId', $pomNamespace); $childNode.InnerText = "$PROJECT_ARTIFACTID-lock"; $dependencyNode.AppendChild($childNode) | Out-Null
-    $childNode = $pomDocument.CreateElement('version',    $pomNamespace); $childNode.InnerText = $PROJECT_VERSION;           $dependencyNode.AppendChild($childNode) | Out-Null
-    $childNode = $pomDocument.CreateElement('type',       $pomNamespace); $childNode.InnerText = 'pom';                      $dependencyNode.AppendChild($childNode) | Out-Null
-    $childNode = $pomDocument.CreateElement('scope',      $pomNamespace); $childNode.InnerText = 'import';                   $dependencyNode.AppendChild($childNode) | Out-Null
-    $dependencyListNode.AppendChild($dependencyNode) | Out-Null
-
-    $pomDocumentWriter = [System.Xml.XmlWriter]::Create((Resolve-Path 'pom.xml').Path, $xmlWriterSettings)
-    $pomDocument.Save($pomDocumentWriter)
-    $pomDocumentWriter.Dispose()
-
-    Write-Host "[INFO] 已掛載 packages-lock.xml 為 pom.xml 的 BOM"
     Write-Host "[INFO] ------------------------------------------------------------------------"
 
 
 # ===== End =====
 } while ($false)
 if ($exitCode -eq 0) {
-    Write-Host '[SUCCESS] packages-lock.xml 建立完成'
+    Write-Host '[SUCCESS] 所有作業已全部完成'
 }
 if ($Pause) {
     Write-Host

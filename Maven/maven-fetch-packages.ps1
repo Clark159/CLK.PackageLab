@@ -33,9 +33,9 @@ do {
 
 
     # ===== Execute =====
-    Write-Host "========================================"
+    Write-Host "-------------------------------------------------------------------------------"
     Write-Host "maven-fetch-packages"
-    Write-Host "========================================"
+    Write-Host "-------------------------------------------------------------------------------"
     Write-Host
 
     # 下載基礎環境
@@ -111,7 +111,7 @@ do {
 # ===== End =====
 } while ($false)
 if ($exitCode -eq 0) {
-    Write-Host '[SUCCESS] pom.xml 下載完成'
+    Write-Host '[SUCCESS] 所有作業已全部完成'
 }
 if ($Pause) {
     Write-Host
