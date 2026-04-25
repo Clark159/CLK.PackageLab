@@ -133,20 +133,37 @@ do {
         $exitCode = 1
         break
     }
+    Write-Host "[INFO] 已產生 packages.txt"
+    Write-Host "[INFO] 已產生 packages-lock.xml"
     Write-Host "[INFO] 已安裝 packages-lock.xml"
 
-    # 掛載 packages-lock.xml 為 pom.xml 的 <parent>
+    # 掛載 packages-lock.xml 為 pom.xml 的 BOM
     $pomNamespace = $pomDocument.DocumentElement.NamespaceURI
-    $pomParentNode = $pomDocument.CreateElement('parent', $pomNamespace)
-    $childNode = $pomDocument.CreateElement('groupId',      $pomNamespace); $childNode.InnerText = $PROJECT_GROUPID;           $pomParentNode.AppendChild($childNode) | Out-Null
-    $childNode = $pomDocument.CreateElement('artifactId',   $pomNamespace); $childNode.InnerText = "$PROJECT_ARTIFACTID-lock"; $pomParentNode.AppendChild($childNode) | Out-Null
-    $childNode = $pomDocument.CreateElement('version',      $pomNamespace); $childNode.InnerText = $PROJECT_VERSION;           $pomParentNode.AppendChild($childNode) | Out-Null
-    $childNode = $pomDocument.CreateElement('relativePath', $pomNamespace); $childNode.InnerText = 'packages-lock.xml';        $pomParentNode.AppendChild($childNode) | Out-Null
-    $pomDocument.DocumentElement.AppendChild($pomParentNode) | Out-Null    
-    $pomDocumentWriter = [System.Xml.XmlWriter]::Create((Resolve-Path 'pom.xml').Path, $xmlWriterSettings); 
-    $pomDocument.Save($pomDocumentWriter); 
-    $pomDocumentWriter.Dispose() 
-    Write-Host "[INFO] 已掛載 packages-lock.xml 為 pom.xml 的 <parent>"
+
+    $dependencyManagementNode = $pomDocument.DocumentElement.ChildNodes | Where-Object { $_.LocalName -eq 'dependencyManagement' } | Select-Object -First 1
+    if (-not $dependencyManagementNode) {
+        $dependencyManagementNode = $pomDocument.CreateElement('dependencyManagement', $pomNamespace)
+        $pomDocument.DocumentElement.AppendChild($dependencyManagementNode) | Out-Null
+    }
+    $dependencyListNode = $dependencyManagementNode.ChildNodes | Where-Object { $_.LocalName -eq 'dependencies' } | Select-Object -First 1
+    if (-not $dependencyListNode) {
+        $dependencyListNode = $pomDocument.CreateElement('dependencies', $pomNamespace)
+        $dependencyManagementNode.AppendChild($dependencyListNode) | Out-Null
+    }
+
+    $dependencyNode = $pomDocument.CreateElement('dependency', $pomNamespace)
+    $childNode = $pomDocument.CreateElement('groupId',    $pomNamespace); $childNode.InnerText = $PROJECT_GROUPID;           $dependencyNode.AppendChild($childNode) | Out-Null
+    $childNode = $pomDocument.CreateElement('artifactId', $pomNamespace); $childNode.InnerText = "$PROJECT_ARTIFACTID-lock"; $dependencyNode.AppendChild($childNode) | Out-Null
+    $childNode = $pomDocument.CreateElement('version',    $pomNamespace); $childNode.InnerText = $PROJECT_VERSION;           $dependencyNode.AppendChild($childNode) | Out-Null
+    $childNode = $pomDocument.CreateElement('type',       $pomNamespace); $childNode.InnerText = 'pom';                      $dependencyNode.AppendChild($childNode) | Out-Null
+    $childNode = $pomDocument.CreateElement('scope',      $pomNamespace); $childNode.InnerText = 'import';                   $dependencyNode.AppendChild($childNode) | Out-Null
+    $dependencyListNode.AppendChild($dependencyNode) | Out-Null
+
+    $pomDocumentWriter = [System.Xml.XmlWriter]::Create((Resolve-Path 'pom.xml').Path, $xmlWriterSettings)
+    $pomDocument.Save($pomDocumentWriter)
+    $pomDocumentWriter.Dispose()
+
+    Write-Host "[INFO] 已掛載 packages-lock.xml 為 pom.xml 的 BOM"
     Write-Host "[INFO] ------------------------------------------------------------------------"
 
 
