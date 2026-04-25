@@ -15,7 +15,7 @@ do {
     # ===== Require =====
     
     # 檢查檔案
-    foreach ($f in 'pom.xml', 'packages-lock.xml', 'packages.txt') {
+    foreach ($f in 'pom.xml', 'packages-lock.txt', 'packages-lock.xml') {
         if (-not (Test-Path $f)) {
             Write-Host "[ERROR] 找不到 $f"
             $exitCode = 1
@@ -49,7 +49,7 @@ do {
     }
 
     # 刪除套件快取
-    $dependencyList = Get-Content 'packages.txt' -Encoding UTF8 | Where-Object { $_.Trim() -ne '' }
+    $dependencyList = Get-Content 'packages-lock.txt' -Encoding UTF8 | Where-Object { $_.Trim() -ne '' }
     foreach ($dependency in $dependencyList) {
         $parts = $dependency -split ':'
         if ($parts.Count -ge 4) {

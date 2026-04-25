@@ -92,6 +92,7 @@ do {
         $exitCode = 1
         break
     }
+    Write-Host "[INFO] 已建立 pom.xml"
 
     # 過濾套件清單
     $dependencyList = Get-Content 'packages-lock.txt' -Raw -Encoding UTF8
@@ -101,7 +102,6 @@ do {
             ($_ -replace '\s*-- module.*', '').Trim()
         }
         $dependencyList | Set-Content 'packages-lock.txt' -Encoding UTF8
-    Write-Host "[INFO] 已建立 pom.xml"
     Write-Host "[INFO] 已建立 packages-lock.txt"
 
     # 建立 packages-lock.xml
@@ -145,6 +145,21 @@ do {
     $bomContent.Add('</project>')
     $bomContent | Set-Content 'packages-lock.xml' -Encoding UTF8
     Write-Host "[INFO] 已建立 packages-lock.xml"
+
+    # 掛載 packages-lock.xml 為 pom.xml 的 <parent>
+    $pomDocument = [System.Xml.XmlDocument]::new()
+    $pomDocument.Load((Resolve-Path 'pom.xml').Path)
+    $pomNamespace = $pomDocument.DocumentElement.NamespaceURI
+    $pomParentNode = $pomDocument.CreateElement('parent', $pomNamespace)
+    $childNode = $pomDocument.CreateElement('groupId',      $pomNamespace); $childNode.InnerText = $projectGroupId;           $pomParentNode.AppendChild($childNode) | Out-Null
+    $childNode = $pomDocument.CreateElement('artifactId',   $pomNamespace); $childNode.InnerText = "$projectArtifactId-lock"; $pomParentNode.AppendChild($childNode) | Out-Null
+    $childNode = $pomDocument.CreateElement('version',      $pomNamespace); $childNode.InnerText = $projectVersion;           $pomParentNode.AppendChild($childNode) | Out-Null
+    $childNode = $pomDocument.CreateElement('relativePath', $pomNamespace); $childNode.InnerText = 'packages-lock.xml';       $pomParentNode.AppendChild($childNode) | Out-Null
+    $pomDocument.DocumentElement.AppendChild($pomParentNode) | Out-Null    
+    $pomDocumentWriter = [System.Xml.XmlWriter]::Create((Resolve-Path 'pom.xml').Path, $xmlWriterSettings); 
+    $pomDocument.Save($pomDocumentWriter); 
+    $pomDocumentWriter.Dispose() 
+    Write-Host "[INFO] 已掛載 packages-lock.xml 為 pom.xml 的 <parent>"
     Write-Host "[INFO] ------------------------------------------------------------------------"
 
 
