@@ -40,11 +40,19 @@ org.apache.httpcomponents.client5:httpclient5:5.3
 | `packages-lock.txt` | 鎖定所有相依（含遞移）的版本清單 |
 | `packages-lock.xml` | 鎖定版本的 BOM（Bill of Materials） |
 
+執行結果：
+
+![maven-resolve-packages](Maven/maven-resolve-packages.png)
+
 ### 步驟三：下載套件
 
 執行 [Maven/maven-fetch-packages.bat](Maven/maven-fetch-packages.bat)。
 
 此步驟會依據前一步產生的鎖定檔，從 Maven Central 下載所有套件（含遞移相依）至 `Maven/packages/` 目錄。
+
+執行結果：
+
+![maven-fetch-packages](Maven/maven-fetch-packages.png)
 
 ### 注意事項
 
