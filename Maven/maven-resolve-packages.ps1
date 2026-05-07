@@ -79,16 +79,47 @@ do {
     $pomContent.Add('</project>')
     $pomContent | Set-Content 'pom.xml' -Encoding UTF8
 
+    # 建立 settings.xml
+    $settingsContent = [System.Collections.Generic.List[string]]::new()
+    $settingsContent.Add('<?xml version="1.0" encoding="UTF-8"?>')
+    $settingsContent.Add('<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"')
+    $settingsContent.Add('          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"')
+    $settingsContent.Add('          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd">')
+    $settingsContent.Add('    <profiles>')
+    $settingsContent.Add('        <profile>')
+    $settingsContent.Add('            <id>default</id>')
+    $settingsContent.Add('            <repositories>')
+    $settingsContent.Add('                <repository>')
+    $settingsContent.Add('                    <id>default</id>')
+    $settingsContent.Add("                    <url>$mavenCentralUrl</url>")
+    $settingsContent.Add('                    <releases><enabled>true</enabled></releases>')
+    $settingsContent.Add('                    <snapshots><enabled>false</enabled></snapshots>')
+    $settingsContent.Add('                </repository>')
+    $settingsContent.Add('                <repository>')
+    $settingsContent.Add('                    <id>central</id>')
+    $settingsContent.Add('                    <url>https://repo.maven.apache.org/maven2</url>')
+    $settingsContent.Add('                    <releases><enabled>false</enabled></releases>')
+    $settingsContent.Add('                    <snapshots><enabled>false</enabled></snapshots>')
+    $settingsContent.Add('                </repository>')
+    $settingsContent.Add('            </repositories>')
+    $settingsContent.Add('        </profile>')
+    $settingsContent.Add('    </profiles>')
+    $settingsContent.Add('    <activeProfiles>')
+    $settingsContent.Add('        <activeProfile>default</activeProfile>')
+    $settingsContent.Add('    </activeProfiles>')
+    $settingsContent.Add('    <localRepository>./.m2</localRepository>')
+    $settingsContent.Add('</settings>')
+    $settingsContent | Set-Content 'settings.xml' -Encoding UTF8
+
     # 解析套件清單
     & mvn dependency:list `
         "-DoutputFile=packages-lock.txt" `
-        "-DincludeScope=runtime" `
-        "-DexcludeTransitive=false" `
         "-Dsort=true" `
         "-Dstyle.color=never" `
         "-DappendOutput=false" `
-        "-Dmaven.repo.local=./.m2" `
-        "-DremoteRepositories=central::default::$mavenCentralUrl"
+        "-DincludeScope=runtime" `
+        "-DexcludeTransitive=false" `
+        "-s" "settings.xml"
     if ($LASTEXITCODE -ne 0) {
         Write-Host "[ERROR] mvn dependency:list 執行失敗"
         $exitCode = 1
@@ -168,7 +199,7 @@ do {
     Write-Host "[INFO] ------------------------------------------------------------------------"
 
     # 移除資料夾
-    foreach ($d in './.m2') {
+    foreach ($d in './.m2', './packages') {
         if (Test-Path $d) {
             Remove-Item -Path $d -Recurse -Force
         }
