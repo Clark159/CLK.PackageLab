@@ -44,10 +44,33 @@ do {
     Write-Host "-------------------------------------------------------------------------------"
     Write-Host
 
+    # 建立 settings.xml
+    $settingsContent = [System.Collections.Generic.List[string]]::new()
+    $settingsContent.Add('<?xml version="1.0" encoding="UTF-8"?>')
+    $settingsContent.Add('<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"')
+    $settingsContent.Add('          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"')
+    $settingsContent.Add('          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd">')
+    $settingsContent.Add('    <profiles>')
+    $settingsContent.Add('        <profile>')
+    $settingsContent.Add('            <id>default</id>')
+    $settingsContent.Add('            <repositories>')
+    $settingsContent.Add('                <repository>')
+    $settingsContent.Add('                    <id>central</id>')
+    $settingsContent.Add("                    <url>$mavenCentralUrl</url>")
+    $settingsContent.Add('                </repository>')
+    $settingsContent.Add('            </repositories>')
+    $settingsContent.Add('        </profile>')
+    $settingsContent.Add('    </profiles>')
+    $settingsContent.Add('    <activeProfiles>')
+    $settingsContent.Add('        <activeProfile>default</activeProfile>')
+    $settingsContent.Add('    </activeProfiles>')
+    $settingsContent.Add('    <localRepository>./.m2</localRepository>')
+    $settingsContent.Add('</settings>')
+    $settingsContent | Set-Content 'settings.xml' -Encoding UTF8
+
     # 下載基礎環境
     mvn dependency:go-offline `
-        "-Dmaven.repo.local=./.m2" `
-        "-DremoteRepositories=central::default::$mavenCentralUrl"
+        "-s" "settings.xml"
     if ($LASTEXITCODE -ne 0) {
         Write-Host "[ERROR] mvn dependency:go-offline 執行失敗 ($mavenCentralUrl)"
         $exitCode = 1
@@ -71,10 +94,9 @@ do {
 
     # 下載套件清單
     mvn dependency:copy-dependencies `
-        "-DincludeScope=runtime" `
         "-DoutputDirectory=./packages" `
-        "-Dmaven.repo.local=./.m2" `
-        "-DremoteRepositories=central::default::$packageCentralUrl"
+        "-DincludeScope=runtime" `
+        "-s" "settings.xml"
     if ($LASTEXITCODE -ne 0) {
         Write-Host "[ERROR] mvn dependency:copy-dependencies 執行失敗 ($packageCentralUrl)"
         $exitCode = 1
