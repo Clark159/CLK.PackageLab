@@ -8,6 +8,9 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 # ===== Variables =====
 $exitCode = 0
 $npmRegistryUrl = 'https://registry.npmjs.org'
+Add-Type -AssemblyName System.Web.Extensions
+$jsonSerializer = New-Object System.Web.Script.Serialization.JavaScriptSerializer
+$jsonSerializer.MaxJsonLength = [int]::MaxValue
 do {
 
 
@@ -44,25 +47,29 @@ do {
     Write-Host
 
     # 解析套件清單
+    # 建立 package-lock.json
     npm install --package-lock-only --registry $npmRegistryUrl
     if ($LASTEXITCODE -ne 0) {
         Write-Host "[ERROR] npm install --package-lock-only 執行失敗"
         $exitCode = 1
         break
     }
+    Write-Host
+    Write-Host
+    Write-Host "[INFO] ------------------------------------------------------------------------"
     Write-Host "[INFO] 已建立 package-lock.json"
 
-    # 過濾套件清單
-    $lockJson = Get-Content 'package-lock.json' -Encoding UTF8 -Raw | ConvertFrom-Json
-    $lockPackages = $lockJson.packages.PSObject.Properties |
-        Where-Object { $_.Name -ne '' -and $_.Value.dev -ne $true } |
+    # 建立 packages-lock.txt
+    $packageDictionary = $jsonSerializer.DeserializeObject((Get-Content 'package-lock.json' -Encoding UTF8 -Raw))
+    $packageList = $packageDictionary['packages'].Keys |
+        Where-Object { $_ -ne '' -and $packageDictionary['packages'][$_]['dev'] -ne $true } |
         ForEach-Object {
-            $pathParts = $_.Name -split 'node_modules/'
+            $pathParts = $_ -split 'node_modules/'
             $pkgName   = $pathParts[-1]
-            $version   = $_.Value.version
+            $version   = $packageDictionary['packages'][$_]['version']
             "$pkgName@$version"
         } | Sort-Object -Unique
-    $lockPackages | Set-Content 'packages-lock.txt' -Encoding UTF8
+    $packageList | Set-Content 'packages-lock.txt' -Encoding UTF8
     Write-Host "[INFO] 已建立 packages-lock.txt"
     Write-Host "[INFO] ------------------------------------------------------------------------"
 

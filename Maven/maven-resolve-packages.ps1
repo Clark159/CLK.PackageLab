@@ -119,7 +119,7 @@ do {
     }
     Write-Host "[INFO] 已建立 pom.xml" # 為了排版好看，改放這邊。
 
-    # 過濾套件清單
+    # 建立 packages-lock.txt
     $dependencyList = Get-Content 'packages-lock.txt' -Raw -Encoding UTF8
     $dependencyList = $dependencyList -split "`n" |
     Where-Object { $_ -match '^\s+\S+:\S+:\S+:\S+' } |
