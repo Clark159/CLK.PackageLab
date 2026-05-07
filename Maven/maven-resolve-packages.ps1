@@ -7,10 +7,10 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 
 # ===== Variables =====
 $exitCode = 0
-$projectGroupId      = 'com.example'
-$projectArtifactId   = 'packages'
-$projectVersion      = '1.0.0'
-$mavenCentralUrl = 'https://repo.maven.apache.org/maven2'
+$projectGroupId    = 'com.example'
+$projectArtifactId = 'packages'
+$projectVersion    = '1.0.0'
+$mavenCentralUrl   = 'https://repo.maven.apache.org/maven2'
 $xmlWriterSettings = [System.Xml.XmlWriterSettings]@{ Indent = $true; Encoding = [System.Text.UTF8Encoding]::new($false); IndentChars = '    '; }
 do {
 

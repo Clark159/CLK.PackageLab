@@ -7,7 +7,7 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 
 # ===== Variables =====
 $exitCode = 0
-$mavenCentralUrl = 'https://repo.maven.apache.org/maven2'
+$mavenCentralUrl   = 'https://repo.maven.apache.org/maven2'
 $packageCentralUrl = 'https://repo.maven.apache.org/maven2'
 do {
 
@@ -91,6 +91,30 @@ do {
             }
         }
     }
+
+    # 建立 settings.xml
+    $settingsContent = [System.Collections.Generic.List[string]]::new()
+    $settingsContent.Add('<?xml version="1.0" encoding="UTF-8"?>')
+    $settingsContent.Add('<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"')
+    $settingsContent.Add('          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"')
+    $settingsContent.Add('          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd">')
+    $settingsContent.Add('    <profiles>')
+    $settingsContent.Add('        <profile>')
+    $settingsContent.Add('            <id>default</id>')
+    $settingsContent.Add('            <repositories>')
+    $settingsContent.Add('                <repository>')
+    $settingsContent.Add('                    <id>central</id>')
+    $settingsContent.Add("                    <url>$packageCentralUrl</url>")
+    $settingsContent.Add('                </repository>')
+    $settingsContent.Add('            </repositories>')
+    $settingsContent.Add('        </profile>')
+    $settingsContent.Add('    </profiles>')
+    $settingsContent.Add('    <activeProfiles>')
+    $settingsContent.Add('        <activeProfile>default</activeProfile>')
+    $settingsContent.Add('    </activeProfiles>')
+    $settingsContent.Add('    <localRepository>./.m2</localRepository>')
+    $settingsContent.Add('</settings>')
+    $settingsContent | Set-Content 'settings.xml' -Encoding UTF8
 
     # 下載套件清單
     mvn dependency:copy-dependencies `
