@@ -51,10 +51,10 @@ do {
     $dependencyList = Get-Content 'packages-lock.txt' -Encoding UTF8 | Where-Object { $_.Trim() -ne '' }
     foreach ($dependency in $dependencyList) {
         $parts = $dependency -split ':'
-        if ($parts.Count -ge 4) {
+        if ($parts.Count -ge 3) {
             $groupId    = $parts[0]
             $artifactId = $parts[1]
-            $version    = $parts[3]
+            $version    = $parts[2]
             $dependencyPath = "./.m2/$($groupId -replace '\.', '/')/$artifactId/$version"
             if (Test-Path $dependencyPath) {
                 Remove-Item -Path $dependencyPath -Recurse -Force
@@ -78,10 +78,10 @@ do {
     $missingList = @()
     foreach ($dependency in $dependencyList) {
         $parts = $dependency -split ':'
-        if ($parts.Count -lt 4) { continue }
+        if ($parts.Count -lt 3) { continue }
         $artifactId = $parts[1]
-        $packaging  = $parts[2]
-        $version    = $parts[3]
+        $packaging  = 'jar'
+        $version    = $parts[2]
         $fileName   = "$artifactId-$version.$packaging"
         if (-not (Test-Path "./packages/$fileName")) {
             $missingList += $dependency

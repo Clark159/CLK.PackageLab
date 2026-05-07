@@ -10,7 +10,7 @@ $exitCode = 0
 $projectGroupId      = 'com.example'
 $projectArtifactId   = 'packages'
 $projectVersion      = '1.0.0'
-$mavenCentralUrl = 'https://repo.maven.apache.org/maven22'
+$mavenCentralUrl = 'https://repo.maven.apache.org/maven2'
 $xmlWriterSettings = [System.Xml.XmlWriterSettings]@{ Indent = $true; Encoding = [System.Text.UTF8Encoding]::new($false); IndentChars = '    '; }
 do {
 
@@ -103,7 +103,10 @@ do {
         ForEach-Object {
             ($_ -replace '\s*-- module.*', '').Trim()
         }
-    $dependencyList | Set-Content 'packages-lock.txt' -Encoding UTF8
+    $dependencyList | ForEach-Object {
+        $p = $_ -split ':'
+        "$($p[0]):$($p[1]):$($p[3])"
+    } | Set-Content 'packages-lock.txt' -Encoding UTF8
     Write-Host "[INFO] 已建立 packages-lock.txt"
 
     # 建立 packages-lock.xml
@@ -170,7 +173,7 @@ do {
             Remove-Item -Path $d -Recurse -Force
         }
     }
-    
+
 
 # ===== End =====
 } while ($false)
