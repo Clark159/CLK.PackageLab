@@ -92,8 +92,6 @@ do {
     $settingsContent.Add('                <repository>')
     $settingsContent.Add('                    <id>central</id>')
     $settingsContent.Add("                    <url>$mavenCentralUrl</url>")
-    $settingsContent.Add('                    <releases><enabled>true</enabled></releases>')
-    $settingsContent.Add('                    <snapshots><enabled>false</enabled></snapshots>')
     $settingsContent.Add('                </repository>')
     $settingsContent.Add('            </repositories>')
     $settingsContent.Add('        </profile>')
@@ -101,7 +99,7 @@ do {
     $settingsContent.Add('    <activeProfiles>')
     $settingsContent.Add('        <activeProfile>default</activeProfile>')
     $settingsContent.Add('    </activeProfiles>')
-    $settingsContent.Add('    <localRepository>./.m2</localRepository>')
+    #$settingsContent.Add('    <localRepository>./.m2</localRepository>')
     $settingsContent.Add('</settings>')
     $settingsContent | Set-Content 'settings.xml' -Encoding UTF8
 
