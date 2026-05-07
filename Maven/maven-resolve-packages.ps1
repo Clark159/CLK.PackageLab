@@ -34,7 +34,7 @@ do {
     }
 
     # 移除檔案
-    foreach ($f in 'pom.xml', 'packages-lock.txt', 'packages-lock.xml') {
+    foreach ($f in 'pom.xml', 'settings.xml', 'packages-lock.txt', 'packages-lock.xml') {
         if (Test-Path $f) {
             Remove-Item $f -Force
         }
@@ -173,6 +173,13 @@ do {
             Remove-Item -Path $d -Recurse -Force
         }
     }
+
+    # 移除檔案
+    foreach ($f in 'settings.xml') {
+        if (Test-Path $f) {
+            Remove-Item $f -Force
+        }
+    }  
 
 
 # ===== End =====

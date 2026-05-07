@@ -30,6 +30,13 @@ do {
         }
     }
 
+    # 移除檔案
+    foreach ($f in 'settings.xml') {
+        if (Test-Path $f) {
+            Remove-Item $f -Force
+        }
+    }  
+
 
     # ===== Execute =====
     Write-Host "-------------------------------------------------------------------------------"
@@ -105,6 +112,13 @@ do {
             Remove-Item -Path $d -Recurse -Force
         }
     }
+
+    # 移除檔案
+    foreach ($f in 'settings.xml') {
+        if (Test-Path $f) {
+            Remove-Item $f -Force
+        }
+    }  
 
 
 # ===== End =====
