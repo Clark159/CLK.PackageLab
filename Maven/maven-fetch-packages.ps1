@@ -12,8 +12,7 @@ $packageCentralUrl = 'https://repo.maven.apache.org/maven2'
 do {
 
 
-    # ===== Require =====
-    
+    # ===== Require =====    
     # 檢查檔案
     foreach ($f in 'pom.xml', 'packages-lock.txt', 'packages-lock.xml') {
         if (-not (Test-Path $f)) {
@@ -65,9 +64,9 @@ do {
 
     # 下載套件清單
     mvn dependency:copy-dependencies `
+        "-DincludeScope=runtime" `
         "-DoutputDirectory=./packages" `
         "-Dmaven.repo.local=./.m2" `
-        "-DincludeScope=runtime" `
         "-DremoteRepositories=central::default::$packageCentralUrl"
     if ($LASTEXITCODE -ne 0) {
         Write-Host "[ERROR] mvn dependency:copy-dependencies 執行失敗 ($packageCentralUrl)"

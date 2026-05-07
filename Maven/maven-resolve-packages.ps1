@@ -10,11 +10,12 @@ $exitCode = 0
 $projectGroupId      = 'com.example'
 $projectArtifactId   = 'packages'
 $projectVersion      = '1.0.0'
+$mavenCentralUrl = 'https://repo.maven.apache.org/maven22'
 $xmlWriterSettings = [System.Xml.XmlWriterSettings]@{ Indent = $true; Encoding = [System.Text.UTF8Encoding]::new($false); IndentChars = '    '; }
 do {
 
 
-    # ===== Require =====
+    # ===== Require =====    
     # 檢查檔案
     foreach ($f in 'packages.txt') {
         if (-not (Test-Path $f)) {
@@ -25,12 +26,19 @@ do {
     }
     if ($exitCode -ne 0) { break }
 
+    # 移除資料夾
+    foreach ($d in './.m2', './packages') {
+        if (Test-Path $d) {
+            Remove-Item -Path $d -Recurse -Force
+        }
+    }
+
     # 移除檔案
     foreach ($f in 'pom.xml', 'packages-lock.txt', 'packages-lock.xml') {
         if (Test-Path $f) {
             Remove-Item $f -Force
         }
-    }
+    }    
 
 
     # ===== Execute =====
@@ -78,7 +86,9 @@ do {
         "-DexcludeTransitive=false" `
         "-Dsort=true" `
         "-Dstyle.color=never" `
-        "-DappendOutput=false"
+        "-DappendOutput=false" `
+        "-Dmaven.repo.local=./.m2" `
+        "-DremoteRepositories=central::default::$mavenCentralUrl"
     if ($LASTEXITCODE -ne 0) {
         Write-Host "[ERROR] mvn dependency:list 執行失敗"
         $exitCode = 1
@@ -154,6 +164,13 @@ do {
     Write-Host "[INFO] 已掛載 packages-lock.xml 為 pom.xml 的 <parent>"
     Write-Host "[INFO] ------------------------------------------------------------------------"
 
+    # 移除資料夾
+    foreach ($d in './.m2') {
+        if (Test-Path $d) {
+            Remove-Item -Path $d -Recurse -Force
+        }
+    }
+    
 
 # ===== End =====
 } while ($false)
