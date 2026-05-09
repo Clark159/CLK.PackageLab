@@ -10,7 +10,7 @@ $exitCode = 0
 $projectGroupId    = 'com.example'
 $projectArtifactId = 'packages'
 $projectVersion    = '1.0.0'
-$mavenCentralUrl   = 'https://repo.maven.apache.org/maven2'
+$mavenSourceUrl   = 'https://repo.maven.apache.org/maven2'
 $xmlWriterSettings = [System.Xml.XmlWriterSettings]@{ Indent = $true; Encoding = [System.Text.UTF8Encoding]::new($false); IndentChars = '    '; }
 do {
 
@@ -91,13 +91,13 @@ do {
     $settingsContent.Add('            <repositories>')
     $settingsContent.Add('                <repository>')
     $settingsContent.Add('                    <id>central</id>')
-    $settingsContent.Add("                    <url>$mavenCentralUrl</url>")
+    $settingsContent.Add("                    <url>$mavenSourceUrl</url>")
     $settingsContent.Add('                </repository>')
     $settingsContent.Add('            </repositories>')
     $settingsContent.Add('            <pluginRepositories>')
     $settingsContent.Add('                <pluginRepository>')
     $settingsContent.Add('                    <id>central</id>')
-    $settingsContent.Add("                    <url>$mavenCentralUrl</url>")
+    $settingsContent.Add("                    <url>$mavenSourceUrl</url>")
     $settingsContent.Add('                </pluginRepository>')
     $settingsContent.Add('            </pluginRepositories>')
     $settingsContent.Add('        </profile>')

@@ -7,8 +7,8 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 
 # ===== Variables =====
 $exitCode = 0
-$mavenCentralUrl   = 'https://repo.maven.apache.org/maven2'
-$packageCentralUrl = 'https://repo.maven.apache.org/maven2'
+$mavenSourceUrl   = 'https://repo.maven.apache.org/maven2'
+$packageSourceUrl = 'https://repo.maven.apache.org/maven2'
 do {
 
 
@@ -56,13 +56,13 @@ do {
     $settingsContent.Add('            <repositories>')
     $settingsContent.Add('                <repository>')
     $settingsContent.Add('                    <id>central</id>')
-    $settingsContent.Add("                    <url>$mavenCentralUrl</url>")
+    $settingsContent.Add("                    <url>$mavenSourceUrl</url>")
     $settingsContent.Add('                </repository>')
     $settingsContent.Add('            </repositories>')
     $settingsContent.Add('            <pluginRepositories>')
     $settingsContent.Add('                <pluginRepository>')
     $settingsContent.Add('                    <id>central</id>')
-    $settingsContent.Add("                    <url>$mavenCentralUrl</url>")
+    $settingsContent.Add("                    <url>$mavenSourceUrl</url>")
     $settingsContent.Add('                </pluginRepository>')
     $settingsContent.Add('            </pluginRepositories>')
     $settingsContent.Add('        </profile>')
@@ -78,7 +78,7 @@ do {
     mvn dependency:go-offline `
         "-s" "settings.xml"
     if ($LASTEXITCODE -ne 0) {
-        Write-Host "[ERROR] mvn dependency:go-offline 執行失敗 ($mavenCentralUrl)"
+        Write-Host "[ERROR] mvn dependency:go-offline 執行失敗"
         $exitCode = 1
         break
     }
@@ -110,13 +110,13 @@ do {
     $settingsContent.Add('            <repositories>')
     $settingsContent.Add('                <repository>')
     $settingsContent.Add('                    <id>central</id>')
-    $settingsContent.Add("                    <url>$packageCentralUrl</url>")
+    $settingsContent.Add("                    <url>$packageSourceUrl</url>")
     $settingsContent.Add('                </repository>')
     $settingsContent.Add('            </repositories>')
     $settingsContent.Add('            <pluginRepositories>')
     $settingsContent.Add('                <pluginRepository>')
     $settingsContent.Add('                    <id>central</id>')
-    $settingsContent.Add("                    <url>$packageCentralUrl</url>")
+    $settingsContent.Add("                    <url>$packageSourceUrl</url>")
     $settingsContent.Add('                </pluginRepository>')
     $settingsContent.Add('            </pluginRepositories>')
     $settingsContent.Add('        </profile>')
@@ -134,7 +134,7 @@ do {
         "-DincludeScope=runtime" `
         "-s" "settings.xml"
     if ($LASTEXITCODE -ne 0) {
-        Write-Host "[ERROR] mvn dependency:copy-dependencies 執行失敗 ($packageCentralUrl)"
+        Write-Host "[ERROR] mvn dependency:copy-dependencies 執行失敗"
         $exitCode = 1
         break
     }
