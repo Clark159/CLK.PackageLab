@@ -10,7 +10,7 @@ $exitCode = 0
 $projectGroupId    = 'com.example'
 $projectArtifactId = 'packages'
 $projectVersion    = '1.0.0'
-$mavenSourceList  = @('https://repo.maven.apache.org/maven2')
+$mavenSourceList  = @('https://repo.maven.apache.org/maven2', 'https://maven.google.com')
 $xmlWriterSettings = [System.Xml.XmlWriterSettings]@{ Indent = $true; Encoding = [System.Text.UTF8Encoding]::new($false); IndentChars = '    '; }
 do {
 
