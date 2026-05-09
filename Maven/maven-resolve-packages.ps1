@@ -10,7 +10,7 @@ $exitCode = 0
 $projectGroupId    = 'com.example'
 $projectArtifactId = 'packages'
 $projectVersion    = '1.0.0'
-$mavenSourceUrl   = 'https://repo.maven.apache.org/maven2'
+$mavenSourceList  = @('https://repo.maven.apache.org/maven2')
 $xmlWriterSettings = [System.Xml.XmlWriterSettings]@{ Indent = $true; Encoding = [System.Text.UTF8Encoding]::new($false); IndentChars = '    '; }
 do {
 
@@ -89,16 +89,22 @@ do {
     $settingsContent.Add('        <profile>')
     $settingsContent.Add('            <id>default</id>')
     $settingsContent.Add('            <repositories>')
-    $settingsContent.Add('                <repository>')
-    $settingsContent.Add('                    <id>central</id>')
-    $settingsContent.Add("                    <url>$mavenSourceUrl</url>")
-    $settingsContent.Add('                </repository>')
+    for ($i = 0; $i -lt $mavenSourceList.Count; $i++) {
+        $settingsContent.Add('                <repository>')
+        if ($i -eq 0) { $settingsContent.Add('                    <id>central</id>') }
+        if ($i -ne 0) { $settingsContent.Add("                    <id>central-$i</id>") }
+        $settingsContent.Add("                    <url>$($mavenSourceList[$i])</url>")
+        $settingsContent.Add('                </repository>')
+    }
     $settingsContent.Add('            </repositories>')
     $settingsContent.Add('            <pluginRepositories>')
-    $settingsContent.Add('                <pluginRepository>')
-    $settingsContent.Add('                    <id>central</id>')
-    $settingsContent.Add("                    <url>$mavenSourceUrl</url>")
-    $settingsContent.Add('                </pluginRepository>')
+    for ($i = 0; $i -lt $mavenSourceList.Count; $i++) {
+        $settingsContent.Add('                <pluginRepository>')
+        if ($i -eq 0) { $settingsContent.Add('                    <id>central</id>') }
+        if ($i -ne 0) { $settingsContent.Add("                    <id>central-$i</id>") }
+        $settingsContent.Add("                    <url>$($mavenSourceList[$i])</url>")
+        $settingsContent.Add('                </pluginRepository>')
+    }
     $settingsContent.Add('            </pluginRepositories>')
     $settingsContent.Add('        </profile>')
     $settingsContent.Add('    </profiles>')

@@ -7,8 +7,8 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 
 # ===== Variables =====
 $exitCode = 0
-$mavenSourceUrl   = 'https://repo.maven.apache.org/maven2'
-$packageSourceUrl = 'https://repo.maven.apache.org/maven2'
+$mavenSourceList  = @('https://repo.maven.apache.org/maven2')
+$packageSourceList = @('https://repo.maven.apache.org/maven2')
 do {
 
 
@@ -54,16 +54,22 @@ do {
     $settingsContent.Add('        <profile>')
     $settingsContent.Add('            <id>default</id>')
     $settingsContent.Add('            <repositories>')
-    $settingsContent.Add('                <repository>')
-    $settingsContent.Add('                    <id>central</id>')
-    $settingsContent.Add("                    <url>$mavenSourceUrl</url>")
-    $settingsContent.Add('                </repository>')
+    for ($i = 0; $i -lt $mavenSourceList.Count; $i++) {
+        $settingsContent.Add('                <repository>')
+        if ($i -eq 0) { $settingsContent.Add('                    <id>central</id>') }
+        if ($i -ne 0) { $settingsContent.Add("                    <id>central-$i</id>") }
+        $settingsContent.Add("                    <url>$($mavenSourceList[$i])</url>")
+        $settingsContent.Add('                </repository>')
+    }
     $settingsContent.Add('            </repositories>')
     $settingsContent.Add('            <pluginRepositories>')
-    $settingsContent.Add('                <pluginRepository>')
-    $settingsContent.Add('                    <id>central</id>')
-    $settingsContent.Add("                    <url>$mavenSourceUrl</url>")
-    $settingsContent.Add('                </pluginRepository>')
+    for ($i = 0; $i -lt $mavenSourceList.Count; $i++) {
+        $settingsContent.Add('                <pluginRepository>')
+        if ($i -eq 0) { $settingsContent.Add('                    <id>central</id>') }
+        if ($i -ne 0) { $settingsContent.Add("                    <id>central-$i</id>") }
+        $settingsContent.Add("                    <url>$($mavenSourceList[$i])</url>")
+        $settingsContent.Add('                </pluginRepository>')
+    }
     $settingsContent.Add('            </pluginRepositories>')
     $settingsContent.Add('        </profile>')
     $settingsContent.Add('    </profiles>')
@@ -108,16 +114,22 @@ do {
     $settingsContent.Add('        <profile>')
     $settingsContent.Add('            <id>default</id>')
     $settingsContent.Add('            <repositories>')
-    $settingsContent.Add('                <repository>')
-    $settingsContent.Add('                    <id>central</id>')
-    $settingsContent.Add("                    <url>$packageSourceUrl</url>")
-    $settingsContent.Add('                </repository>')
+    for ($i = 0; $i -lt $packageSourceList.Count; $i++) {
+        $settingsContent.Add('                <repository>')
+        if ($i -eq 0) { $settingsContent.Add('                    <id>central</id>') }
+        if ($i -ne 0) { $settingsContent.Add("                    <id>central-$i</id>") }
+        $settingsContent.Add("                    <url>$($packageSourceList[$i])</url>")
+        $settingsContent.Add('                </repository>')
+    }
     $settingsContent.Add('            </repositories>')
     $settingsContent.Add('            <pluginRepositories>')
-    $settingsContent.Add('                <pluginRepository>')
-    $settingsContent.Add('                    <id>central</id>')
-    $settingsContent.Add("                    <url>$packageSourceUrl</url>")
-    $settingsContent.Add('                </pluginRepository>')
+    for ($i = 0; $i -lt $packageSourceList.Count; $i++) {
+        $settingsContent.Add('                <pluginRepository>')
+        if ($i -eq 0) { $settingsContent.Add('                    <id>central</id>') }
+        if ($i -ne 0) { $settingsContent.Add("                    <id>central-$i</id>") }
+        $settingsContent.Add("                    <url>$($packageSourceList[$i])</url>")
+        $settingsContent.Add('                </pluginRepository>')
+    }
     $settingsContent.Add('            </pluginRepositories>')
     $settingsContent.Add('        </profile>')
     $settingsContent.Add('    </profiles>')
