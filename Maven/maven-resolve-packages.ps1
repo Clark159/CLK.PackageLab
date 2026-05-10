@@ -11,7 +11,7 @@ $projectGroupId    = 'com.example'
 $projectArtifactId = 'packages'
 $projectVersion    = '1.0.0'
 $mavenSourceList  = @('https://repo.maven.apache.org/maven2', 'https://maven.google.com')
-$packageSourceUrl  = 'https://maven.google.com'
+$packageRepositoryUrl  = 'https://maven.google.com'
 $xmlWriterSettings = [System.Xml.XmlWriterSettings]@{ Indent = $true; Encoding = [System.Text.UTF8Encoding]::new($false); IndentChars = '    '; }
 do {
 
@@ -208,7 +208,7 @@ do {
         if ($parts.Count -ge 4) {
             $groupPath = $parts[0] -replace '\.', '/'
             $artifactId = $parts[1]
-            $packageUrl = "$packageSourceUrl/$groupPath/$artifactId/"
+            $packageUrl = "$packageRepositoryUrl/$groupPath/$artifactId/"
             $packageExists = $false
             try {
                 $null = Invoke-WebRequest -Uri $packageUrl -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop

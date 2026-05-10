@@ -8,13 +8,13 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 # ===== Variables =====
 $exitCode = 0
 $mavenSourceList  = @('https://repo.maven.apache.org/maven2', 'https://maven.google.com')
-$packageSourceUrl  = 'https://repo.maven.apache.org/maven2'
+$packageRepositoryUrl  = 'https://repo.maven.apache.org/maven2'
 do {
 
 
     # ===== Require =====    
     # 檢查檔案
-    foreach ($f in 'pom.xml', 'packages-lock.txt', 'packages-lock.xml') {
+    foreach ($f in 'pom.xml', 'packages-lock.txt', 'packages-lock.xml', 'packages-new.txt') {
         if (-not (Test-Path $f)) {
             Write-Host "[ERROR] 找不到 $f"
             $exitCode = 1
@@ -116,13 +116,13 @@ do {
     $settingsContent.Add('            <repositories>')
     $settingsContent.Add('                <repository>')
     $settingsContent.Add('                    <id>central</id>')
-    $settingsContent.Add("                    <url>$packageSourceUrl</url>")
+    $settingsContent.Add("                    <url>$packageRepositoryUrl</url>")
     $settingsContent.Add('                </repository>')
     $settingsContent.Add('            </repositories>')
     $settingsContent.Add('            <pluginRepositories>')
     $settingsContent.Add('                <pluginRepository>')
     $settingsContent.Add('                    <id>central</id>')
-    $settingsContent.Add("                    <url>$packageSourceUrl</url>")
+    $settingsContent.Add("                    <url>$packageRepositoryUrl</url>")
     $settingsContent.Add('                </pluginRepository>')
     $settingsContent.Add('            </pluginRepositories>')
     $settingsContent.Add('        </profile>')
