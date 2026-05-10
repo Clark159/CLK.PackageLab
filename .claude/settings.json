@@ -1,7 +1,11 @@
 {
   "permissions": {
+    "allow": [
+      "Bash(Select-Object Name)"
+    ],
     "additionalDirectories": [
-      "c:\\Lab\\CLK.PackageLab\\NPM"
+      "c:\\Lab\\CLK.PackageLab\\NPM",
+      "c:\\Lab\\CLK.PackageLab"
     ]
   }
 }
