@@ -11,7 +11,7 @@ $projectGroupId    = 'com.example'
 $projectArtifactId = 'packages'
 $projectVersion    = '1.0.0'
 $mavenSourceList  = @('https://repo.maven.apache.org/maven2', 'https://maven.google.com')
-$packageSourceUrl  = 'https://repo.maven.apache.org/maven2'
+$packageSourceUrl  = 'https://maven.google.com'
 $xmlWriterSettings = [System.Xml.XmlWriterSettings]@{ Indent = $true; Encoding = [System.Text.UTF8Encoding]::new($false); IndentChars = '    '; }
 do {
 
@@ -116,7 +116,7 @@ do {
     $settingsContent.Add('</settings>')
     Set-Content 'settings.xml' -Value $settingsContent -Encoding UTF8
 
-    # 解析套件清單
+    # 建立 packages-lock.txt
     & mvn dependency:list `
         "-DoutputFile=packages-lock.txt" `
         "-Dsort=true" `
@@ -129,21 +129,19 @@ do {
         Write-Host "[ERROR] mvn dependency:list 執行失敗"
         $exitCode = 1
         break
-    }
-    Write-Host "[INFO] 已建立 pom.xml" # 為了排版好看，改放這邊。
-
-    # 建立 packages-lock.txt
+    }        
     $dependencyList = Get-Content 'packages-lock.txt' -Raw -Encoding UTF8
     $dependencyList = $dependencyList -split "`n" |
     Where-Object { $_ -match '^\s+\S+:\S+:\S+:\S+' } |
         ForEach-Object {
             ($_ -replace '\s*-- module.*', '').Trim()
         }
-    $lockContent = $dependencyList | ForEach-Object {
-        $p = $_ -split ':'
-        "$($p[0]):$($p[1]):$($p[3])"
+    $lockDependencyContent = $dependencyList | ForEach-Object {
+        $parts = $_ -split ':'
+        "$($parts[0]):$($parts[1]):$($parts[3])"
     }
-    Set-Content 'packages-lock.txt' -Value $lockContent -Encoding UTF8
+    Set-Content 'packages-lock.txt' -Value $lockDependencyContent -Encoding UTF8
+    Write-Host "[INFO] 已建立 pom.xml" # 為了排版好看，改放這邊。
     Write-Host "[INFO] 已建立 packages-lock.txt"
 
     # 建立 packages-lock.xml
@@ -204,7 +202,7 @@ do {
     Write-Host "[INFO] 已掛載 packages-lock.xml 為 pom.xml 的 <parent>"
 
     # 建立 packages-new.txt
-    $newPackageList = [System.Collections.Generic.List[string]]::new()
+    $newDependencyList = [System.Collections.Generic.List[string]]::new()
     foreach ($dependency in $dependencyList) {
         $parts = $dependency -split ':'
         if ($parts.Count -ge 4) {
@@ -223,11 +221,15 @@ do {
                 }
             }
             if (-not $packageExists) {
-                $newPackageList.Add($dependency)
+                $newDependencyList.Add($dependency)
             }
         }
     }
-    Set-Content 'packages-new.txt' -Value $newPackageList -Encoding UTF8
+    $newDependencyContent = $newDependencyList | ForEach-Object {
+        $parts = $_ -split ':'
+        "$($parts[0]):$($parts[1]):$($parts[3])"
+    }
+    Set-Content 'packages-new.txt' -Value $newDependencyContent -Encoding UTF8
     Write-Host "[INFO] 已建立 packages-new.txt"
     Write-Host "[INFO] ------------------------------------------------------------------------"
 
