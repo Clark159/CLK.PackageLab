@@ -132,8 +132,7 @@ do {
     }
     
     $dependencyList = Get-Content 'packages-lock.txt' -Raw -Encoding UTF8
-    $dependencyList = $dependencyList -split "`n" |
-    Where-Object { $_ -match '^\s+\S+:\S+:\S+:\S+' } |
+    $dependencyList = $dependencyList -split "`n" | Where-Object { $_ -match '^\s+\S+:\S+:\S+:\S+' } |
         ForEach-Object {
             ($_ -replace '\s*-- module.*', '').Trim()
         }
