@@ -11,6 +11,7 @@ $projectGroupId    = 'com.example'
 $projectArtifactId = 'packages'
 $projectVersion    = '1.0.0'
 $mavenSourceList  = @('https://repo.maven.apache.org/maven2', 'https://maven.google.com')
+$packageSourceUrl  = 'https://repo.maven.apache.org/maven2'
 $xmlWriterSettings = [System.Xml.XmlWriterSettings]@{ Indent = $true; Encoding = [System.Text.UTF8Encoding]::new($false); IndentChars = '    '; }
 do {
 
@@ -34,7 +35,7 @@ do {
     }
 
     # 移除檔案
-    foreach ($f in 'pom.xml', 'settings.xml', 'packages-lock.txt', 'packages-lock.xml') {
+    foreach ($f in 'pom.xml', 'settings.xml', 'packages-lock.txt', 'packages-lock.xml', 'packages-new.txt') {
         if (Test-Path $f) {
             Remove-Item $f -Force
         }
@@ -77,7 +78,7 @@ do {
     }
     $pomContent.Add('    </dependencies>')
     $pomContent.Add('</project>')
-    $pomContent | Set-Content 'pom.xml' -Encoding UTF8
+    Set-Content 'pom.xml' -Value $pomContent -Encoding UTF8
 
     # 建立 settings.xml
     $settingsContent = [System.Collections.Generic.List[string]]::new()
@@ -113,7 +114,7 @@ do {
     $settingsContent.Add('    </activeProfiles>')
     #$settingsContent.Add('    <localRepository>./.m2</localRepository>')
     $settingsContent.Add('</settings>')
-    $settingsContent | Set-Content 'settings.xml' -Encoding UTF8
+    Set-Content 'settings.xml' -Value $settingsContent -Encoding UTF8
 
     # 解析套件清單
     & mvn dependency:list `
@@ -138,10 +139,11 @@ do {
         ForEach-Object {
             ($_ -replace '\s*-- module.*', '').Trim()
         }
-    $dependencyList | ForEach-Object {
+    $lockContent = $dependencyList | ForEach-Object {
         $p = $_ -split ':'
         "$($p[0]):$($p[1]):$($p[3])"
-    } | Set-Content 'packages-lock.txt' -Encoding UTF8
+    }
+    Set-Content 'packages-lock.txt' -Value $lockContent -Encoding UTF8
     Write-Host "[INFO] 已建立 packages-lock.txt"
 
     # 建立 packages-lock.xml
@@ -183,7 +185,7 @@ do {
     $bomContent.Add('        </dependencies>')
     $bomContent.Add('    </dependencyManagement>')
     $bomContent.Add('</project>')
-    $bomContent | Set-Content 'packages-lock.xml' -Encoding UTF8
+    Set-Content 'packages-lock.xml' -Value $bomContent -Encoding UTF8
     Write-Host "[INFO] 已建立 packages-lock.xml"
 
     # 掛載 packages-lock.xml 為 pom.xml 的 <parent>
@@ -200,6 +202,33 @@ do {
     $pomDocument.Save($pomDocumentWriter); 
     $pomDocumentWriter.Dispose() 
     Write-Host "[INFO] 已掛載 packages-lock.xml 為 pom.xml 的 <parent>"
+
+    # 建立 packages-new.txt
+    $newPackageList = [System.Collections.Generic.List[string]]::new()
+    foreach ($package in (Get-Content 'packages-lock.txt' -Encoding UTF8 | Where-Object { $_ -match '\S' })) {
+        $parts = $package -split ':'
+        if ($parts.Count -ge 2) {
+            $groupPath = $parts[0] -replace '\.', '/'
+            $artifactId = $parts[1]
+            $packageUrl = "$packageSourceUrl/$groupPath/$artifactId/"
+            $packageExists = $false
+            try {
+                $null = Invoke-WebRequest -Uri $packageUrl -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
+                $packageExists = $true
+            } catch {
+                if ($_.Exception.Response -and $_.Exception.Response.StatusCode.value__ -eq 404) {
+                    $packageExists = $false
+                } else {
+                    $packageExists = $true
+                }
+            }
+            if (-not $packageExists) {
+                $newPackageList.Add($package)
+            }
+        }
+    }
+    Set-Content 'packages-new.txt' -Value $newPackageList -Encoding UTF8
+    Write-Host "[INFO] 已建立 packages-new.txt"
     Write-Host "[INFO] ------------------------------------------------------------------------"
 
     # 移除資料夾

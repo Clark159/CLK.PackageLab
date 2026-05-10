@@ -78,7 +78,7 @@ do {
     $settingsContent.Add('    </activeProfiles>')
     $settingsContent.Add('    <localRepository>./.m2</localRepository>')
     $settingsContent.Add('</settings>')
-    $settingsContent | Set-Content 'settings.xml' -Encoding UTF8
+    Set-Content 'settings.xml' -Value $settingsContent -Encoding UTF8
 
     # 下載基礎環境
     mvn dependency:go-offline `
@@ -132,7 +132,7 @@ do {
     $settingsContent.Add('    </activeProfiles>')
     $settingsContent.Add('    <localRepository>./.m2</localRepository>')
     $settingsContent.Add('</settings>')
-    $settingsContent | Set-Content 'settings.xml' -Encoding UTF8
+    Set-Content 'settings.xml' -Value $settingsContent -Encoding UTF8
 
     # 下載套件清單
     mvn dependency:copy-dependencies `
