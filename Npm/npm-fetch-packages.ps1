@@ -47,7 +47,7 @@ do {
     # 建立 .npmrc
     $npmrcContent = [System.Collections.Generic.List[string]]::new()
     $npmrcContent.Add("registry=$($npmSourceList[0])")
-    $npmrcContent | Set-Content '.npmrc' -Encoding UTF8
+    Set-Content '.npmrc' -Value $npmrcContent -Encoding UTF8
 
     # 下載基礎環境
     & npm install --ignore-scripts --cache './.npm-cache'
@@ -73,7 +73,7 @@ do {
     # 建立 .npmrc (packageSourceList)
     $npmrcContent = [System.Collections.Generic.List[string]]::new()
     $npmrcContent.Add("registry=$($packageSourceList[0])")
-    $npmrcContent | Set-Content '.npmrc' -Encoding UTF8
+    Set-Content '.npmrc' -Value $npmrcContent -Encoding UTF8
 
     # 下載套件清單
     New-Item -ItemType Directory -Path './packages' -Force | Out-Null

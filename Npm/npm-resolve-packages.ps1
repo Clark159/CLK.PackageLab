@@ -61,12 +61,12 @@ do {
         private      = $true
         dependencies = $dependencies
     }
-    $packageJson | ConvertTo-Json -Depth 10 | Set-Content 'package.json' -Encoding UTF8
+    Set-Content 'package.json' -Value ($packageJson | ConvertTo-Json -Depth 10) -Encoding UTF8
 
     # 建立 .npmrc
     $npmrcContent = [System.Collections.Generic.List[string]]::new()
     $npmrcContent.Add("registry=$($npmSourceList[0])")
-    $npmrcContent | Set-Content '.npmrc' -Encoding UTF8
+    Set-Content '.npmrc' -Value $npmrcContent -Encoding UTF8
 
     # 解析套件清單
     & npm install --package-lock-only --ignore-scripts
@@ -93,9 +93,9 @@ do {
             if ($_.Value.integrity) { $bomEntry['integrity'] = $_.Value.integrity }
             $bomJson[$pkgName] = $bomEntry
         }
-    $resolvedList | Set-Content 'packages-lock.txt' -Encoding UTF8
+    Set-Content 'packages-lock.txt' -Value $resolvedList -Encoding UTF8
     Write-Host "[INFO] 已建立 packages-lock.txt"
-    $bomJson | ConvertTo-Json -Depth 10 | Set-Content 'packages-lock.json' -Encoding UTF8
+    Set-Content 'packages-lock.json' -Value ($bomJson | ConvertTo-Json -Depth 10) -Encoding UTF8
     Write-Host "[INFO] 已建立 packages-lock.json"
     Write-Host "[INFO] ------------------------------------------------------------------------"
 

@@ -205,9 +205,9 @@ do {
 
     # 建立 packages-new.txt
     $newPackageList = [System.Collections.Generic.List[string]]::new()
-    foreach ($package in (Get-Content 'packages-lock.txt' -Encoding UTF8 | Where-Object { $_ -match '\S' })) {
-        $parts = $package -split ':'
-        if ($parts.Count -ge 2) {
+    foreach ($dependency in $dependencyList) {
+        $parts = $dependency -split ':'
+        if ($parts.Count -ge 4) {
             $groupPath = $parts[0] -replace '\.', '/'
             $artifactId = $parts[1]
             $packageUrl = "$packageSourceUrl/$groupPath/$artifactId/"
@@ -223,7 +223,7 @@ do {
                 }
             }
             if (-not $packageExists) {
-                $newPackageList.Add($package)
+                $newPackageList.Add($dependency)
             }
         }
     }
