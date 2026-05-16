@@ -12,7 +12,17 @@ $packageSourceUrl  = 'https://repo.maven.apache.org/maven2'
 do {
 
 
-    # ===== Require =====    
+    # ===== Require =====
+    # 檢查參數
+    $ticketNumber = Split-Path -Leaf (Get-Location)
+    Write-Host "$ticketNumber"
+    #if ($ticketNumber -notmatch '^\d{12}-\d{2}$') {
+    #    Write-Host "[ERROR] 資料夾名稱必須為需求單號"
+    #    $exitCode = 1
+    #    break
+    #}
+    #$packageSourceUrl = "$packageSourceUrl/$ticketNumber"
+
     # 檢查檔案
     foreach ($f in 'pom.xml', 'packages-lock.txt', 'packages-lock.xml', 'packages-new.txt') {
         if (-not (Test-Path $f)) {
