@@ -11,7 +11,7 @@ $projectGroupId    = 'com.example'
 $projectArtifactId = 'packages'
 $projectVersion    = '1.0.0'
 $mavenSourceList  = @('https://repo.maven.apache.org/maven2', 'https://maven.google.com')
-$packageRepositoryUrl  = 'https://maven.google.com'
+$packageRepositoryUrl  = 'https://google.com'
 $xmlWriterSettings = [System.Xml.XmlWriterSettings]@{ Indent = $true; Encoding = [System.Text.UTF8Encoding]::new($false); IndentChars = '    '; }
 do {
 
@@ -48,7 +48,7 @@ do {
     Write-Host "-------------------------------------------------------------------------------"
     Write-Host
 
-    # 建立 settings.xml
+    # 建立 settings.xml - mavenSourceList
     $settingsContent = [System.Collections.Generic.List[string]]::new()
     $settingsContent.Add('<?xml version="1.0" encoding="UTF-8"?>')
     $settingsContent.Add('<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"')

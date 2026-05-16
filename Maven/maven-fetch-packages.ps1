@@ -8,7 +8,7 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 # ===== Variables =====
 $exitCode = 0
 $mavenSourceList  = @('https://repo.maven.apache.org/maven2', 'https://maven.google.com')
-$packageRepositoryUrl  = 'https://repo.maven.apache.org/maven2'
+$packageSourceUrl  = 'https://repo.maven.apache.org/maven2'
 do {
 
 
@@ -44,7 +44,7 @@ do {
     Write-Host "-------------------------------------------------------------------------------"
     Write-Host
 
-    # 建立 settings.xml
+    # 建立 settings.xml - mavenSourceList
     $settingsContent = [System.Collections.Generic.List[string]]::new()
     $settingsContent.Add('<?xml version="1.0" encoding="UTF-8"?>')
     $settingsContent.Add('<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"')
@@ -104,7 +104,7 @@ do {
         }
     }
 
-    # 建立 settings.xml
+    # 建立 settings.xml - packageSourceUrl
     $settingsContent = [System.Collections.Generic.List[string]]::new()
     $settingsContent.Add('<?xml version="1.0" encoding="UTF-8"?>')
     $settingsContent.Add('<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"')
@@ -116,13 +116,13 @@ do {
     $settingsContent.Add('            <repositories>')
     $settingsContent.Add('                <repository>')
     $settingsContent.Add('                    <id>central</id>')
-    $settingsContent.Add("                    <url>$packageRepositoryUrl</url>")
+    $settingsContent.Add("                    <url>$packageSourceUrl</url>")
     $settingsContent.Add('                </repository>')
     $settingsContent.Add('            </repositories>')
     $settingsContent.Add('            <pluginRepositories>')
     $settingsContent.Add('                <pluginRepository>')
     $settingsContent.Add('                    <id>central</id>')
-    $settingsContent.Add("                    <url>$packageRepositoryUrl</url>")
+    $settingsContent.Add("                    <url>$packageSourceUrl</url>")
     $settingsContent.Add('                </pluginRepository>')
     $settingsContent.Add('            </pluginRepositories>')
     $settingsContent.Add('        </profile>')
