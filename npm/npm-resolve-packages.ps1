@@ -7,11 +7,11 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 
 # ===== Variables =====
 $exitCode = 0
-$npmRegistryUrl = 'https://registry.npmjs.org'
 $platformList = @(
-    @{ platform = 'linux'; arch = 'x64' },
-    @{ platform = 'win32'; arch = 'x64' }
+    @{ os = 'linux'; cpu = 'x64' },
+    @{ os = 'win32'; cpu = 'x64' }
 )
+$npmSourceUrl = 'https://registry.npmjs.org'
 do {
 
 
@@ -24,7 +24,6 @@ do {
             break
         }
     }
-    if ($exitCode -ne 0) { break }
 
     # 移除資料夾
     foreach ($d in './node_modules', './packages') {
@@ -39,16 +38,19 @@ do {
             Remove-Item $f -Force
         }
     }
-
+    Get-Item 'package-lock-*.json' -ErrorAction SilentlyContinue | Remove-Item -Force
+    
 
     # ===== Execute =====
     Write-Host "-------------------------------------------------------------------------------"
     Write-Host "npm-resolve-packages"
     Write-Host "-------------------------------------------------------------------------------"
     Write-Host
+    Write-Host "[INFO] Scanning for projects..."
+    Write-Host "[INFO]"
 
-    # 建立 package.json
-    $packageList = @(Get-Content 'packages.txt' -Encoding UTF8 | Where-Object { $_ -match '\S' })
+    # 建立 package.json   
+    $packageList = @(Get-Content 'packages.txt' -Encoding UTF8 | Where-Object { $_ -match '\S' -and $_ -notmatch '^\s*#' })
     $packageJsonContent = [System.Collections.Generic.List[string]]::new()
     $packageJsonContent.Add('{')
     $packageJsonContent.Add('    "name": "packages",')
@@ -60,15 +62,26 @@ do {
         $packageName    = $parts[0]
         $packageVersion = $parts[1]
         $comma = if ($i -lt $packageList.Count - 1) { ',' } else { '' }
-        $packageJsonContent.Add("    `"$packageName`": `"$packageVersion`"$comma")
+        $packageJsonContent.Add("        `"$packageName`": `"$packageVersion`"$comma")
     }
     $packageJsonContent.Add('    }')
     $packageJsonContent.Add('}')
     Set-Content 'package.json' -Value $packageJsonContent -Encoding UTF8
-   
+    Write-Host "[INFO] 已建立 package.json"
+    Write-Host "[INFO] ------------------------------------------------------------------------"
 
-   
-
+    # 建立 package-lock.json
+    foreach ($platform in $platformList) {
+        & npm install --package-lock-only --ignore-scripts --silent --os=$($platform.os) --cpu=$($platform.cpu)
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "[ERROR] npm install 失敗 (os=$($platform.os) cpu=$($platform.cpu))"
+            $exitCode = 1
+            break
+        }
+        Rename-Item 'package-lock.json' "package-lock-$($platform.os)-$($platform.cpu).json"
+        Write-Host "[INFO] 已建立 package-lock-$($platform.os)-$($platform.cpu).json"
+    }
+    Write-Host "[INFO] ------------------------------------------------------------------------"
 
 # ===== End =====
 } while ($false)
