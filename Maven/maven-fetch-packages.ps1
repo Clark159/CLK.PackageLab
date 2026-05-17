@@ -152,7 +152,8 @@ do {
         break
     }
 
-    # 比對套件清單
+    # 複製目標套件
+    New-Item -ItemType Directory -Force './packages' | Out-Null
     $missingList = @()
     foreach ($dependency in $dependencyList) {
         $parts = $dependency -split ':'
@@ -160,22 +161,24 @@ do {
             $groupId    = $parts[0]
             $artifactId = $parts[1]
             $version    = $parts[2]
-            $groupPath  = $groupId -replace '\.', '/'
-            $dependencyPath    = "./.m2/$groupPath/$artifactId/$version/$artifactId-$version.jar"
-            if (-not (Test-Path $dependencyPath)) {
+            $dependencyPath = "./.m2/$($groupId -replace '\.', '/')/$artifactId/$version"
+            if (Test-Path $dependencyPath) {
+                Copy-Item -Path $dependencyPath -Destination './packages/' -Recurse -Force
+            } else {
                 $missingList += $dependency
             }
         }
     }
-    if ($missingList.Count -gt 0) {
-        Write-Host "[ERROR] 套件下載失敗，缺少 $($missingList.Count) 個套件"
-        $missingList | ForEach-Object { Write-Host "[ERROR] $_" }
-        Write-Host "[ERROR] ------------------------------------------------------------------------"
-    } else {
+    if ($missingList.Count -eq 0) {
         Write-Host "[INFO] 套件下載完成，取得 $($dependencyList.Count) 個套件"
         $dependencyList | ForEach-Object { Write-Host "[INFO] $_" }
         Write-Host "[INFO] ------------------------------------------------------------------------"
+    } else {
+        Write-Host "[ERROR] 套件下載失敗，缺少 $($missingList.Count) 個套件"
+        $missingList | ForEach-Object { Write-Host "[ERROR] $_" }
+        Write-Host "[ERROR] ------------------------------------------------------------------------"
     }
+
 
     # 移除資料夾
     foreach ($d in './.m2') {
