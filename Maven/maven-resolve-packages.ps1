@@ -122,7 +122,6 @@ do {
         "-Dsort=true" `
         "-Dstyle.color=never" `
         "-DappendOutput=false" `
-        "-DincludeScope=runtime" `
         "-DexcludeTransitive=false" `
         "-s" "settings.xml"
     if ($LASTEXITCODE -ne 0) {
