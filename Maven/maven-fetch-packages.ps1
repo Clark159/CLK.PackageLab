@@ -93,7 +93,7 @@ do {
     mvn dependency:go-offline `
         "-s" "settings.xml"
     if ($LASTEXITCODE -ne 0) {
-        Write-Host "[ERROR] mvn dependency:go-offline 執行失敗"
+        Write-Host "[ERROR] mvn dependency:go-offline 執行失敗 (mavenSourceList)"
         $exitCode = 1
         break
     }
@@ -144,12 +144,10 @@ do {
     }
 
     # 下載目標套件
-    mvn dependency:copy-dependencies `
-        "-DoutputDirectory=./packages" `
-        "-DincludeScope=runtime" `
+    mvn dependency:resolve `
         "-s" "settings.xml"
     if ($LASTEXITCODE -ne 0) {
-        Write-Host "[ERROR] mvn dependency:copy-dependencies 執行失敗"
+        Write-Host "[ERROR] mvn dependency:resolve 執行失敗 (mavenSourceProxyUrl)"
         $exitCode = 1
         break
     }
