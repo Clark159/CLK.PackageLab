@@ -90,7 +90,7 @@ do {
     $settingsContent.Add('</settings>')
     Set-Content 'settings.xml' -Value $settingsContent -Encoding UTF8
 
-    # 下載基礎環境
+    # 下載所有套件
     mvn dependency:go-offline `
         "-s" "settings.xml"
     if ($LASTEXITCODE -ne 0) {
@@ -99,7 +99,7 @@ do {
         break
     }
 
-    # 刪除套件快取
+    # 刪除目標套件
     $dependencyList = Get-Content 'packages-lock.txt' -Encoding UTF8 | Where-Object { $_.Trim() -ne '' }
     foreach ($dependency in $dependencyList) {
         $parts = $dependency -split ':'
@@ -144,7 +144,7 @@ do {
     $settingsContent.Add('</settings>')
     Set-Content 'settings.xml' -Value $settingsContent -Encoding UTF8
 
-    # 下載套件清單
+    # 下載目標套件
     mvn dependency:copy-dependencies `
         "-DoutputDirectory=./packages" `
         "-DincludeScope=runtime" `
