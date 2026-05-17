@@ -28,7 +28,7 @@
   <parent>
     <groupId>org.apache.httpcomponents.client5</groupId>
     <artifactId>httpclient5-parent</artifactId>
-    <version>5.3</version>
+    <version>5.4.3</version>
   </parent>
   <artifactId>httpclient5</artifactId>
   <name>Apache HttpClient</name>
@@ -108,12 +108,18 @@
             <include>**/*.properties</include>
         </includes>
       </resource>
+      <resource>
+        <directory>src/main/resources</directory>
+        <includes>
+            <include>**/*.dat</include>
+        </includes>
+      </resource>
     </resources>
     <plugins>
       <plugin>
         <groupId>com.googlecode.maven-download-plugin</groupId>
         <artifactId>download-maven-plugin</artifactId>
-        <version>1.7.1</version>
+        <version>1.9.0</version>
         <executions>
           <execution>
             <id>download-public-suffix-list</id>
@@ -123,8 +129,7 @@
             </goals>
             <configuration>
               <url>https://publicsuffix.org/list/effective_tld_names.dat</url>
-              <outputDirectory>${project.build.outputDirectory}/mozilla</outputDirectory>
-              <outputFileName>public-suffix-list.txt</outputFileName>
+              <outputDirectory>${project.basedir}/src/main/resources/org/publicsuffix/list</outputDirectory>
             </configuration>
           </execution>
         </executions>
