@@ -171,15 +171,15 @@ do {
         }
     }
     if ($missingList.Count -eq 0) {
-        Write-Host "[INFO] 套件下載完成，取得 $($dependencyList.Count) 個套件"
         $dependencyList | ForEach-Object { Write-Host "[INFO] $_" }
+        Write-Host "[INFO] 套件下載完成，取得 $($dependencyList.Count) 個套件"
         Write-Host "[INFO] ------------------------------------------------------------------------"
     } else {
-        Write-Host "[ERROR] 套件下載失敗，缺少 $($missingList.Count) 個套件"
         $missingList | ForEach-Object { Write-Host "[ERROR] $_" }
+        Write-Host "[ERROR] 套件下載失敗，缺少 $($missingList.Count) 個套件"
         Write-Host "[ERROR] ------------------------------------------------------------------------"
+        $exitCode = 1
     }
-
 
     # 移除資料夾
     foreach ($d in './.m2') {
