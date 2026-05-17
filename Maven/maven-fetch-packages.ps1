@@ -15,7 +15,6 @@ do {
     # ===== Require =====
     # 檢查參數
     $ticketNumber = Split-Path -Leaf (Get-Location)
-    Write-Host "$ticketNumber"
     #if ($ticketNumber -notmatch '^\d{12}-\d{2}$') {
     #    Write-Host "[ERROR] 資料夾名稱必須為需求單號"
     #    $exitCode = 1
