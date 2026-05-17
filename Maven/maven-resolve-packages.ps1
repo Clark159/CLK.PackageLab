@@ -125,7 +125,7 @@ do {
         "-DexcludeTransitive=false" `
         "-s" "settings.xml"
     if ($LASTEXITCODE -ne 0) {
-        Write-Host "[ERROR] mvn dependency:list 執行失敗"
+        Write-Host "[ERROR] mvn dependency:list 執行失敗 (mavenSourceList)"
         $exitCode = 1
         break
     }
