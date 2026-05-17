@@ -1,4 +1,4 @@
-param(
+﻿param(
     [switch]$Pause
 )
 Set-Location -Path $PSScriptRoot
