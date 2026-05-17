@@ -48,6 +48,38 @@ do {
     Write-Host "-------------------------------------------------------------------------------"
     Write-Host
 
+    # 建立 pom.xml
+    $packageList = Get-Content 'packages.txt' -Encoding UTF8 | Where-Object { $_ -match '\S' }
+    $pomContent = [System.Collections.Generic.List[string]]::new()
+    $pomContent.Add('<?xml version="1.0" encoding="UTF-8"?>')
+    $pomContent.Add('<project xmlns="http://maven.apache.org/POM/4.0.0"')
+    $pomContent.Add('         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"')
+    $pomContent.Add('         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">')
+    $pomContent.Add("    <modelVersion>4.0.0</modelVersion>")
+    $pomContent.Add('')
+    $pomContent.Add("    <groupId>$projectGroupId</groupId>")
+    $pomContent.Add("    <artifactId>$projectArtifactId</artifactId>")
+    $pomContent.Add("    <version>$projectVersion</version>")
+    $pomContent.Add('    <packaging>pom</packaging>')
+    $pomContent.Add('')
+    $pomContent.Add('    <dependencies>')
+    foreach ($package in $packageList) {
+        $parts = $package -split ':'
+        if ($parts.Count -ge 3) {
+            $packageGroupId    = $parts[0]
+            $packageArtifactId = $parts[1]
+            $packageVersion    = $parts[2]
+            $pomContent.Add('        <dependency>')
+            $pomContent.Add("            <groupId>$packageGroupId</groupId>")
+            $pomContent.Add("            <artifactId>$packageArtifactId</artifactId>")
+            $pomContent.Add("            <version>$packageVersion</version>")
+            $pomContent.Add('        </dependency>')
+        }
+    }
+    $pomContent.Add('    </dependencies>')
+    $pomContent.Add('</project>')
+    Set-Content 'pom.xml' -Value $pomContent -Encoding UTF8    
+
     # 建立 settings.xml - mavenSourceList
     $settingsContent = [System.Collections.Generic.List[string]]::new()
     $settingsContent.Add('<?xml version="1.0" encoding="UTF-8"?>')
@@ -82,41 +114,9 @@ do {
     $settingsContent.Add('    </activeProfiles>')
     #$settingsContent.Add('    <localRepository>./.m2</localRepository>')
     $settingsContent.Add('</settings>')
-    Set-Content 'settings.xml' -Value $settingsContent -Encoding UTF8
+    Set-Content 'settings.xml' -Value $settingsContent -Encoding UTF8    
 
-    # 建立 pom.xml
-    $packageList = Get-Content 'packages.txt' -Encoding UTF8 | Where-Object { $_ -match '\S' }
-    $pomContent = [System.Collections.Generic.List[string]]::new()
-    $pomContent.Add('<?xml version="1.0" encoding="UTF-8"?>')
-    $pomContent.Add('<project xmlns="http://maven.apache.org/POM/4.0.0"')
-    $pomContent.Add('         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"')
-    $pomContent.Add('         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">')
-    $pomContent.Add("    <modelVersion>4.0.0</modelVersion>")
-    $pomContent.Add('')
-    $pomContent.Add("    <groupId>$projectGroupId</groupId>")
-    $pomContent.Add("    <artifactId>$projectArtifactId</artifactId>")
-    $pomContent.Add("    <version>$projectVersion</version>")
-    $pomContent.Add('    <packaging>pom</packaging>')
-    $pomContent.Add('')
-    $pomContent.Add('    <dependencies>')
-    foreach ($package in $packageList) {
-        $parts = $package -split ':'
-        if ($parts.Count -ge 3) {
-            $packageGroupId    = $parts[0]
-            $packageArtifactId = $parts[1]
-            $packageVersion    = $parts[2]
-            $pomContent.Add('        <dependency>')
-            $pomContent.Add("            <groupId>$packageGroupId</groupId>")
-            $pomContent.Add("            <artifactId>$packageArtifactId</artifactId>")
-            $pomContent.Add("            <version>$packageVersion</version>")
-            $pomContent.Add('        </dependency>')
-        }
-    }
-    $pomContent.Add('    </dependencies>')
-    $pomContent.Add('</project>')
-    Set-Content 'pom.xml' -Value $pomContent -Encoding UTF8    
-
-    # 建立 packages-lock.txt
+    # 計算相依套件
     & mvn dependency:list `
         "-DoutputFile=packages-lock.txt" `
         "-Dsort=true" `
@@ -130,6 +130,7 @@ do {
         break
     }
     
+    # 建立 packages-lock.txt
     $dependencyList = Get-Content 'packages-lock.txt' -Raw -Encoding UTF8
     $dependencyList = $dependencyList -split "`n" | Where-Object { $_ -match '^\s+\S+:\S+:\S+:\S+' } |
         ForEach-Object {
