@@ -1,0 +1,4 @@
+# npm packages
+# 格式: name@version
+# 例如: express@4.18.2
+#       @types/node@20.0.0
