@@ -8,7 +8,7 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 # ===== Variables =====
 $exitCode = 0
 $mavenSourceList  = @('https://repo.maven.apache.org/maven2', 'https://maven.google.com')
-$packageSourceUrl  = 'https://repo.maven.apache.org/maven2'
+$mavneProxyUrl  = 'https://repo.maven.apache.org/maven2'
 do {
 
 
@@ -21,7 +21,7 @@ do {
     #    $exitCode = 1
     #    break
     #}
-    #$packageSourceUrl = "$packageSourceUrl/$ticketNumber"
+    #$mavneProxyUrl = "$mavneProxyUrl/$ticketNumber"
 
     # 檢查檔案
     foreach ($f in 'pom.xml', 'packages-lock.txt', 'packages-lock.xml', 'packages-new.txt') {
@@ -114,7 +114,7 @@ do {
         }
     }
 
-    # 建立 settings.xml - packageSourceUrl
+    # 建立 settings.xml - mavneProxyUrl
     $settingsContent = [System.Collections.Generic.List[string]]::new()
     $settingsContent.Add('<?xml version="1.0" encoding="UTF-8"?>')
     $settingsContent.Add('<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"')
@@ -126,13 +126,13 @@ do {
     $settingsContent.Add('            <repositories>')
     $settingsContent.Add('                <repository>')
     $settingsContent.Add('                    <id>central</id>')
-    $settingsContent.Add("                    <url>$packageSourceUrl</url>")
+    $settingsContent.Add("                    <url>$mavneProxyUrl</url>")
     $settingsContent.Add('                </repository>')
     $settingsContent.Add('            </repositories>')
     $settingsContent.Add('            <pluginRepositories>')
     $settingsContent.Add('                <pluginRepository>')
     $settingsContent.Add('                    <id>central</id>')
-    $settingsContent.Add("                    <url>$packageSourceUrl</url>")
+    $settingsContent.Add("                    <url>$mavneProxyUrl</url>")
     $settingsContent.Add('                </pluginRepository>')
     $settingsContent.Add('            </pluginRepositories>')
     $settingsContent.Add('        </profile>')
