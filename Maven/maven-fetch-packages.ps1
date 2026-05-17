@@ -153,7 +153,6 @@ do {
     }
 
     # 複製目標套件
-    New-Item -ItemType Directory -Force './packages' | Out-Null
     $missingList = @()
     foreach ($dependency in $dependencyList) {
         $parts = $dependency -split ':'
@@ -163,7 +162,9 @@ do {
             $version    = $parts[2]
             $dependencyPath = "./.m2/$($groupId -replace '\.', '/')/$artifactId/$version"
             if (Test-Path $dependencyPath) {
-                Copy-Item -Path $dependencyPath -Destination './packages/' -Recurse -Force
+                $destinationDirectory = "./packages/$($groupId -replace '\.', '/')/$artifactId"
+                New-Item -ItemType Directory -Force $destinationDirectory | Out-Null
+                Copy-Item -Path $dependencyPath -Destination $destinationDirectory -Recurse -Force
             } else {
                 $missingList += $dependency
             }
