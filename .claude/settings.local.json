@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell($null = [System.Management.Automation.Language.Parser]::ParseFile\\('C:\\\\Lab\\\\CLK.PackageLab\\\\npm\\\\npm-resolve-packages.ps1', [ref]$null, [ref]$errors\\); $errors)",
+      "PowerShell($errors = $null; $tokens = $null; [System.Management.Automation.Language.Parser]::ParseFile\\('C:\\\\Lab\\\\CLK.PackageLab\\\\npm\\\\npm-resolve-packages.ps1', [ref]$tokens, [ref]$errors\\) | Out-Null; $errors)"
+    ]
+  }
+}
