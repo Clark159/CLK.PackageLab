@@ -156,15 +156,17 @@ do {
     $missingList = @()
     foreach ($dependency in $dependencyList) {
         $parts = $dependency -split ':'
-        if ($parts.Count -lt 3) { continue }
-        $artifactId = $parts[1]
-        $packaging  = 'jar'
-        $version    = $parts[2]
-        $fileName   = "$artifactId-$version.$packaging"
-        if (-not (Test-Path "./packages/$fileName")) {
-            $missingList += $dependency
+        if ($parts.Count -ge 3) {
+            $groupId    = $parts[0]
+            $artifactId = $parts[1]
+            $version    = $parts[2]
+            $groupPath  = $groupId -replace '\.', '/'
+            $dependencyPath    = "./.m2/$groupPath/$artifactId/$version/$artifactId-$version.jar"
+            if (-not (Test-Path $dependencyPath)) {
+                $missingList += $dependency
+            }
         }
-    }    
+    }
     if ($missingList.Count -gt 0) {
         Write-Host "[ERROR] 套件下載失敗，缺少 $($missingList.Count) 個套件"
         $missingList | ForEach-Object { Write-Host "[ERROR] $_" }
