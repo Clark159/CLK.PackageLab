@@ -16,6 +16,7 @@ do {
 
 
     # ===== Require =====
+    # 檢查檔案
     foreach ($f in 'packages.txt') {
         if (-not (Test-Path $f)) {
             Write-Host "[ERROR] 找不到 $f"
@@ -46,28 +47,20 @@ do {
     Write-Host "-------------------------------------------------------------------------------"
     Write-Host
 
-    # 讀取 packages.txt
-    $packageList = Get-Content 'packages.txt' -Encoding UTF8 |
-        Where-Object { $_ -match '\S' -and $_ -notmatch '^\s*#' }
-
     # 建立 package.json
-    $dependencyLines = [System.Collections.Generic.List[string]]::new()
-    foreach ($package in $packageList) {
-        if ($package -match '^(.+):(.+)$') {
-            $pkgName    = $Matches[1].Trim()
-            $pkgVersion = $Matches[2].Trim()
-            $dependencyLines.Add("    `"$pkgName`": `"$pkgVersion`"")
-        }
-    }
+    $packageList = @(Get-Content 'packages.txt' -Encoding UTF8 | Where-Object { $_ -match '\S' } | Where-Object { ($_ -split ':').Count -ge 2 })
     $packageJsonContent = [System.Collections.Generic.List[string]]::new()
     $packageJsonContent.Add('{')
     $packageJsonContent.Add('    "name": "packages",')
     $packageJsonContent.Add('    "version": "1.0.0",')
     $packageJsonContent.Add('    "private": true,')
     $packageJsonContent.Add('    "dependencies": {')
-    for ($i = 0; $i -lt $dependencyLines.Count; $i++) {
-        $comma = if ($i -lt $dependencyLines.Count - 1) { ',' } else { '' }
-        $packageJsonContent.Add("$($dependencyLines[$i])$comma")
+    for ($i = 0; $i -lt $packageList.Count; $i++) {
+        $parts = $packageList[$i] -split ':'
+        $packageName    = $parts[0].Trim()
+        $packageVersion = $parts[1].Trim()
+        $comma = if ($i -lt $packageList.Count - 1) { ',' } else { '' }
+        $packageJsonContent.Add("    `"$packageName`": `"$packageVersion`"$comma")
     }
     $packageJsonContent.Add('    }')
     $packageJsonContent.Add('}')
@@ -102,10 +95,10 @@ do {
             if ($prop.Name -eq '') { continue }
             # 取得最後一段 node_modules/ 後的名稱，處理巢狀模組
             $lastIdx = $prop.Name.LastIndexOf('node_modules/')
-            $pkgName    = $prop.Name.Substring($lastIdx + 'node_modules/'.Length)
-            $pkgVersion = $prop.Value.version
-            if ($pkgVersion) {
-                $null = $allPackages.Add("$pkgName`:$pkgVersion")
+            $packageName    = $prop.Name.Substring($lastIdx + 'node_modules/'.Length)
+            $packageVersion = $prop.Value.version
+            if ($packageVersion) {
+                $null = $allPackages.Add("$packageName`:$packageVersion")
             }
         }
 
@@ -127,15 +120,15 @@ do {
     # 建立 packages-new.txt
     $newDependencyList = [System.Collections.Generic.List[string]]::new()
     foreach ($entry in $allPackages) {
-        $colonIdx   = $entry.LastIndexOf(':')
-        $pkgName    = $entry.Substring(0, $colonIdx)
-        $pkgVersion = $entry.Substring($colonIdx + 1)
+        $colonIdx       = $entry.LastIndexOf(':')
+        $packageName    = $entry.Substring(0, $colonIdx)
+        $packageVersion = $entry.Substring($colonIdx + 1)
 
-        if ($pkgName -match '^@([^/]+)/(.+)$') {
+        if ($packageName -match '^@([^/]+)/(.+)$') {
             $unscoped   = $Matches[2]
-            $packageUrl = "$npmRegistryUrl/$pkgName/-/$unscoped-$pkgVersion.tgz"
+            $packageUrl = "$npmRegistryUrl/$packageName/-/$unscoped-$packageVersion.tgz"
         } else {
-            $packageUrl = "$npmRegistryUrl/$pkgName/-/$pkgName-$pkgVersion.tgz"
+            $packageUrl = "$npmRegistryUrl/$packageName/-/$packageName-$packageVersion.tgz"
         }
 
         $packageExists = $false
