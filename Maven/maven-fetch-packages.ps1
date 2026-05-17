@@ -98,21 +98,6 @@ do {
         break
     }
 
-    # 刪除目標套件
-    $dependencyList = Get-Content 'packages-lock.txt' -Encoding UTF8 | Where-Object { $_.Trim() -ne '' }
-    foreach ($dependency in $dependencyList) {
-        $parts = $dependency -split ':'
-        if ($parts.Count -ge 3) {
-            $groupId    = $parts[0]
-            $artifactId = $parts[1]
-            $version    = $parts[2]
-            $dependencyPath = "./.m2/$($groupId -replace '\.', '/')/$artifactId/$version"
-            if (Test-Path $dependencyPath) {
-                Remove-Item -Path $dependencyPath -Recurse -Force
-            }
-        }
-    }
-
     # 建立 settings.xml - mavenSourceProxyUrl
     $settingsContent = [System.Collections.Generic.List[string]]::new()
     $settingsContent.Add('<?xml version="1.0" encoding="UTF-8"?>')
@@ -142,6 +127,21 @@ do {
     $settingsContent.Add('    <localRepository>./.m2</localRepository>')
     $settingsContent.Add('</settings>')
     Set-Content 'settings.xml' -Value $settingsContent -Encoding UTF8
+
+    # 刪除目標套件
+    $dependencyList = Get-Content 'packages-lock.txt' -Encoding UTF8 | Where-Object { $_.Trim() -ne '' }
+    foreach ($dependency in $dependencyList) {
+        $parts = $dependency -split ':'
+        if ($parts.Count -ge 3) {
+            $groupId    = $parts[0]
+            $artifactId = $parts[1]
+            $version    = $parts[2]
+            $dependencyPath = "./.m2/$($groupId -replace '\.', '/')/$artifactId/$version"
+            if (Test-Path $dependencyPath) {
+                Remove-Item -Path $dependencyPath -Recurse -Force
+            }
+        }
+    }
 
     # 下載目標套件
     mvn dependency:copy-dependencies `
