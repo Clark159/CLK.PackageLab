@@ -48,6 +48,7 @@ do {
     Write-Host
     Write-Host "[INFO] Scanning for projects..."
     Write-Host "[INFO]"
+    Write-Host "[INFO] ------------------------------------------------------------------------"
 
     # 建立 package.json   
     $packageList = @(Get-Content 'packages.txt' -Encoding UTF8 | Where-Object { $_ -match '\S' -and $_ -notmatch '^\s*#' })
@@ -81,6 +82,7 @@ do {
         Rename-Item 'package-lock.json' "package-lock-$($platform.os)-$($platform.cpu).json"
         Write-Host "[INFO] 已建立 package-lock-$($platform.os)-$($platform.cpu).json"
     }
+    Write-Host "[INFO] 已合併 package-lock.json"
     Write-Host "[INFO] ------------------------------------------------------------------------"
 
 # ===== End =====
