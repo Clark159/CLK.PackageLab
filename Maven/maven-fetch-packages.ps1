@@ -169,8 +169,6 @@ do {
         Write-Host "[ERROR] 套件下載失敗，缺少 $($missingList.Count) 個套件"
         $missingList | ForEach-Object { Write-Host "[ERROR] $_" }
         Write-Host "[ERROR] ------------------------------------------------------------------------"
-        $exitCode = 1
-        break
     } else {
         Write-Host "[INFO] 套件下載完成，取得 $($dependencyList.Count) 個套件"
         $dependencyList | ForEach-Object { Write-Host "[INFO] $_" }
