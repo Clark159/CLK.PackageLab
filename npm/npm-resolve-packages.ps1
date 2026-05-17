@@ -59,7 +59,7 @@ do {
     $packageJsonContent.Add('    "private": true,')
     $packageJsonContent.Add('    "dependencies": {')
     for ($i = 0; $i -lt $packageList.Count; $i++) {
-        $parts = $packageList[$i] -split ':'
+        $parts = $packageList[$i] -split '@'
         $packageName    = $parts[0]
         $packageVersion = $parts[1]
         $comma = if ($i -lt $packageList.Count - 1) { ',' } else { '' }
@@ -73,7 +73,7 @@ do {
 
     # 建立 package-lock.json
     foreach ($platform in $platformList) {
-        & npm install --package-lock-only --ignore-scripts --silent --os=$($platform.os) --cpu=$($platform.cpu)
+        & npm install --package-lock-only --ignore-scripts --silent --os=$($platform.os) --cpu=$($platform.cpu) --lockfile-version=2
         if ($LASTEXITCODE -ne 0) {
             Write-Host "[ERROR] npm install 失敗 (os=$($platform.os) cpu=$($platform.cpu))"
             $exitCode = 1
