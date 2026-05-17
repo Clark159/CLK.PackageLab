@@ -24,7 +24,7 @@ do {
     #$mavenSourceProxyUrl = "$mavenSourceProxyUrl/$ticketNumber"
 
     # 檢查檔案
-    foreach ($f in 'pom.xml', 'packages-lock.txt', 'packages-lock.xml', 'packages-new.txt') {
+    foreach ($f in 'pom.xml', 'packages-lock.txt', 'packages-lock.xml') {
         if (-not (Test-Path $f)) {
             Write-Host "[ERROR] 找不到 $f"
             $exitCode = 1
