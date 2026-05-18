@@ -35,7 +35,7 @@ do {
     }
 
     # 移除檔案
-    foreach ($f in 'pom.xml', 'settings.xml', 'packages-lock.txt', 'packages-lock.xml', 'packages-new.txt') {
+    foreach ($f in 'pom.xml', 'settings.xml', 'packages-lock.txt', 'packages-lock.xml', 'packages-new.txt', 'packages-miss.txt') {
         if (Test-Path $f) {
             Remove-Item $f -Force
         }
@@ -231,6 +231,38 @@ do {
     }
     Set-Content 'packages-new.txt' -Value $newDependencyContent -Encoding UTF8
     Write-Host "[INFO] 已建立 packages-new.txt"
+
+    # 建立 packages-miss.txt
+    $missDependencyList = [System.Collections.Generic.List[string]]::new()
+    foreach ($dependency in $dependencyList) {
+        $parts = $dependency -split ':'
+        if ($parts.Count -ge 4) {
+            $groupPath  = $parts[0] -replace '\.', '/'
+            $artifactId = $parts[1]
+            $version    = $parts[3]
+            $jarUrl     = "$mavenRepositoryUrl/$groupPath/$artifactId/$version/$artifactId-$version.jar"
+            $jarExists  = $false
+            try {
+                $null = Invoke-WebRequest -Uri $jarUrl -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
+                $jarExists = $true
+            } catch {
+                if ($_.Exception.Response -and $_.Exception.Response.StatusCode.value__ -eq 404) {
+                    $jarExists = $false
+                } else {
+                    $jarExists = $true
+                }
+            }
+            if (-not $jarExists) {
+                $missDependencyList.Add($dependency)
+            }
+        }
+    }
+    $missDependencyContent = $missDependencyList | ForEach-Object {
+        $parts = $_ -split ':'
+        "$($parts[0]):$($parts[1]):$($parts[3])"
+    }
+    Set-Content 'packages-miss.txt' -Value $missDependencyContent -Encoding UTF8
+    Write-Host "[INFO] 已建立 packages-miss.txt"
     Write-Host "[INFO] ------------------------------------------------------------------------"
 
     # 移除資料夾
