@@ -109,6 +109,16 @@ do {
     $settingsContent.Add('            </pluginRepositories>')
     $settingsContent.Add('        </profile>')
     $settingsContent.Add('    </profiles>')
+    $settingsContent.Add('    <mirrors>')
+    for ($i = 0; $i -lt $mavenSourceList.Count; $i++) {
+        if ($mavenSourceList[$i] -notmatch '^http://') { continue }
+        if ($i -eq 0) { $settingsContent.Add('        <mirror>') ; $settingsContent.Add('            <id>central</id>') ; $settingsContent.Add('            <mirrorOf>central</mirrorOf>') }
+        if ($i -ne 0) { $settingsContent.Add('        <mirror>') ; $settingsContent.Add("            <id>central-$i</id>") ; $settingsContent.Add("            <mirrorOf>central-$i</mirrorOf>") }
+        $settingsContent.Add("            <url>$($mavenSourceList[$i])</url>")
+        $settingsContent.Add('            <blocked>false</blocked>')
+        $settingsContent.Add('        </mirror>')
+    }
+    $settingsContent.Add('    </mirrors>')
     $settingsContent.Add('    <activeProfiles>')
     $settingsContent.Add('        <activeProfile>default</activeProfile>')
     $settingsContent.Add('    </activeProfiles>')
