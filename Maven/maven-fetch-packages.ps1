@@ -7,7 +7,7 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 
 # ===== Variables =====
 $exitCode = 0
-$mavenSourceList  = @('https://repo.maven.apache.org/maven2', 'https://maven.google.com')
+$mavenSourceList  = @('https://repo.maven.apache.org/maven2', 'https://maven.artifacts.atlassian.com')
 $mavenSourceProxyUrl  = 'https://repo.maven.apache.org/maven2'
 do {
 
