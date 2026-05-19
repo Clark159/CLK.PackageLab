@@ -10,8 +10,11 @@ $exitCode = 0
 $projectGroupId    = 'com.example'
 $projectArtifactId = 'packages'
 $projectVersion    = '1.0.0'
-$mavenSourceList  = @('https://repo.maven.apache.org/maven2', 'https://maven.artifacts.atlassian.com')
-$mavenRepositoryUrl  = 'https://repo.maven.apache.org/maven2'
+$mavenSourceList   = @(
+    @{ id = 'central';   url = 'https://repo.maven.apache.org/maven2'  }
+    @{ id = 'atlassian'; url = 'https://maven.artifacts.atlassian.com' }
+)
+$mavenRepository   = @{ id = 'central'; url = 'https://repo.maven.apache.org/maven2' }
 $xmlWriterSettings = [System.Xml.XmlWriterSettings]@{ Indent = $true; Encoding = [System.Text.UTF8Encoding]::new($false); IndentChars = '    '; }
 do {
 
@@ -90,34 +93,43 @@ do {
     $settingsContent.Add('        <profile>')
     $settingsContent.Add('            <id>default</id>')
     $settingsContent.Add('            <repositories>')
-    for ($i = 0; $i -lt $mavenSourceList.Count; $i++) {
+    foreach ($src in $mavenSourceList) {
         $settingsContent.Add('                <repository>')
-        if ($i -eq 0) { $settingsContent.Add('                    <id>central</id>') }
-        if ($i -ne 0) { $settingsContent.Add("                    <id>central-$i</id>") }
-        $settingsContent.Add("                    <url>$($mavenSourceList[$i])</url>")
+        $settingsContent.Add("                    <id>$($src.id)</id>")
+        $settingsContent.Add("                    <url>$($src.url)</url>")
         $settingsContent.Add('                </repository>')
     }
     $settingsContent.Add('            </repositories>')
     $settingsContent.Add('            <pluginRepositories>')
-    for ($i = 0; $i -lt $mavenSourceList.Count; $i++) {
+    foreach ($src in $mavenSourceList) {
         $settingsContent.Add('                <pluginRepository>')
-        if ($i -eq 0) { $settingsContent.Add('                    <id>central</id>') }
-        if ($i -ne 0) { $settingsContent.Add("                    <id>central-$i</id>") }
-        $settingsContent.Add("                    <url>$($mavenSourceList[$i])</url>")
+        $settingsContent.Add("                    <id>$($src.id)</id>")
+        $settingsContent.Add("                    <url>$($src.url)</url>")
         $settingsContent.Add('                </pluginRepository>')
     }
     $settingsContent.Add('            </pluginRepositories>')
     $settingsContent.Add('        </profile>')
     $settingsContent.Add('    </profiles>')
     $settingsContent.Add('    <mirrors>')
-    for ($i = 0; $i -lt $mavenSourceList.Count; $i++) {
-        if ($mavenSourceList[$i] -notmatch '^http://') { continue }
-        if ($i -eq 0) { $settingsContent.Add('        <mirror>') ; $settingsContent.Add('            <id>central</id>') ; $settingsContent.Add('            <mirrorOf>central</mirrorOf>') }
-        if ($i -ne 0) { $settingsContent.Add('        <mirror>') ; $settingsContent.Add("            <id>central-$i</id>") ; $settingsContent.Add("            <mirrorOf>central-$i</mirrorOf>") }
-        $settingsContent.Add("            <url>$($mavenSourceList[$i])</url>")
+    foreach ($src in $mavenSourceList) {
+        if ($src.url -notmatch '^http://') { continue }
+        $settingsContent.Add('        <mirror>')
+        $settingsContent.Add("            <id>$($src.id)</id>")
+        $settingsContent.Add("            <mirrorOf>$($src.id)</mirrorOf>")
+        $settingsContent.Add("            <url>$($src.url)</url>")
         $settingsContent.Add('        </mirror>')
     }
     $settingsContent.Add('    </mirrors>')
+    $settingsContent.Add('    <servers>')
+    foreach ($src in $mavenSourceList) {
+        if (-not $src.username -or -not $src.password) { continue }
+        $settingsContent.Add('        <server>')
+        $settingsContent.Add("            <id>$($src.id)</id>")
+        $settingsContent.Add("            <username>$($src.username)</username>")
+        $settingsContent.Add("            <password>$($src.password)</password>")
+        $settingsContent.Add('        </server>')
+    }
+    $settingsContent.Add('    </servers>')
     $settingsContent.Add('    <activeProfiles>')
     $settingsContent.Add('        <activeProfile>default</activeProfile>')
     $settingsContent.Add('    </activeProfiles>')
@@ -217,7 +229,7 @@ do {
         if ($parts.Count -ge 4) {
             $groupPath = $parts[0] -replace '\.', '/'
             $artifactId = $parts[1]
-            $packageUrl = "$mavenRepositoryUrl/$groupPath/$artifactId/"
+            $packageUrl = "$mavenRepository.url/$groupPath/$artifactId/"
             $packageExists = $false
             try {
                 $null = Invoke-WebRequest -Uri $packageUrl -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
@@ -249,7 +261,7 @@ do {
             $groupPath  = $parts[0] -replace '\.', '/'
             $artifactId = $parts[1]
             $version    = $parts[3]
-            $jarUrl     = "$mavenRepositoryUrl/$groupPath/$artifactId/$version/$artifactId-$version.jar"
+            $jarUrl     = "$mavenRepository.url/$groupPath/$artifactId/$version/$artifactId-$version.jar"
             $jarExists  = $false
             try {
                 $null = Invoke-WebRequest -Uri $jarUrl -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop

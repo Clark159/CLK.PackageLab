@@ -7,8 +7,11 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 
 # ===== Variables =====
 $exitCode = 0
-$mavenSourceList  = @('https://repo.maven.apache.org/maven2', 'https://maven.artifacts.atlassian.com')
-$mavenSourceProxyUrl  = 'https://repo.maven.apache.org/maven2'
+$mavenSourceList  = @(
+    @{ id = 'central';   url = 'https://repo.maven.apache.org/maven2'  }
+    @{ id = 'atlassian'; url = 'https://maven.artifacts.atlassian.com' }
+)
+$mavenSourceProxy = @{ id = 'central'; url = 'https://repo.maven.apache.org/maven2' }
 do {
 
 
@@ -20,7 +23,7 @@ do {
     #    $exitCode = 1
     #    break
     #}
-    #$mavenSourceProxyUrl = "$mavenSourceProxyUrl/$ticketNumber"
+    #$mavenSourceProxy.url = "$($mavenSourceProxy.url)/$ticketNumber"
 
     # 檢查檔案
     foreach ($f in 'pom.xml', 'packages-lock.txt', 'packages-lock.xml') {
@@ -63,34 +66,43 @@ do {
     $settingsContent.Add('        <profile>')
     $settingsContent.Add('            <id>default</id>')
     $settingsContent.Add('            <repositories>')
-    for ($i = 0; $i -lt $mavenSourceList.Count; $i++) {
+    foreach ($src in $mavenSourceList) {
         $settingsContent.Add('                <repository>')
-        if ($i -eq 0) { $settingsContent.Add('                    <id>central</id>') }
-        if ($i -ne 0) { $settingsContent.Add("                    <id>central-$i</id>") }
-        $settingsContent.Add("                    <url>$($mavenSourceList[$i])</url>")
+        $settingsContent.Add("                    <id>$($src.id)</id>")
+        $settingsContent.Add("                    <url>$($src.url)</url>")
         $settingsContent.Add('                </repository>')
     }
     $settingsContent.Add('            </repositories>')
     $settingsContent.Add('            <pluginRepositories>')
-    for ($i = 0; $i -lt $mavenSourceList.Count; $i++) {
+    foreach ($src in $mavenSourceList) {
         $settingsContent.Add('                <pluginRepository>')
-        if ($i -eq 0) { $settingsContent.Add('                    <id>central</id>') }
-        if ($i -ne 0) { $settingsContent.Add("                    <id>central-$i</id>") }
-        $settingsContent.Add("                    <url>$($mavenSourceList[$i])</url>")
+        $settingsContent.Add("                    <id>$($src.id)</id>")
+        $settingsContent.Add("                    <url>$($src.url)</url>")
         $settingsContent.Add('                </pluginRepository>')
     }
     $settingsContent.Add('            </pluginRepositories>')
     $settingsContent.Add('        </profile>')
     $settingsContent.Add('    </profiles>')
     $settingsContent.Add('    <mirrors>')
-    for ($i = 0; $i -lt $mavenSourceList.Count; $i++) {
-        if ($mavenSourceList[$i] -notmatch '^http://') { continue }
-        if ($i -eq 0) { $settingsContent.Add('        <mirror>') ; $settingsContent.Add('            <id>central</id>') ; $settingsContent.Add('            <mirrorOf>central</mirrorOf>') }
-        if ($i -ne 0) { $settingsContent.Add('        <mirror>') ; $settingsContent.Add("            <id>central-$i</id>") ; $settingsContent.Add("            <mirrorOf>central-$i</mirrorOf>") }
-        $settingsContent.Add("            <url>$($mavenSourceList[$i])</url>")
+    foreach ($src in $mavenSourceList) {
+        if ($src.url -notmatch '^http://') { continue }
+        $settingsContent.Add('        <mirror>')
+        $settingsContent.Add("            <id>$($src.id)</id>")
+        $settingsContent.Add("            <mirrorOf>$($src.id)</mirrorOf>")
+        $settingsContent.Add("            <url>$($src.url)</url>")
         $settingsContent.Add('        </mirror>')
     }
     $settingsContent.Add('    </mirrors>')
+    $settingsContent.Add('    <servers>')
+    foreach ($src in $mavenSourceList) {
+        if (-not $src.username -or -not $src.password) { continue }
+        $settingsContent.Add('        <server>')
+        $settingsContent.Add("            <id>$($src.id)</id>")
+        $settingsContent.Add("            <username>$($src.username)</username>")
+        $settingsContent.Add("            <password>$($src.password)</password>")
+        $settingsContent.Add('        </server>')
+    }
+    $settingsContent.Add('    </servers>')
     $settingsContent.Add('    <activeProfiles>')
     $settingsContent.Add('        <activeProfile>default</activeProfile>')
     $settingsContent.Add('    </activeProfiles>')
@@ -107,7 +119,7 @@ do {
         break
     }
 
-    # 建立 settings.xml - mavenSourceProxyUrl
+    # 建立 settings.xml - mavenSourceProxy
     $settingsContent = [System.Collections.Generic.List[string]]::new()
     $settingsContent.Add('<?xml version="1.0" encoding="UTF-8"?>')
     $settingsContent.Add('<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"')
@@ -118,27 +130,36 @@ do {
     $settingsContent.Add('            <id>default</id>')
     $settingsContent.Add('            <repositories>')
     $settingsContent.Add('                <repository>')
-    $settingsContent.Add('                    <id>central</id>')
-    $settingsContent.Add("                    <url>$mavenSourceProxyUrl</url>")
+    $settingsContent.Add("                    <id>$($mavenSourceProxy.id)</id>")
+    $settingsContent.Add("                    <url>$($mavenSourceProxy.url)</url>")
     $settingsContent.Add('                </repository>')
     $settingsContent.Add('            </repositories>')
     $settingsContent.Add('            <pluginRepositories>')
     $settingsContent.Add('                <pluginRepository>')
-    $settingsContent.Add('                    <id>central</id>')
-    $settingsContent.Add("                    <url>$mavenSourceProxyUrl</url>")
+    $settingsContent.Add("                    <id>$($mavenSourceProxy.id)</id>")
+    $settingsContent.Add("                    <url>$($mavenSourceProxy.url)</url>")
     $settingsContent.Add('                </pluginRepository>')
     $settingsContent.Add('            </pluginRepositories>')
     $settingsContent.Add('        </profile>')
     $settingsContent.Add('    </profiles>')
     $settingsContent.Add('    <mirrors>')
-    if ($mavenSourceProxyUrl -match '^http://') {
+    if ($mavenSourceProxy.url -match '^http://') {
         $settingsContent.Add('        <mirror>')
-        $settingsContent.Add('            <id>central</id>')
-        $settingsContent.Add('            <mirrorOf>central</mirrorOf>')
-        $settingsContent.Add("            <url>$mavenSourceProxyUrl</url>")
+        $settingsContent.Add("            <id>$($mavenSourceProxy.id)</id>")
+        $settingsContent.Add("            <mirrorOf>$($mavenSourceProxy.id)</mirrorOf>")
+        $settingsContent.Add("            <url>$($mavenSourceProxy.url)</url>")
         $settingsContent.Add('        </mirror>')
     }
     $settingsContent.Add('    </mirrors>')
+    $settingsContent.Add('    <servers>')
+    if ($mavenSourceProxy.username -and $mavenSourceProxy.password) {
+        $settingsContent.Add('        <server>')
+        $settingsContent.Add("            <id>$($mavenSourceProxy.id)</id>")
+        $settingsContent.Add("            <username>$($mavenSourceProxy.username)</username>")
+        $settingsContent.Add("            <password>$($mavenSourceProxy.password)</password>")
+        $settingsContent.Add('        </server>')
+    }
+    $settingsContent.Add('    </servers>')
     $settingsContent.Add('    <activeProfiles>')
     $settingsContent.Add('        <activeProfile>default</activeProfile>')
     $settingsContent.Add('    </activeProfiles>')
@@ -165,7 +186,7 @@ do {
     mvn dependency:resolve `
         "-s" "settings.xml"
     if ($LASTEXITCODE -ne 0) {
-        Write-Host "[ERROR] mvn dependency:resolve 執行失敗 (mavenSourceProxyUrl)"
+        Write-Host "[ERROR] mvn dependency:resolve 執行失敗 (mavenSourceProxy)"
         $exitCode = 1
         break
     }
