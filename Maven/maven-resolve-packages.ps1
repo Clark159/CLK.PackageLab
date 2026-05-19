@@ -52,7 +52,7 @@ do {
     Write-Host
 
     # 建立 pom.xml
-    $packageList = Get-Content 'packages.txt' -Encoding UTF8 | Where-Object { $_ -match '\S' }
+    $packageList = Get-Content 'packages.txt' -Encoding UTF8 | Where-Object { $_ -match '\S' -and $_ -notmatch '^\s*#' }
     $pomContent = [System.Collections.Generic.List[string]]::new()
     $pomContent.Add('<?xml version="1.0" encoding="UTF-8"?>')
     $pomContent.Add('<project xmlns="http://maven.apache.org/POM/4.0.0"')
@@ -229,7 +229,7 @@ do {
         if ($parts.Count -ge 4) {
             $groupPath = $parts[0] -replace '\.', '/'
             $artifactId = $parts[1]
-            $packageUrl = "$mavenRepository.url/$groupPath/$artifactId/"
+            $packageUrl = "$($mavenRepository.url)/$groupPath/$artifactId/"
             $packageExists = $false
             try {
                 $null = Invoke-WebRequest -Uri $packageUrl -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
@@ -261,7 +261,7 @@ do {
             $groupPath  = $parts[0] -replace '\.', '/'
             $artifactId = $parts[1]
             $version    = $parts[3]
-            $jarUrl     = "$mavenRepository.url/$groupPath/$artifactId/$version/$artifactId-$version.jar"
+            $jarUrl     = "$($mavenRepository.url)/$groupPath/$artifactId/$version/$artifactId-$version.jar"
             $jarExists  = $false
             try {
                 $null = Invoke-WebRequest -Uri $jarUrl -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop

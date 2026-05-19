@@ -16,15 +16,6 @@ do {
 
 
     # ===== Require =====
-    # 檢查參數
-    $ticketNumber = Split-Path -Leaf (Get-Location)
-    #if ($ticketNumber -notmatch '^\d{12}-\d{2}$') {
-    #    Write-Host "[ERROR] 資料夾名稱必須為需求單號"
-    #    $exitCode = 1
-    #    break
-    #}
-    #$mavenSourceProxy.url = "$($mavenSourceProxy.url)/$ticketNumber"
-
     # 檢查檔案
     foreach ($f in 'pom.xml', 'packages-lock.txt', 'packages-lock.xml') {
         if (-not (Test-Path $f)) {
@@ -111,7 +102,7 @@ do {
     Set-Content 'settings.xml' -Value $settingsContent -Encoding UTF8
 
     # 下載所有套件
-    mvn dependency:go-offline `
+    & mvn dependency:go-offline `
         "-s" "settings.xml"
     if ($LASTEXITCODE -ne 0) {
         Write-Host "[ERROR] mvn dependency:go-offline 執行失敗 (mavenSourceList)"
@@ -183,7 +174,7 @@ do {
     }
 
     # 下載目標套件
-    mvn dependency:resolve `
+    & mvn dependency:resolve `
         "-s" "settings.xml"
     if ($LASTEXITCODE -ne 0) {
         Write-Host "[ERROR] mvn dependency:resolve 執行失敗 (mavenSourceProxy)"
