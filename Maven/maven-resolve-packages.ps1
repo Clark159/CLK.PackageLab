@@ -118,11 +118,11 @@ do {
 
     # 建立 packages.txt
     $packagesContent = Get-Content 'packages.txt' -Raw -Encoding UTF8
-    $dependencyList = $packagesContent -split "`n" | Where-Object { $_ -match '^\s+\S+:\S+:\S+:\S+' } |
+    $packageList = $packagesContent -split "`n" | Where-Object { $_ -match '^\s+\S+:\S+:\S+:\S+' } |
         ForEach-Object {
             ($_ -replace '\s*-- module.*', '').Trim()
         }
-    $packagesContent = $dependencyList | ForEach-Object {
+    $packagesContent = $packageList | ForEach-Object {
         $parts = $_ -split ':'
         "$($parts[0]):$($parts[1]):$($parts[3])"
     }
@@ -144,23 +144,23 @@ do {
     $bomContent.Add('')
     $bomContent.Add('    <dependencyManagement>')
     $bomContent.Add('        <dependencies>')
-    foreach ($dependency in $dependencyList) {
-        $parts = $dependency -split ':'
+    foreach ($package in $packageList) {
+        $parts = $package -split ':'
         if ($parts.Count -ge 4) {
-            $depGroupId    = $parts[0]
-            $depArtifactId = $parts[1]
-            $depType       = $parts[2]
-            $depVersion    = $parts[3]
-            $depScope      = if ($parts.Count -ge 5) { $parts[4].Trim() } else { 'compile' }
+            $packageGroupId    = $parts[0]
+            $packageArtifactId = $parts[1]
+            $packageType       = $parts[2]
+            $packageVersion    = $parts[3]
+            $packageScope      = if ($parts.Count -ge 5) { $parts[4].Trim() } else { 'compile' }
             $bomContent.Add('            <dependency>')
-            $bomContent.Add("                <groupId>$depGroupId</groupId>")
-            $bomContent.Add("                <artifactId>$depArtifactId</artifactId>")
-            $bomContent.Add("                <version>$depVersion</version>")
-            if ($depType -ne 'jar') {
-                $bomContent.Add("                <type>$depType</type>")
+            $bomContent.Add("                <groupId>$packageGroupId</groupId>")
+            $bomContent.Add("                <artifactId>$packageArtifactId</artifactId>")
+            $bomContent.Add("                <version>$packageVersion</version>")
+            if ($packageType -ne 'jar') {
+                $bomContent.Add("                <type>$packageType</type>")
             }
-            if ($depScope -ne 'compile') {
-                $bomContent.Add("                <scope>$depScope</scope>")
+            if ($packageScope -ne 'compile') {
+                $bomContent.Add("                <scope>$packageScope</scope>")
             }
             $bomContent.Add('            </dependency>')
         }
@@ -173,8 +173,8 @@ do {
 
     # 建立 packages-adding.txt
     $addingList = [System.Collections.Generic.List[string]]::new()
-    foreach ($dependency in $dependencyList) {
-        $parts = $dependency -split ':'
+    foreach ($package in $packageList) {
+        $parts = $package -split ':'
         if ($parts.Count -ge 4) {
             $groupPath  = $parts[0] -replace '\.', '/'
             $artifactId = $parts[1]
@@ -200,8 +200,8 @@ do {
 
     # 建立 packages-missing.txt
     $missingList = [System.Collections.Generic.List[string]]::new()
-    foreach ($dependency in $dependencyList) {
-        $parts = $dependency -split ':'
+    foreach ($package in $packageList) {
+        $parts = $package -split ':'
         if ($parts.Count -ge 4) {
             $groupPath  = $parts[0] -replace '\.', '/'
             $artifactId = $parts[1]
