@@ -32,7 +32,7 @@ do {
     }
 
     # 移除檔案
-    foreach ($fileName in '.npmrc', 'package-lock.json', 'package.txt', 'package-adding.txt', 'package-missing.txt') {
+    foreach ($fileName in '.npmrc', 'package.txt', 'package-lock.json', 'package-adding.txt', 'package-missing.txt') {
         if (Test-Path $fileName) {
             Remove-Item $fileName -Force
         }
@@ -153,7 +153,7 @@ do {
     Write-Host "[INFO] ------------------------------------------------------------------------"
 
     # 移除資料夾
-    foreach ($directoryPath in './node_modules', './packages') {
+    foreach ($directoryPath in './node_modules') {
         if (Test-Path $directoryPath) {
             Remove-Item -Path $directoryPath -Recurse -Force
         }

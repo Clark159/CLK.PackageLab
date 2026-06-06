@@ -254,7 +254,7 @@ do {
     Write-Host "[INFO] ------------------------------------------------------------------------"
 
     # 移除資料夾
-    foreach ($directoryPath in './.m2', './packages') {
+    foreach ($directoryPath in './.m2') {
         if (Test-Path $directoryPath) {
             Remove-Item -Path $directoryPath -Recurse -Force
         }
