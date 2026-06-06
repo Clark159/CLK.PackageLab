@@ -117,8 +117,8 @@ do {
     }
 
     # 建立 packages.txt
-    $dependencyRaw = Get-Content 'packages.txt' -Raw -Encoding UTF8
-    $dependencyList = $dependencyRaw -split "`n" | Where-Object { $_ -match '^\s+\S+:\S+:\S+:\S+' } |
+    $packagesContent = Get-Content 'packages.txt' -Raw -Encoding UTF8
+    $dependencyList = $packagesContent -split "`n" | Where-Object { $_ -match '^\s+\S+:\S+:\S+:\S+' } |
         ForEach-Object {
             ($_ -replace '\s*-- module.*', '').Trim()
         }
@@ -171,7 +171,7 @@ do {
     Set-Content 'packages-lock.xml' -Value $bomContent -Encoding UTF8
     Write-Host "[INFO] 已建立 packages-lock.xml"
 
-    # 建立 packages-adding.txt (mavenRepository 不存在任何版本的套件)
+    # 建立 packages-adding.txt
     $addingList = [System.Collections.Generic.List[string]]::new()
     foreach ($dependency in $dependencyList) {
         $parts = $dependency -split ':'
@@ -198,7 +198,7 @@ do {
     Set-Content 'packages-adding.txt' -Value $addingList -Encoding UTF8
     Write-Host "[INFO] 已建立 packages-adding.txt"
 
-    # 建立 packages-missing.txt (mavenRepository 不存在需求版本的套件，包含 pom 與 jar)
+    # 建立 packages-missing.txt
     $missingList = [System.Collections.Generic.List[string]]::new()
     foreach ($dependency in $dependencyList) {
         $parts = $dependency -split ':'
@@ -219,7 +219,7 @@ do {
                 }
             }
 
-            # 檢查 .jar (僅限 jar 類型)
+            # 檢查 .jar
             if (-not $isMissing -and $type -eq 'jar') {
                 try {
                     $null = Invoke-WebRequest -Uri "$baseUrl.jar" -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
