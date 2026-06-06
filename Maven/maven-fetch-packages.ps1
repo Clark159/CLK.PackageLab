@@ -17,7 +17,7 @@ do {
 
     # ===== Require =====
     # 檢查檔案
-    foreach ($fileName in 'packages.txt') {
+    foreach ($fileName in 'package.txt') {
         if (-not (Test-Path $fileName)) {
             Write-Host "[ERROR] 找不到 $fileName"
             $exitCode = 1
@@ -101,8 +101,8 @@ do {
     $settingsContent.Add('</settings>')
     Set-Content 'settings.xml' -Value $settingsContent -Encoding UTF8
 
-    # 讀取 packages.txt
-    $packageList = Get-Content 'packages.txt' -Encoding UTF8 | Where-Object {
+    # 讀取 package.txt
+    $packageList = Get-Content 'package.txt' -Encoding UTF8 | Where-Object {
         $_.Trim() -ne '' 
     }
 
