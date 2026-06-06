@@ -17,7 +17,7 @@ do {
 
     # ===== Require =====
     # 檢查檔案
-    foreach ($fileName in 'pom.xml', 'packages-lock.txt', 'packages-lock.xml') {
+    foreach ($fileName in 'packages.txt') {
         if (-not (Test-Path $fileName)) {
             Write-Host "[ERROR] 找不到 $fileName"
             $exitCode = 1
@@ -34,7 +34,7 @@ do {
     }
 
     # 移除檔案
-    foreach ($fileName in 'settings.xml') {
+    foreach ($fileName in 'settings.xml', 'pom-temp.xml') {
         if (Test-Path $fileName) {
             Remove-Item $fileName -Force
         }
@@ -101,8 +101,36 @@ do {
     $settingsContent.Add('</settings>')
     Set-Content 'settings.xml' -Value $settingsContent -Encoding UTF8
 
+    # 讀取 packages.txt
+    $packageList = Get-Content 'packages.txt' -Encoding UTF8 | Where-Object { $_.Trim() -ne '' }
+
+    # 產生 pom-temp.xml
+    $pomContent = [System.Collections.Generic.List[string]]::new()
+    $pomContent.Add('<?xml version="1.0" encoding="UTF-8"?>')
+    $pomContent.Add('<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">')
+    $pomContent.Add('    <modelVersion>4.0.0</modelVersion>')
+    $pomContent.Add('    <groupId>com.example</groupId>')
+    $pomContent.Add('    <artifactId>packages</artifactId>')
+    $pomContent.Add('    <version>1.0.0</version>')
+    $pomContent.Add('    <packaging>pom</packaging>')
+    $pomContent.Add('    <dependencies>')
+    foreach ($package in $packageList) {
+        $packageParts = $package -split ':'
+        if ($packageParts.Count -ge 3) {
+            $pomContent.Add('        <dependency>')
+            $pomContent.Add("            <groupId>$($packageParts[0])</groupId>")
+            $pomContent.Add("            <artifactId>$($packageParts[1])</artifactId>")
+            $pomContent.Add("            <version>$($packageParts[2])</version>")
+            $pomContent.Add('        </dependency>')
+        }
+    }
+    $pomContent.Add('    </dependencies>')
+    $pomContent.Add('</project>')
+    Set-Content 'pom-temp.xml' -Value $pomContent -Encoding UTF8
+
     # 下載所有套件
     & mvn dependency:go-offline `
+        "-f" "pom-temp.xml" `
         "-s" "settings.xml"
     if ($LASTEXITCODE -ne 0) {
         Write-Host "[ERROR] mvn dependency:go-offline 執行失敗 (mavenSourceList)"
@@ -159,7 +187,6 @@ do {
     Set-Content 'settings.xml' -Value $settingsContent -Encoding UTF8
 
     # 刪除目標套件
-    $packageList = Get-Content 'packages-lock.txt' -Encoding UTF8 | Where-Object { $_.Trim() -ne '' }
     foreach ($package in $packageList) {
         $packageParts = $package -split ':'
         if ($packageParts.Count -ge 3) {
@@ -175,6 +202,7 @@ do {
 
     # 下載目標套件
     & mvn dependency:resolve `
+        "-f" "pom-temp.xml" `
         "-s" "settings.xml"
     if ($LASTEXITCODE -ne 0) {
         Write-Host "[ERROR] mvn dependency:resolve 執行失敗 (mavenSourceProxy)"
@@ -219,7 +247,7 @@ do {
     }
 
     # 移除檔案
-    foreach ($fileName in 'settings.xml') {
+    foreach ($fileName in 'settings.xml', 'pom-temp.xml') {
         if (Test-Path $fileName) {
             Remove-Item $fileName -Force
         }
