@@ -1,4 +1,4 @@
-param(
+﻿param(
     [switch]$Pause
 )
 Set-Location -Path $PSScriptRoot
@@ -67,7 +67,14 @@ do {
         $exitCode = 1
         break
     }
-    $lockJson = Get-Content 'package-lock.json' -Encoding UTF8 -Raw | ConvertFrom-Json
+    # PS 5.1 ConvertFrom-Json 無法處理空字串 key，先將 "" 重新命名再解析
+    $rawJson = (Get-Content 'package-lock.json' -Encoding UTF8 -Raw) -replace '(?s)"packages"\s*:\s*\{\s*"":', '"packages":{"__root__":'
+    $lockJson = $rawJson | ConvertFrom-Json
+    if ($null -eq $lockJson) {
+        Write-Host "[ERROR] package-lock.json 解析失敗"
+        $exitCode = 1
+        break
+    }
 
     # 建立 package.txt
     $packageMap = @{}
