@@ -32,7 +32,7 @@ do {
     }
 
     # 移除檔案
-    foreach ($fileName in '.npmrc', 'package-lock.json', 'packages.txt', 'packages-lock.json', 'packages-adding.txt', 'packages-missing.txt') {
+    foreach ($fileName in '.npmrc', 'package-lock.json', 'package.txt', 'package-adding.txt', 'package-missing.txt') {
         if (Test-Path $fileName) {
             Remove-Item $fileName -Force
         }
@@ -69,39 +69,35 @@ do {
     }
     $lockJson = Get-Content 'package-lock.json' -Encoding UTF8 -Raw | ConvertFrom-Json
 
-    # 建立 packages.txt
+    # 建立 package.txt
     $packageMap = @{}
     foreach ($packageParts in $lockJson.packages.PSObject.Properties) {
         $key = $packageParts.Name
         if ($key -eq '') { continue }
-        $pkg = $packageParts.Value
+        $package = $packageParts.Value
         if ($key -match 'node_modules/(@[^/]+/[^/]+|[^/]+)$') {
             $name = $Matches[1]
         } else {
             continue
         }
-        $nameVersion = "$name@$($pkg.version)"
+        $nameVersion = "$name@$($package.version)"
         if (-not $packageMap.ContainsKey($nameVersion)) {
             $packageMap[$nameVersion] = @{
                 name     = $name
-                version  = $pkg.version
-                resolved = $pkg.resolved
+                version  = $package.version
+                resolved = $package.resolved
             }
         }
     }
     $packageList = @($packageMap.Values | Sort-Object { $_.name })    
-    $packagesContent = $packageList | ForEach-Object { "$($_.name)@$($_.version)" }
-    Set-Content 'packages.txt' -Value $packagesContent -Encoding UTF8
-    Write-Host "[INFO] 已建立 packages.txt"
+    $packageContent = $packageList | ForEach-Object { "$($_.name)@$($_.version)" }
+    Set-Content 'package.txt' -Value $packageContent -Encoding UTF8
+    Write-Host "[INFO] 已建立 package.txt"
 
-    # 建立 packages-lock.json
-    Copy-Item 'package-lock.json' 'packages-lock.json'
-    Write-Host "[INFO] 已建立 packages-lock.json"
-
-    # 建立 packages-adding.txt
+    # 建立 package-adding.txt
     $addingList = [System.Collections.Generic.List[string]]::new()
-    foreach ($pkg in $packageList) {
-        $encodedName = $pkg.name -replace '/', '%2F'
+    foreach ($package in $packageList) {
+        $encodedName = $package.name -replace '/', '%2F'
         $packageUrl  = "$($npmRegistry.url)/$encodedName"
         $exists = $false
         try {
@@ -115,20 +111,20 @@ do {
             }
         }
         if (-not $exists) {
-            $addingList.Add("$($pkg.name)@$($pkg.version)")
+            $addingList.Add("$($package.name)@$($package.version)")
         }
     }
-    Set-Content 'packages-adding.txt' -Value $addingList -Encoding UTF8
-    Write-Host "[INFO] 已建立 packages-adding.txt"
+    Set-Content 'package-adding.txt' -Value $addingList -Encoding UTF8
+    Write-Host "[INFO] 已建立 package-adding.txt"
 
-    # 建立 packages-missing.txt
+    # 建立 package-missing.txt
     $missingList = [System.Collections.Generic.List[string]]::new()
-    foreach ($pkg in $packageList) {
+    foreach ($package in $packageList) {
         $isMissing   = $false
-        $encodedName = $pkg.name -replace '/', '%2F'
+        $encodedName = $package.name -replace '/', '%2F'
 
-        # 檢查版本資訊
-        $versionUrl = "$($npmRegistry.url)/$encodedName/$($pkg.version)"
+        # 檢查 version
+        $versionUrl = "$($npmRegistry.url)/$encodedName/$($package.version)"
         try {
             $null = Invoke-WebRequest -Uri $versionUrl -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
         } catch {
@@ -138,9 +134,9 @@ do {
         }
 
         # 檢查 tarball
-        if (-not $isMissing -and $pkg.resolved) {
+        if (-not $isMissing -and $package.resolved) {
             try {
-                $null = Invoke-WebRequest -Uri $pkg.resolved -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
+                $null = Invoke-WebRequest -Uri $package.resolved -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
             } catch {
                 if ($_.Exception.Response -and $_.Exception.Response.StatusCode.value__ -eq 404) {
                     $isMissing = $true
@@ -149,11 +145,11 @@ do {
         }
 
         if ($isMissing) {
-            $missingList.Add("$($pkg.name)@$($pkg.version)")
+            $missingList.Add("$($package.name)@$($package.version)")
         }
     }
-    Set-Content 'packages-missing.txt' -Value $missingList -Encoding UTF8
-    Write-Host "[INFO] 已建立 packages-missing.txt"
+    Set-Content 'package-missing.txt' -Value $missingList -Encoding UTF8
+    Write-Host "[INFO] 已建立 package-missing.txt"
     Write-Host "[INFO] ------------------------------------------------------------------------"
 
     # 移除資料夾
@@ -164,7 +160,7 @@ do {
     }
 
     # 移除檔案
-    foreach ($fileName in '.npmrc', 'package-lock.json') {
+    foreach ($fileName in '.npmrc') {
         if (Test-Path $fileName) {
             Remove-Item $fileName -Force
         }

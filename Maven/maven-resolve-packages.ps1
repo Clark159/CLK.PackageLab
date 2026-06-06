@@ -36,7 +36,7 @@ do {
     }
 
     # 移除檔案
-    foreach ($fileName in 'settings.xml', 'packages.txt', 'packages-lock.xml', 'packages-adding.txt', 'packages-missing.txt') {
+    foreach ($fileName in 'settings.xml', 'package.txt', 'package-lock.xml', 'package-adding.txt', 'package-missing.txt') {
         if (Test-Path $fileName) {
             Remove-Item $fileName -Force
         }
@@ -102,9 +102,9 @@ do {
     $settingsContent.Add('</settings>')
     Set-Content 'settings.xml' -Value $settingsContent -Encoding UTF8
 
-    # 建立 packages.txt
+    # 建立 package.txt
     & mvn dependency:list `
-        "-DoutputFile=packages.txt" `
+        "-DoutputFile=package.txt" `
         "-Dsort=true" `
         "-Dstyle.color=never" `
         "-DappendOutput=false" `
@@ -116,17 +116,17 @@ do {
         break
     }
     
-    $packageList = Get-Content 'packages.txt' -Encoding UTF8 | Where-Object { $_ -match '^\s+\S+:\S+:\S+:\S+' } | ForEach-Object {
+    $packageList = Get-Content 'package.txt' -Encoding UTF8 | Where-Object { $_ -match '^\s+\S+:\S+:\S+:\S+' } | ForEach-Object {
         ($_ -replace '\s*-- module.*', '').Trim()
     }
-    $packagesContent = $packageList | ForEach-Object {
+    $packageContent = $packageList | ForEach-Object {
         $packageParts = $_ -split ':'
         "$($packageParts[0]):$($packageParts[1]):$($packageParts[3])"
     }
-    Set-Content 'packages.txt' -Value $packagesContent -Encoding UTF8
-    Write-Host "[INFO] 已建立 packages.txt"
+    Set-Content 'package.txt' -Value $packageContent -Encoding UTF8
+    Write-Host "[INFO] 已建立 package.txt"
 
-    # 建立 packages-lock.xml
+    # 建立 package-lock.xml
     $lockContent = [System.Collections.Generic.List[string]]::new()
     $lockContent.Add('<?xml version="1.0" encoding="UTF-8"?>')
     $lockContent.Add('<project xmlns="http://maven.apache.org/POM/4.0.0"')
@@ -165,20 +165,20 @@ do {
     $lockContent.Add('        </dependencies>')
     $lockContent.Add('    </dependencyManagement>')
     $lockContent.Add('</project>')
-    Set-Content 'packages-lock.xml' -Value $lockContent -Encoding UTF8
-    Write-Host "[INFO] 已建立 packages-lock.xml"
+    Set-Content 'package-lock.xml' -Value $lockContent -Encoding UTF8
+    Write-Host "[INFO] 已建立 package-lock.xml"
 
-    # 建立 packages-adding.txt
+    # 建立 package-adding.txt
     $addingList = [System.Collections.Generic.List[string]]::new()
     foreach ($package in $packageList) {
         $packageParts = $package -split ':'
         if ($packageParts.Count -ge 4) {
             $groupPath  = $packageParts[0] -replace '\.', '/'
             $artifactId = $packageParts[1]
-            $artifactUrl = "$($mavenRepository.url)/$groupPath/$artifactId/"
+            $packageUrl = "$($mavenRepository.url)/$groupPath/$artifactId/"
             $exists = $false
             try {
-                $null = Invoke-WebRequest -Uri $artifactUrl -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
+                $null = Invoke-WebRequest -Uri $packageUrl -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
                 $exists = $true
             } catch {
                 if ($_.Exception.Response -and $_.Exception.Response.StatusCode.value__ -eq 404) {
@@ -192,10 +192,10 @@ do {
             }
         }
     }
-    Set-Content 'packages-adding.txt' -Value $addingList -Encoding UTF8
-    Write-Host "[INFO] 已建立 packages-adding.txt"
+    Set-Content 'package-adding.txt' -Value $addingList -Encoding UTF8
+    Write-Host "[INFO] 已建立 package-adding.txt"
 
-    # 建立 packages-missing.txt
+    # 建立 package-missing.txt
     $artifactSpecMap = @{
         'jar'         = @{ ext = 'jar'; classifier = ''        }
         'war'         = @{ ext = 'war'; classifier = ''        }
@@ -234,9 +234,9 @@ do {
             # 檢查 artifact
             if (-not $isMissing -and $artifactSpecMap.ContainsKey($type)) {
                 $spec        = $artifactSpecMap[$type]
-                $artifactUrl = if ($spec.classifier) { "$baseUrl-$($spec.classifier).$($spec.ext)" } else { "$baseUrl.$($spec.ext)" }
+                $packageUrl = if ($spec.classifier) { "$baseUrl-$($spec.classifier).$($spec.ext)" } else { "$baseUrl.$($spec.ext)" }
                 try {
-                    $null = Invoke-WebRequest -Uri $artifactUrl -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
+                    $null = Invoke-WebRequest -Uri $packageUrl -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
                 } catch {
                     if ($_.Exception.Response -and $_.Exception.Response.StatusCode.value__ -eq 404) {
                         $isMissing = $true
@@ -249,8 +249,8 @@ do {
             }
         }
     }
-    Set-Content 'packages-missing.txt' -Value $missingList -Encoding UTF8
-    Write-Host "[INFO] 已建立 packages-missing.txt"
+    Set-Content 'package-missing.txt' -Value $missingList -Encoding UTF8
+    Write-Host "[INFO] 已建立 package-missing.txt"
     Write-Host "[INFO] ------------------------------------------------------------------------"
 
     # 移除資料夾
