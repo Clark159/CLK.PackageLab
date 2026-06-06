@@ -197,6 +197,22 @@ do {
     Write-Host "[INFO] 已建立 packages-adding.txt"
 
     # 建立 packages-missing.txt
+    # type → @{ ext; classifier }，pom 不在表內（無 binary artifact）
+    $artifactSpecMap = @{
+        'jar'         = @{ ext = 'jar'; classifier = ''        }
+        'war'         = @{ ext = 'war'; classifier = ''        }
+        'ear'         = @{ ext = 'ear'; classifier = ''        }
+        'aar'         = @{ ext = 'aar'; classifier = ''        }
+        'rar'         = @{ ext = 'rar'; classifier = ''        }
+        'zip'         = @{ ext = 'zip'; classifier = ''        }
+        'bundle'      = @{ ext = 'jar'; classifier = ''        }
+        'ejb'         = @{ ext = 'jar'; classifier = ''        }
+        'hk2-jar'     = @{ ext = 'jar'; classifier = ''        }
+        'ejb-client'  = @{ ext = 'jar'; classifier = 'client'  }
+        'test-jar'    = @{ ext = 'jar'; classifier = 'tests'   }
+        'java-source' = @{ ext = 'jar'; classifier = 'sources' }
+        'javadoc'     = @{ ext = 'jar'; classifier = 'javadoc' }
+    }
     $missingList = [System.Collections.Generic.List[string]]::new()
     foreach ($package in $packageList) {
         $packageParts = $package -split ':'
@@ -217,10 +233,12 @@ do {
                 }
             }
 
-            # 檢查 .jar
-            if (-not $isMissing -and $type -eq 'jar') {
+            # 檢查 artifact
+            if (-not $isMissing -and $artifactSpecMap.ContainsKey($type)) {
+                $spec        = $artifactSpecMap[$type]
+                $artifactUrl = if ($spec.classifier) { "$baseUrl-$($spec.classifier).$($spec.ext)" } else { "$baseUrl.$($spec.ext)" }
                 try {
-                    $null = Invoke-WebRequest -Uri "$baseUrl.jar" -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
+                    $null = Invoke-WebRequest -Uri $artifactUrl -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
                 } catch {
                     if ($_.Exception.Response -and $_.Exception.Response.StatusCode.value__ -eq 404) {
                         $isMissing = $true
