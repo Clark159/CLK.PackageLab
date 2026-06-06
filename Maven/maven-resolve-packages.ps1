@@ -59,40 +59,40 @@ do {
     $settingsContent.Add('        <profile>')
     $settingsContent.Add('            <id>default</id>')
     $settingsContent.Add('            <repositories>')
-    foreach ($src in $mavenSourceList) {
+    foreach ($source in $mavenSourceList) {
         $settingsContent.Add('                <repository>')
-        $settingsContent.Add("                    <id>$($src.id)</id>")
-        $settingsContent.Add("                    <url>$($src.url)</url>")
+        $settingsContent.Add("                    <id>$($source.id)</id>")
+        $settingsContent.Add("                    <url>$($source.url)</url>")
         $settingsContent.Add('                </repository>')
     }
     $settingsContent.Add('            </repositories>')
     $settingsContent.Add('            <pluginRepositories>')
-    foreach ($src in $mavenSourceList) {
+    foreach ($source in $mavenSourceList) {
         $settingsContent.Add('                <pluginRepository>')
-        $settingsContent.Add("                    <id>$($src.id)</id>")
-        $settingsContent.Add("                    <url>$($src.url)</url>")
+        $settingsContent.Add("                    <id>$($source.id)</id>")
+        $settingsContent.Add("                    <url>$($source.url)</url>")
         $settingsContent.Add('                </pluginRepository>')
     }
     $settingsContent.Add('            </pluginRepositories>')
     $settingsContent.Add('        </profile>')
     $settingsContent.Add('    </profiles>')
     $settingsContent.Add('    <mirrors>')
-    foreach ($src in $mavenSourceList) {
-        if ($src.url -notmatch '^http://') { continue }
+    foreach ($source in $mavenSourceList) {
+        if ($source.url -notmatch '^http://') { continue }
         $settingsContent.Add('        <mirror>')
-        $settingsContent.Add("            <id>$($src.id)</id>")
-        $settingsContent.Add("            <mirrorOf>$($src.id)</mirrorOf>")
-        $settingsContent.Add("            <url>$($src.url)</url>")
+        $settingsContent.Add("            <id>$($source.id)</id>")
+        $settingsContent.Add("            <mirrorOf>$($source.id)</mirrorOf>")
+        $settingsContent.Add("            <url>$($source.url)</url>")
         $settingsContent.Add('        </mirror>')
     }
     $settingsContent.Add('    </mirrors>')
     $settingsContent.Add('    <servers>')
-    foreach ($src in $mavenSourceList) {
-        if (-not $src.username -or -not $src.password) { continue }
+    foreach ($source in $mavenSourceList) {
+        if (-not $source.username -or -not $source.password) { continue }
         $settingsContent.Add('        <server>')
-        $settingsContent.Add("            <id>$($src.id)</id>")
-        $settingsContent.Add("            <username>$($src.username)</username>")
-        $settingsContent.Add("            <password>$($src.password)</password>")
+        $settingsContent.Add("            <id>$($source.id)</id>")
+        $settingsContent.Add("            <username>$($source.username)</username>")
+        $settingsContent.Add("            <password>$($source.password)</password>")
         $settingsContent.Add('        </server>')
     }
     $settingsContent.Add('    </servers>')
@@ -102,7 +102,7 @@ do {
     $settingsContent.Add('</settings>')
     Set-Content 'settings.xml' -Value $settingsContent -Encoding UTF8
 
-    # 計算相依套件 (mavenSourceList -> packages.txt)
+    # 建立 packages.txt
     & mvn dependency:list `
         "-DoutputFile=packages.txt" `
         "-Dsort=true" `
@@ -116,7 +116,7 @@ do {
         break
     }
 
-    # 建立 packages.txt
+    # 整理 packages.txt
     $packagesContent = Get-Content 'packages.txt' -Raw -Encoding UTF8
     $packageList = $packagesContent -split "`n" | Where-Object { $_ -match '^\s+\S+:\S+:\S+:\S+' } |
         ForEach-Object {
@@ -147,20 +147,20 @@ do {
     foreach ($package in $packageList) {
         $parts = $package -split ':'
         if ($parts.Count -ge 4) {
-            $packageGroupId    = $parts[0]
-            $packageArtifactId = $parts[1]
-            $packageType       = $parts[2]
-            $packageVersion    = $parts[3]
-            $packageScope      = if ($parts.Count -ge 5) { $parts[4].Trim() } else { 'compile' }
+            $groupId    = $parts[0]
+            $artifactId = $parts[1]
+            $type       = $parts[2]
+            $version    = $parts[3]
+            $scope      = if ($parts.Count -ge 5) { $parts[4].Trim() } else { 'compile' }
             $bomContent.Add('            <dependency>')
-            $bomContent.Add("                <groupId>$packageGroupId</groupId>")
-            $bomContent.Add("                <artifactId>$packageArtifactId</artifactId>")
-            $bomContent.Add("                <version>$packageVersion</version>")
-            if ($packageType -ne 'jar') {
-                $bomContent.Add("                <type>$packageType</type>")
+            $bomContent.Add("                <groupId>$groupId</groupId>")
+            $bomContent.Add("                <artifactId>$artifactId</artifactId>")
+            $bomContent.Add("                <version>$version</version>")
+            if ($type -ne 'jar') {
+                $bomContent.Add("                <type>$type</type>")
             }
-            if ($packageScope -ne 'compile') {
-                $bomContent.Add("                <scope>$packageScope</scope>")
+            if ($scope -ne 'compile') {
+                $bomContent.Add("                <scope>$scope</scope>")
             }
             $bomContent.Add('            </dependency>')
         }

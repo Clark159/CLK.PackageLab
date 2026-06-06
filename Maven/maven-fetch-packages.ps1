@@ -159,16 +159,16 @@ do {
     Set-Content 'settings.xml' -Value $settingsContent -Encoding UTF8
 
     # 刪除目標套件
-    $dependencyList = Get-Content 'packages-lock.txt' -Encoding UTF8 | Where-Object { $_.Trim() -ne '' }
-    foreach ($dependency in $dependencyList) {
-        $parts = $dependency -split ':'
+    $packageList = Get-Content 'packages-lock.txt' -Encoding UTF8 | Where-Object { $_.Trim() -ne '' }
+    foreach ($package in $packageList) {
+        $parts = $package -split ':'
         if ($parts.Count -ge 3) {
             $groupId    = $parts[0]
             $artifactId = $parts[1]
             $version    = $parts[2]
-            $dependencyPath = "./.m2/$($groupId -replace '\.', '/')/$artifactId/$version"
-            if (Test-Path $dependencyPath) {
-                Remove-Item -Path $dependencyPath -Recurse -Force
+            $packagePath = "./.m2/$($groupId -replace '\.', '/')/$artifactId/$version"
+            if (Test-Path $packagePath) {
+                Remove-Item -Path $packagePath -Recurse -Force
             }
         }
     }
@@ -184,25 +184,25 @@ do {
 
     # 複製目標套件
     $missingList = @()
-    foreach ($dependency in $dependencyList) {
-        $parts = $dependency -split ':'
+    foreach ($package in $packageList) {
+        $parts = $package -split ':'
         if ($parts.Count -ge 3) {
             $groupId    = $parts[0]
             $artifactId = $parts[1]
             $version    = $parts[2]
-            $dependencyPath = "./.m2/$($groupId -replace '\.', '/')/$artifactId/$version"
-            if (Test-Path $dependencyPath) {
+            $packagePath = "./.m2/$($groupId -replace '\.', '/')/$artifactId/$version"
+            if (Test-Path $packagePath) {
                 $destinationDirectory = "./packages/$($groupId -replace '\.', '/')/$artifactId"
                 New-Item -ItemType Directory -Force $destinationDirectory | Out-Null
-                Copy-Item -Path $dependencyPath -Destination $destinationDirectory -Recurse -Force
+                Copy-Item -Path $packagePath -Destination $destinationDirectory -Recurse -Force
             } else {
-                $missingList += $dependency
+                $missingList += $package
             }
         }
     }
     if ($missingList.Count -eq 0) {
-        $dependencyList | ForEach-Object { Write-Host "[INFO] $_" }
-        Write-Host "[INFO] 套件下載完成，取得 $($dependencyList.Count) 個套件"
+        $packageList | ForEach-Object { Write-Host "[INFO] $_" }
+        Write-Host "[INFO] 套件下載完成，取得 $($packageList.Count) 個套件"
         Write-Host "[INFO] ------------------------------------------------------------------------"
     } else {
         $missingList | ForEach-Object { Write-Host "[ERROR] $_" }
