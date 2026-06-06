@@ -15,24 +15,21 @@ do {
 
 
     # ===== Require =====
-    # 檢查檔案
     foreach ($fileName in 'package.txt') {
         if (-not (Test-Path $fileName)) {
-            Write-Host "[ERROR] 找不到 $fileName"
+            Write-Host "[ERROR] Not found: $fileName"
             $exitCode = 1
             break
         }
     }
     if ($exitCode -ne 0) { break }
 
-    # 移除資料夾
     foreach ($directoryPath in './node_modules', './packages') {
         if (Test-Path $directoryPath) {
             Remove-Item -Path $directoryPath -Recurse -Force
         }
     }
 
-    # 移除檔案
     foreach ($fileName in '.npmrc', 'package.json', 'package-lock.json', 'package-adding.txt', 'package-missing.txt') {
         if (Test-Path $fileName) {
             Remove-Item $fileName -Force
@@ -46,10 +43,8 @@ do {
     Write-Host "-------------------------------------------------------------------------------"
     Write-Host
 
-    # 讀取 package.txt
     $packageList = Get-Content 'package.txt' -Encoding UTF8 | Where-Object { $_.Trim() -ne '' }
 
-    # 產生 package.json
     $depsStr = ($packageList | ForEach-Object {
         if ($_ -match '^(@[^@]+/[^@]+|[^@]+)@(.+)$') {
             "    `"$($Matches[1])`": `"$($Matches[2])`""
@@ -58,7 +53,7 @@ do {
     $packageJsonStr = "{`n  `"name`": `"fetch-packages`",`n  `"version`": `"1.0.0`",`n  `"dependencies`": {`n$depsStr`n  }`n}"
     Set-Content './package.json' -Value $packageJsonStr -Encoding UTF8
 
-    # 建立 .npmrc - npmSourceList
+    # .npmrc - npmSourceList
     $npmrcContent = [System.Collections.Generic.List[string]]::new()
     $npmrcContent.Add("registry=$($npmSourceList[0].url)")
     foreach ($npmSource in $npmSourceList) {
@@ -73,16 +68,15 @@ do {
     }
     Set-Content './.npmrc' -Value $npmrcContent -Encoding UTF8
 
-    # 下載所有套件
     & npm install --ignore-scripts --no-audit
     $installExitCode = $LASTEXITCODE
     if ($installExitCode -ne 0) {
-        Write-Host "[ERROR] npm install 執行失敗 (npmSourceList)"
+        Write-Host "[ERROR] npm install failed (npmSourceList)"
         $exitCode = 1
         break
     }
 
-    # 建立 .npmrc - npmRegistry
+    # .npmrc - npmRegistry
     $npmrcContent = [System.Collections.Generic.List[string]]::new()
     $npmrcContent.Add("registry=$($npmRegistry.url)")
     if ($npmRegistry.scope) {
@@ -95,7 +89,6 @@ do {
     }
     Set-Content './.npmrc' -Value $npmrcContent -Encoding UTF8
 
-    # 刪除目標套件
     foreach ($package in $packageList) {
         if ($package -match '^(@[^@]+/[^@]+|[^@]+)@(.+)$') {
             $name = $Matches[1]
@@ -106,21 +99,18 @@ do {
         }
     }
 
-    # 刪除 package-lock.json（讓 npm 重新解析來源）
     if (Test-Path './package-lock.json') {
         Remove-Item './package-lock.json' -Force
     }
 
-    # 下載目標套件
     & npm install --ignore-scripts --no-audit
     $installExitCode = $LASTEXITCODE
     if ($installExitCode -ne 0) {
-        Write-Host "[ERROR] npm install 執行失敗 (npmRegistry)"
+        Write-Host "[ERROR] npm install failed (npmRegistry)"
         $exitCode = 1
         break
     }
 
-    # 複製目標套件
     $missingList = @()
     foreach ($package in $packageList) {
         if ($package -match '^(@[^@]+/[^@]+|[^@]+)@(.+)$') {
@@ -143,23 +133,21 @@ do {
 
     if ($missingList.Count -eq 0) {
         $packageList | ForEach-Object { Write-Host "[INFO] $_" }
-        Write-Host "[INFO] 套件下載完成，取得 $($packageList.Count) 個套件"
+        Write-Host "[INFO] Done: $($packageList.Count) packages"
         Write-Host "[INFO] ------------------------------------------------------------------------"
     } else {
         $missingList | ForEach-Object { Write-Host "[ERROR] $_" }
-        Write-Host "[ERROR] 套件下載失敗，缺少 $($missingList.Count) 個套件"
+        Write-Host "[ERROR] Failed: missing $($missingList.Count) packages"
         Write-Host "[ERROR] ------------------------------------------------------------------------"
         $exitCode = 1
     }
 
-    # 移除資料夾
     foreach ($directoryPath in './node_modules') {
         if (Test-Path $directoryPath) {
             Remove-Item -Path $directoryPath -Recurse -Force
         }
     }
 
-    # 移除檔案
     foreach ($fileName in '.npmrc', 'package.json', 'package-lock.json') {
         if (Test-Path $fileName) {
             Remove-Item $fileName -Force
@@ -170,11 +158,11 @@ do {
 # ===== End =====
 } while ($false)
 if ($exitCode -eq 0) {
-    Write-Host '[SUCCESS] 所有作業已完成'
+    Write-Host '[SUCCESS] All done'
 }
 if ($Pause) {
     Write-Host
-    Write-Host '按任意鍵繼續...'
+    Write-Host 'Press any key to continue...'
     $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
 }
 exit $exitCode
