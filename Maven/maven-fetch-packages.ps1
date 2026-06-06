@@ -34,7 +34,7 @@ do {
     }
 
     # 移除檔案
-    foreach ($fileName in 'settings.xml', 'pom-temp.xml') {
+    foreach ($fileName in 'settings.xml', 'pom.xml', 'package-lock.xml', 'package-adding.txt', 'package-missing.txt') {
         if (Test-Path $fileName) {
             Remove-Item $fileName -Force
         }
@@ -106,7 +106,7 @@ do {
         $_.Trim() -ne '' 
     }
 
-    # 產生 pom-temp.xml
+    # 產生 pom.xml
     $pomContent = [System.Collections.Generic.List[string]]::new()
     $pomContent.Add('<?xml version="1.0" encoding="UTF-8"?>')
     $pomContent.Add('<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">')
@@ -128,11 +128,11 @@ do {
     }
     $pomContent.Add('    </dependencies>')
     $pomContent.Add('</project>')
-    Set-Content 'pom-temp.xml' -Value $pomContent -Encoding UTF8
+    Set-Content 'pom.xml' -Value $pomContent -Encoding UTF8
 
     # 下載所有套件
     & mvn dependency:go-offline `
-        "-f" "pom-temp.xml" `
+        "-f" "pom.xml" `
         "-s" "settings.xml"
     if ($LASTEXITCODE -ne 0) {
         Write-Host "[ERROR] mvn dependency:go-offline 執行失敗 (mavenSourceList)"
@@ -204,7 +204,7 @@ do {
 
     # 下載目標套件
     & mvn dependency:resolve `
-        "-f" "pom-temp.xml" `
+        "-f" "pom.xml" `
         "-s" "settings.xml"
     if ($LASTEXITCODE -ne 0) {
         Write-Host "[ERROR] mvn dependency:resolve 執行失敗 (mavenSourceProxy)"
@@ -251,7 +251,7 @@ do {
     }
 
     # 移除檔案
-    foreach ($fileName in 'settings.xml', 'pom-temp.xml') {
+    foreach ($fileName in 'settings.xml', 'pom.xml') {
         if (Test-Path $fileName) {
             Remove-Item $fileName -Force
         }
