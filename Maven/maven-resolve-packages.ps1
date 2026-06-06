@@ -117,11 +117,9 @@ do {
     }
 
     # 整理 packages.txt
-    $packagesContent = Get-Content 'packages.txt' -Raw -Encoding UTF8
-    $packageList = $packagesContent -split "`n" | Where-Object { $_ -match '^\s+\S+:\S+:\S+:\S+' } |
-        ForEach-Object {
-            ($_ -replace '\s*-- module.*', '').Trim()
-        }
+    $packageList = Get-Content 'packages.txt' -Encoding UTF8 | Where-Object { $_ -match '^\s+\S+:\S+:\S+:\S+' } | ForEach-Object {
+        ($_ -replace '\s*-- module.*', '').Trim()
+    }
     $packagesContent = $packageList | ForEach-Object {
         $packageParts = $_ -split ':'
         "$($packageParts[0]):$($packageParts[1]):$($packageParts[3])"

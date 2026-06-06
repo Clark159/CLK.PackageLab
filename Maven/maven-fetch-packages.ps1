@@ -102,7 +102,9 @@ do {
     Set-Content 'settings.xml' -Value $settingsContent -Encoding UTF8
 
     # 讀取 packages.txt
-    $packageList = Get-Content 'packages.txt' -Encoding UTF8 | Where-Object { $_.Trim() -ne '' }
+    $packageList = Get-Content 'packages.txt' -Encoding UTF8 | Where-Object {
+        $_.Trim() -ne '' 
+    }
 
     # 產生 pom-temp.xml
     $pomContent = [System.Collections.Generic.List[string]]::new()
