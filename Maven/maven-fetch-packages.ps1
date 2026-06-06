@@ -232,6 +232,7 @@ do {
     }
     Get-ChildItem -Path './packages' -Recurse -Filter '_remote.repositories' | Remove-Item -Force
 
+    # 顯示下載結果
     if ($missingList.Count -eq 0) {
         $packageList | ForEach-Object { Write-Host "[INFO] $_" }
         Write-Host "[INFO] 套件下載完成，取得 $($packageList.Count) 個套件"

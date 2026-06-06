@@ -151,6 +151,7 @@ do {
         }
     }
 
+    # 顯示下載結果
     if ($missingList.Count -eq 0) {
         Write-Host
         Write-Host
