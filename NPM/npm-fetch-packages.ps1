@@ -26,7 +26,7 @@ do {
     if ($exitCode -ne 0) { break }
 
     # 移除資料夾
-    foreach ($directoryPath in './.npm-cache', './node_modules', './packages') {
+    foreach ($directoryPath in './npm_caches', './node_modules', './packages') {
         if (Test-Path $directoryPath) {
             Remove-Item -Path $directoryPath -Recurse -Force
         }
@@ -49,7 +49,7 @@ do {
     # 建立 .npmrc - npmSourceList
     $npmrcContent = [System.Collections.Generic.List[string]]::new()
     $npmrcContent.Add("registry=$($npmSourceList[0].url)")
-    $npmrcContent.Add("cache=./.npm-cache")
+    $npmrcContent.Add("cache=./npm_caches")
     foreach ($npmSource in $npmSourceList) {
         if ($npmSource.scope) {
             $npmrcContent.Add("$($npmSource.scope):registry=$($npmSource.url)")
@@ -77,18 +77,20 @@ do {
     Set-Content './package.json' -Value $packageJsonStr -Encoding UTF8
 
     # 下載所有套件
-    & npm install --ignore-scripts --no-audit
+    & npm install --ignore-scripts --no-audit --verbose
     $installExitCode = $LASTEXITCODE
     if ($installExitCode -ne 0) {
         Write-Host "[ERROR] npm install 執行失敗 (npmSourceList)"
         $exitCode = 1
         break
     }
+    Write-Host "-------------------------------------------------------------------------------"
+    Write-Host
 
     # 建立 .npmrc - npmRegistry
     $npmrcContent = [System.Collections.Generic.List[string]]::new()
     $npmrcContent.Add("registry=$($npmRegistry.url)")
-    $npmrcContent.Add("cache=./.npm-cache")
+    $npmrcContent.Add("cache=./npm_caches")
     if ($npmRegistry.scope) {
         $npmrcContent.Add("$($npmRegistry.scope):registry=$($npmRegistry.url)")
     }
@@ -102,21 +104,25 @@ do {
     # 刪除目標套件
     foreach ($package in $packageList) {
         if ($package -match '^(@[^@]+/[^@]+|[^@]+)@(.+)$') {
-            $name = $Matches[1]
-            $packagePath = "./node_modules/$name"
+            $packagePath = "./node_modules/$($Matches[1])"
             if (Test-Path $packagePath) {
                 Remove-Item -Path $packagePath -Recurse -Force
             }
         }
     }
+    Remove-Item -Path './npm_caches' -Recurse -Force
 
-    # 刪除 package-lock.json（讓 npm 重新解析來源）
+    # 修改 package-lock.json 的 registry 來源
     if (Test-Path './package-lock.json') {
-        Remove-Item './package-lock.json' -Force
+        $lockContent = Get-Content './package-lock.json' -Encoding UTF8 -Raw
+        foreach ($npmSource in $npmSourceList) {
+            $lockContent = $lockContent -replace [regex]::Escape($npmSource.url), $npmRegistry.url
+        }
+        Set-Content './package-lock.json' -Value $lockContent -Encoding UTF8
     }
 
     # 下載目標套件
-    & npm install --ignore-scripts --no-audit
+    & npm install --ignore-scripts --no-audit --verbose
     $installExitCode = $LASTEXITCODE
     if ($installExitCode -ne 0) {
         Write-Host "[ERROR] npm install 執行失敗 (npmRegistry)"
@@ -146,10 +152,16 @@ do {
     }
 
     if ($missingList.Count -eq 0) {
+        Write-Host
+        Write-Host
+        Write-Host "[INFO] ------------------------------------------------------------------------"
         $packageList | ForEach-Object { Write-Host "[INFO] $_" }
         Write-Host "[INFO] 套件下載完成，取得 $($packageList.Count) 個套件"
         Write-Host "[INFO] ------------------------------------------------------------------------"
     } else {
+        Write-Host
+        Write-Host
+        Write-Host "[INFO] ------------------------------------------------------------------------"
         $missingList | ForEach-Object { Write-Host "[ERROR] $_" }
         Write-Host "[ERROR] 套件下載失敗，缺少 $($missingList.Count) 個套件"
         Write-Host "[ERROR] ------------------------------------------------------------------------"
@@ -157,7 +169,7 @@ do {
     }
 
     # 移除資料夾
-    foreach ($directoryPath in './.npm-cache', './node_modules') {
+    foreach ($directoryPath in './npm_caches', './node_modules') {
         if (Test-Path $directoryPath) {
             Remove-Item -Path $directoryPath -Recurse -Force
         }
