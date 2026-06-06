@@ -26,7 +26,7 @@ do {
     if ($exitCode -ne 0) { break }
 
     # 移除資料夾
-    foreach ($directoryPath in './.npm-fetch-tmp', './packages') {
+    foreach ($directoryPath in './node_modules', './packages') {
         if (Test-Path $directoryPath) {
             Remove-Item -Path $directoryPath -Recurse -Force
         }
@@ -49,9 +49,6 @@ do {
     # 讀取 package.txt
     $packageList = Get-Content 'package.txt' -Encoding UTF8 | Where-Object { $_.Trim() -ne '' }
 
-    # 建立暫存目錄
-    New-Item -ItemType Directory -Force './.npm-fetch-tmp' | Out-Null
-
     # 產生 package.json
     $depsStr = ($packageList | ForEach-Object {
         if ($_ -match '^(@[^@]+/[^@]+|[^@]+)@(.+)$') {
@@ -59,7 +56,7 @@ do {
         }
     }) -join ",`n"
     $packageJsonStr = "{`n  `"name`": `"fetch-packages`",`n  `"version`": `"1.0.0`",`n  `"dependencies`": {`n$depsStr`n  }`n}"
-    Set-Content './.npm-fetch-tmp/package.json' -Value $packageJsonStr -Encoding UTF8
+    Set-Content './package.json' -Value $packageJsonStr -Encoding UTF8
 
     # 建立 .npmrc - npmSourceList
     $npmrcContent = [System.Collections.Generic.List[string]]::new()
@@ -74,13 +71,11 @@ do {
             $npmrcContent.Add("$authUrl/:_auth=$token")
         }
     }
-    Set-Content './.npm-fetch-tmp/.npmrc' -Value $npmrcContent -Encoding UTF8
+    Set-Content './.npmrc' -Value $npmrcContent -Encoding UTF8
 
     # 下載所有套件
-    Push-Location './.npm-fetch-tmp'
     & npm install --ignore-scripts --no-audit
     $installExitCode = $LASTEXITCODE
-    Pop-Location
     if ($installExitCode -ne 0) {
         Write-Host "[ERROR] npm install 執行失敗 (npmSourceList)"
         $exitCode = 1
@@ -98,13 +93,13 @@ do {
         $token   = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes("$($npmRegistry.username):$($npmRegistry.password)"))
         $npmrcContent.Add("$authUrl/:_auth=$token")
     }
-    Set-Content './.npm-fetch-tmp/.npmrc' -Value $npmrcContent -Encoding UTF8
+    Set-Content './.npmrc' -Value $npmrcContent -Encoding UTF8
 
     # 刪除目標套件
     foreach ($package in $packageList) {
         if ($package -match '^(@[^@]+/[^@]+|[^@]+)@(.+)$') {
             $name = $Matches[1]
-            $packagePath = "./.npm-fetch-tmp/node_modules/$name"
+            $packagePath = "./node_modules/$name"
             if (Test-Path $packagePath) {
                 Remove-Item -Path $packagePath -Recurse -Force
             }
@@ -112,15 +107,13 @@ do {
     }
 
     # 刪除 package-lock.json（讓 npm 重新解析來源）
-    if (Test-Path './.npm-fetch-tmp/package-lock.json') {
-        Remove-Item './.npm-fetch-tmp/package-lock.json' -Force
+    if (Test-Path './package-lock.json') {
+        Remove-Item './package-lock.json' -Force
     }
 
     # 下載目標套件
-    Push-Location './.npm-fetch-tmp'
     & npm install --ignore-scripts --no-audit
     $installExitCode = $LASTEXITCODE
-    Pop-Location
     if ($installExitCode -ne 0) {
         Write-Host "[ERROR] npm install 執行失敗 (npmRegistry)"
         $exitCode = 1
@@ -133,7 +126,7 @@ do {
         if ($package -match '^(@[^@]+/[^@]+|[^@]+)@(.+)$') {
             $name    = $Matches[1]
             $version = $Matches[2]
-            $packagePath = "./.npm-fetch-tmp/node_modules/$name"
+            $packagePath = "./node_modules/$name"
             if (Test-Path $packagePath) {
                 if ($name -match '^(@[^/]+)/') {
                     $destinationDirectory = "./packages/$($Matches[1])"
@@ -160,9 +153,16 @@ do {
     }
 
     # 移除資料夾
-    foreach ($directoryPath in './.npm-fetch-tmp') {
+    foreach ($directoryPath in './node_modules') {
         if (Test-Path $directoryPath) {
             Remove-Item -Path $directoryPath -Recurse -Force
+        }
+    }
+
+    # 移除檔案
+    foreach ($fileName in '.npmrc', 'package.json', 'package-lock.json') {
+        if (Test-Path $fileName) {
+            Remove-Item $fileName -Force
         }
     }
 
