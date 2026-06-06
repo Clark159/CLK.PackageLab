@@ -115,8 +115,7 @@ do {
         $exitCode = 1
         break
     }
-
-    # 整理 packages.txt
+    
     $packageList = Get-Content 'packages.txt' -Encoding UTF8 | Where-Object { $_ -match '^\s+\S+:\S+:\S+:\S+' } | ForEach-Object {
         ($_ -replace '\s*-- module.*', '').Trim()
     }
