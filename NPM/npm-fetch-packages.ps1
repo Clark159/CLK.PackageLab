@@ -32,6 +32,13 @@ do {
         }
     }
 
+    # 移除檔案
+    foreach ($fileName in '.npmrc', 'package.json', 'package-lock.json', 'package-adding.txt', 'package-missing.txt') {
+        if (Test-Path $fileName) {
+            Remove-Item $fileName -Force
+        }
+    }
+
 
     # ===== Execute =====
     Write-Host "-------------------------------------------------------------------------------"
