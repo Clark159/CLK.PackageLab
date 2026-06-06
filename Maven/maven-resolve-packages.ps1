@@ -19,9 +19,9 @@ do {
 
 
     # ===== Require =====
-    foreach ($f in 'pom.xml') {
-        if (-not (Test-Path $f)) {
-            Write-Host "[ERROR] 找不到 $f"
+    foreach ($fileName in 'pom.xml') {
+        if (-not (Test-Path $fileName)) {
+            Write-Host "[ERROR] 找不到 $fileName"
             $exitCode = 1
             break
         }
@@ -29,16 +29,16 @@ do {
     if ($exitCode -ne 0) { break }
 
     # 移除資料夾
-    foreach ($d in './.m2', './packages') {
-        if (Test-Path $d) {
-            Remove-Item -Path $d -Recurse -Force
+    foreach ($directoryPath in './.m2', './packages') {
+        if (Test-Path $directoryPath) {
+            Remove-Item -Path $directoryPath -Recurse -Force
         }
     }
 
     # 移除檔案
-    foreach ($f in 'settings.xml', 'packages.txt', 'packages-lock.xml', 'packages-adding.txt', 'packages-missing.txt') {
-        if (Test-Path $f) {
-            Remove-Item $f -Force
+    foreach ($fileName in 'settings.xml', 'packages.txt', 'packages-lock.xml', 'packages-adding.txt', 'packages-missing.txt') {
+        if (Test-Path $fileName) {
+            Remove-Item $fileName -Force
         }
     }
 
@@ -59,40 +59,40 @@ do {
     $settingsContent.Add('        <profile>')
     $settingsContent.Add('            <id>default</id>')
     $settingsContent.Add('            <repositories>')
-    foreach ($source in $mavenSourceList) {
+    foreach ($mavenSource in $mavenSourceList) {
         $settingsContent.Add('                <repository>')
-        $settingsContent.Add("                    <id>$($source.id)</id>")
-        $settingsContent.Add("                    <url>$($source.url)</url>")
+        $settingsContent.Add("                    <id>$($mavenSource.id)</id>")
+        $settingsContent.Add("                    <url>$($mavenSource.url)</url>")
         $settingsContent.Add('                </repository>')
     }
     $settingsContent.Add('            </repositories>')
     $settingsContent.Add('            <pluginRepositories>')
-    foreach ($source in $mavenSourceList) {
+    foreach ($mavenSource in $mavenSourceList) {
         $settingsContent.Add('                <pluginRepository>')
-        $settingsContent.Add("                    <id>$($source.id)</id>")
-        $settingsContent.Add("                    <url>$($source.url)</url>")
+        $settingsContent.Add("                    <id>$($mavenSource.id)</id>")
+        $settingsContent.Add("                    <url>$($mavenSource.url)</url>")
         $settingsContent.Add('                </pluginRepository>')
     }
     $settingsContent.Add('            </pluginRepositories>')
     $settingsContent.Add('        </profile>')
     $settingsContent.Add('    </profiles>')
     $settingsContent.Add('    <mirrors>')
-    foreach ($source in $mavenSourceList) {
-        if ($source.url -notmatch '^http://') { continue }
+    foreach ($mavenSource in $mavenSourceList) {
+        if ($mavenSource.url -notmatch '^http://') { continue }
         $settingsContent.Add('        <mirror>')
-        $settingsContent.Add("            <id>$($source.id)</id>")
-        $settingsContent.Add("            <mirrorOf>$($source.id)</mirrorOf>")
-        $settingsContent.Add("            <url>$($source.url)</url>")
+        $settingsContent.Add("            <id>$($mavenSource.id)</id>")
+        $settingsContent.Add("            <mirrorOf>$($mavenSource.id)</mirrorOf>")
+        $settingsContent.Add("            <url>$($mavenSource.url)</url>")
         $settingsContent.Add('        </mirror>')
     }
     $settingsContent.Add('    </mirrors>')
     $settingsContent.Add('    <servers>')
-    foreach ($source in $mavenSourceList) {
-        if (-not $source.username -or -not $source.password) { continue }
+    foreach ($mavenSource in $mavenSourceList) {
+        if (-not $mavenSource.username -or -not $mavenSource.password) { continue }
         $settingsContent.Add('        <server>')
-        $settingsContent.Add("            <id>$($source.id)</id>")
-        $settingsContent.Add("            <username>$($source.username)</username>")
-        $settingsContent.Add("            <password>$($source.password)</password>")
+        $settingsContent.Add("            <id>$($mavenSource.id)</id>")
+        $settingsContent.Add("            <username>$($mavenSource.username)</username>")
+        $settingsContent.Add("            <password>$($mavenSource.password)</password>")
         $settingsContent.Add('        </server>')
     }
     $settingsContent.Add('    </servers>')
@@ -123,61 +123,61 @@ do {
             ($_ -replace '\s*-- module.*', '').Trim()
         }
     $packagesContent = $packageList | ForEach-Object {
-        $parts = $_ -split ':'
-        "$($parts[0]):$($parts[1]):$($parts[3])"
+        $packageParts = $_ -split ':'
+        "$($packageParts[0]):$($packageParts[1]):$($packageParts[3])"
     }
     Set-Content 'packages.txt' -Value $packagesContent -Encoding UTF8
     Write-Host "[INFO] 已建立 packages.txt"
 
     # 建立 packages-lock.xml
-    $bomContent = [System.Collections.Generic.List[string]]::new()
-    $bomContent.Add('<?xml version="1.0" encoding="UTF-8"?>')
-    $bomContent.Add('<project xmlns="http://maven.apache.org/POM/4.0.0"')
-    $bomContent.Add('         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"')
-    $bomContent.Add('         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">')
-    $bomContent.Add("    <modelVersion>4.0.0</modelVersion>")
-    $bomContent.Add('')
-    $bomContent.Add("    <groupId>$projectGroupId</groupId>")
-    $bomContent.Add("    <artifactId>$projectArtifactId-lock</artifactId>")
-    $bomContent.Add("    <version>$projectVersion</version>")
-    $bomContent.Add('    <packaging>pom</packaging>')
-    $bomContent.Add('')
-    $bomContent.Add('    <dependencyManagement>')
-    $bomContent.Add('        <dependencies>')
+    $lockContent = [System.Collections.Generic.List[string]]::new()
+    $lockContent.Add('<?xml version="1.0" encoding="UTF-8"?>')
+    $lockContent.Add('<project xmlns="http://maven.apache.org/POM/4.0.0"')
+    $lockContent.Add('         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"')
+    $lockContent.Add('         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">')
+    $lockContent.Add("    <modelVersion>4.0.0</modelVersion>")
+    $lockContent.Add('')
+    $lockContent.Add("    <groupId>$projectGroupId</groupId>")
+    $lockContent.Add("    <artifactId>$projectArtifactId-lock</artifactId>")
+    $lockContent.Add("    <version>$projectVersion</version>")
+    $lockContent.Add('    <packaging>pom</packaging>')
+    $lockContent.Add('')
+    $lockContent.Add('    <dependencyManagement>')
+    $lockContent.Add('        <dependencies>')
     foreach ($package in $packageList) {
-        $parts = $package -split ':'
-        if ($parts.Count -ge 4) {
-            $groupId    = $parts[0]
-            $artifactId = $parts[1]
-            $type       = $parts[2]
-            $version    = $parts[3]
-            $scope      = if ($parts.Count -ge 5) { $parts[4].Trim() } else { 'compile' }
-            $bomContent.Add('            <dependency>')
-            $bomContent.Add("                <groupId>$groupId</groupId>")
-            $bomContent.Add("                <artifactId>$artifactId</artifactId>")
-            $bomContent.Add("                <version>$version</version>")
+        $packageParts = $package -split ':'
+        if ($packageParts.Count -ge 4) {
+            $groupId    = $packageParts[0]
+            $artifactId = $packageParts[1]
+            $type       = $packageParts[2]
+            $version    = $packageParts[3]
+            $scope      = if ($packageParts.Count -ge 5) { $packageParts[4].Trim() } else { 'compile' }
+            $lockContent.Add('            <dependency>')
+            $lockContent.Add("                <groupId>$groupId</groupId>")
+            $lockContent.Add("                <artifactId>$artifactId</artifactId>")
+            $lockContent.Add("                <version>$version</version>")
             if ($type -ne 'jar') {
-                $bomContent.Add("                <type>$type</type>")
+                $lockContent.Add("                <type>$type</type>")
             }
             if ($scope -ne 'compile') {
-                $bomContent.Add("                <scope>$scope</scope>")
+                $lockContent.Add("                <scope>$scope</scope>")
             }
-            $bomContent.Add('            </dependency>')
+            $lockContent.Add('            </dependency>')
         }
     }
-    $bomContent.Add('        </dependencies>')
-    $bomContent.Add('    </dependencyManagement>')
-    $bomContent.Add('</project>')
-    Set-Content 'packages-lock.xml' -Value $bomContent -Encoding UTF8
+    $lockContent.Add('        </dependencies>')
+    $lockContent.Add('    </dependencyManagement>')
+    $lockContent.Add('</project>')
+    Set-Content 'packages-lock.xml' -Value $lockContent -Encoding UTF8
     Write-Host "[INFO] 已建立 packages-lock.xml"
 
     # 建立 packages-adding.txt
     $addingList = [System.Collections.Generic.List[string]]::new()
     foreach ($package in $packageList) {
-        $parts = $package -split ':'
-        if ($parts.Count -ge 4) {
-            $groupPath  = $parts[0] -replace '\.', '/'
-            $artifactId = $parts[1]
+        $packageParts = $package -split ':'
+        if ($packageParts.Count -ge 4) {
+            $groupPath  = $packageParts[0] -replace '\.', '/'
+            $artifactId = $packageParts[1]
             $artifactUrl = "$($mavenRepository.url)/$groupPath/$artifactId/"
             $exists = $false
             try {
@@ -191,7 +191,7 @@ do {
                 }
             }
             if (-not $exists) {
-                $addingList.Add("$($parts[0]):$($parts[1]):$($parts[3])")
+                $addingList.Add("$($packageParts[0]):$($packageParts[1]):$($packageParts[3])")
             }
         }
     }
@@ -201,12 +201,12 @@ do {
     # 建立 packages-missing.txt
     $missingList = [System.Collections.Generic.List[string]]::new()
     foreach ($package in $packageList) {
-        $parts = $package -split ':'
-        if ($parts.Count -ge 4) {
-            $groupPath  = $parts[0] -replace '\.', '/'
-            $artifactId = $parts[1]
-            $type       = $parts[2]
-            $version    = $parts[3]
+        $packageParts = $package -split ':'
+        if ($packageParts.Count -ge 4) {
+            $groupPath  = $packageParts[0] -replace '\.', '/'
+            $artifactId = $packageParts[1]
+            $type       = $packageParts[2]
+            $version    = $packageParts[3]
             $baseUrl    = "$($mavenRepository.url)/$groupPath/$artifactId/$version/$artifactId-$version"
             $isMissing  = $false
 
@@ -231,7 +231,7 @@ do {
             }
 
             if ($isMissing) {
-                $missingList.Add("$($parts[0]):$($parts[1]):$($parts[3])")
+                $missingList.Add("$($packageParts[0]):$($packageParts[1]):$($packageParts[3])")
             }
         }
     }
@@ -240,16 +240,16 @@ do {
     Write-Host "[INFO] ------------------------------------------------------------------------"
 
     # 移除資料夾
-    foreach ($d in './.m2', './packages') {
-        if (Test-Path $d) {
-            Remove-Item -Path $d -Recurse -Force
+    foreach ($directoryPath in './.m2', './packages') {
+        if (Test-Path $directoryPath) {
+            Remove-Item -Path $directoryPath -Recurse -Force
         }
     }
 
     # 移除檔案
-    foreach ($f in 'settings.xml') {
-        if (Test-Path $f) {
-            Remove-Item $f -Force
+    foreach ($fileName in 'settings.xml') {
+        if (Test-Path $fileName) {
+            Remove-Item $fileName -Force
         }
     }
 
