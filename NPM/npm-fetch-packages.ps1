@@ -10,7 +10,7 @@ $exitCode = 0
 $npmSourceList = @(
     @{ id = 'npmjs'; url = 'https://registry.npmjs.org' }
 )
-$npmRegistry = @{ id = 'npmjs'; url = 'https://registry.npmjs.org' }
+$npmRepository = @{ id = 'npmjs'; url = 'https://registry.npmjs.org' }
 do {
 
 
@@ -87,16 +87,16 @@ do {
     Write-Host "-------------------------------------------------------------------------------"
     Write-Host
 
-    # 建立 .npmrc - npmRegistry
+    # 建立 .npmrc - npmRepository
     $npmrcContent = [System.Collections.Generic.List[string]]::new()
-    $npmrcContent.Add("registry=$($npmRegistry.url)")
+    $npmrcContent.Add("registry=$($npmRepository.url)")
     $npmrcContent.Add("cache=./npm_caches")
-    if ($npmRegistry.scope) {
-        $npmrcContent.Add("$($npmRegistry.scope):registry=$($npmRegistry.url)")
+    if ($npmRepository.scope) {
+        $npmrcContent.Add("$($npmRepository.scope):registry=$($npmRepository.url)")
     }
-    if ($npmRegistry.username -and $npmRegistry.password) {
-        $authUrl = $npmRegistry.url -replace '^https?:', ''
-        $token   = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes("$($npmRegistry.username):$($npmRegistry.password)"))
+    if ($npmRepository.username -and $npmRepository.password) {
+        $authUrl = $npmRepository.url -replace '^https?:', ''
+        $token   = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes("$($npmRepository.username):$($npmRepository.password)"))
         $npmrcContent.Add("$authUrl/:_auth=$token")
     }
     Set-Content './.npmrc' -Value $npmrcContent -Encoding UTF8
@@ -116,7 +116,7 @@ do {
     if (Test-Path './package-lock.json') {
         $lockContent = Get-Content './package-lock.json' -Encoding UTF8 -Raw
         foreach ($npmSource in $npmSourceList) {
-            $lockContent = $lockContent -replace [regex]::Escape($npmSource.url), $npmRegistry.url
+            $lockContent = $lockContent -replace [regex]::Escape($npmSource.url), $npmRepository.url
         }
         Set-Content './package-lock.json' -Value $lockContent -Encoding UTF8
     }
@@ -125,7 +125,7 @@ do {
     & npm install --ignore-scripts --no-audit --verbose
     $installExitCode = $LASTEXITCODE
     if ($installExitCode -ne 0) {
-        Write-Host "[ERROR] npm install 執行失敗 (npmRegistry)"
+        Write-Host "[ERROR] npm install 執行失敗 (npmRepository)"
         $exitCode = 1
         break
     }

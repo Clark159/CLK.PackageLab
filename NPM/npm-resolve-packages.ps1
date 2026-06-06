@@ -10,7 +10,7 @@ $exitCode = 0
 $npmSourceList = @(
     @{ id = 'npmjs'; url = 'https://registry.npmjs.org' }
 )
-$npmRegistry = @{ id = 'npmjs'; url = 'https://registry.npmjs.org' }
+$npmRepository = @{ id = 'npmjs'; url = 'https://registry.npmjs.org' }
 do {
 
 
@@ -106,7 +106,7 @@ do {
     $addingList = [System.Collections.Generic.List[string]]::new()
     foreach ($package in $packageList) {
         $encodedName = $package.name -replace '/', '%2F'
-        $packageUrl  = "$($npmRegistry.url)/$encodedName"
+        $packageUrl  = "$($npmRepository.url)/$encodedName"
         $exists = $false
         try {
             $null = Invoke-WebRequest -Uri $packageUrl -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
@@ -132,7 +132,7 @@ do {
         $encodedName = $package.name -replace '/', '%2F'
 
         # 檢查 version
-        $versionUrl = "$($npmRegistry.url)/$encodedName/$($package.version)"
+        $versionUrl = "$($npmRepository.url)/$encodedName/$($package.version)"
         try {
             $null = Invoke-WebRequest -Uri $versionUrl -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
         } catch {

@@ -11,7 +11,7 @@ $mavenSourceList  = @(
     @{ id = 'central';   url = 'https://repo.maven.apache.org/maven2'  }
     @{ id = 'atlassian'; url = 'https://maven.artifacts.atlassian.com' }
 )
-$mavenSourceProxy = @{ id = 'central'; url = 'https://repo.maven.apache.org/maven2' }
+$mavenRepository = @{ id = 'central'; url = 'https://repo.maven.apache.org/maven2' }
 do {
 
 
@@ -140,7 +140,7 @@ do {
         break
     }
 
-    # 建立 settings.xml - mavenSourceProxy
+    # 建立 settings.xml - mavenRepository
     $settingsContent = [System.Collections.Generic.List[string]]::new()
     $settingsContent.Add('<?xml version="1.0" encoding="UTF-8"?>')
     $settingsContent.Add('<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"')
@@ -151,33 +151,33 @@ do {
     $settingsContent.Add('            <id>default</id>')
     $settingsContent.Add('            <repositories>')
     $settingsContent.Add('                <repository>')
-    $settingsContent.Add("                    <id>$($mavenSourceProxy.id)</id>")
-    $settingsContent.Add("                    <url>$($mavenSourceProxy.url)</url>")
+    $settingsContent.Add("                    <id>$($mavenRepository.id)</id>")
+    $settingsContent.Add("                    <url>$($mavenRepository.url)</url>")
     $settingsContent.Add('                </repository>')
     $settingsContent.Add('            </repositories>')
     $settingsContent.Add('            <pluginRepositories>')
     $settingsContent.Add('                <pluginRepository>')
-    $settingsContent.Add("                    <id>$($mavenSourceProxy.id)</id>")
-    $settingsContent.Add("                    <url>$($mavenSourceProxy.url)</url>")
+    $settingsContent.Add("                    <id>$($mavenRepository.id)</id>")
+    $settingsContent.Add("                    <url>$($mavenRepository.url)</url>")
     $settingsContent.Add('                </pluginRepository>')
     $settingsContent.Add('            </pluginRepositories>')
     $settingsContent.Add('        </profile>')
     $settingsContent.Add('    </profiles>')
     $settingsContent.Add('    <mirrors>')
-    if ($mavenSourceProxy.url -match '^http://') {
+    if ($mavenRepository.url -match '^http://') {
         $settingsContent.Add('        <mirror>')
-        $settingsContent.Add("            <id>$($mavenSourceProxy.id)</id>")
-        $settingsContent.Add("            <mirrorOf>$($mavenSourceProxy.id)</mirrorOf>")
-        $settingsContent.Add("            <url>$($mavenSourceProxy.url)</url>")
+        $settingsContent.Add("            <id>$($mavenRepository.id)</id>")
+        $settingsContent.Add("            <mirrorOf>$($mavenRepository.id)</mirrorOf>")
+        $settingsContent.Add("            <url>$($mavenRepository.url)</url>")
         $settingsContent.Add('        </mirror>')
     }
     $settingsContent.Add('    </mirrors>')
     $settingsContent.Add('    <servers>')
-    if ($mavenSourceProxy.username -and $mavenSourceProxy.password) {
+    if ($mavenRepository.username -and $mavenRepository.password) {
         $settingsContent.Add('        <server>')
-        $settingsContent.Add("            <id>$($mavenSourceProxy.id)</id>")
-        $settingsContent.Add("            <username>$($mavenSourceProxy.username)</username>")
-        $settingsContent.Add("            <password>$($mavenSourceProxy.password)</password>")
+        $settingsContent.Add("            <id>$($mavenRepository.id)</id>")
+        $settingsContent.Add("            <username>$($mavenRepository.username)</username>")
+        $settingsContent.Add("            <password>$($mavenRepository.password)</password>")
         $settingsContent.Add('        </server>')
     }
     $settingsContent.Add('    </servers>')
@@ -207,7 +207,7 @@ do {
         "-f" "pom.xml" `
         "-s" "settings.xml"
     if ($LASTEXITCODE -ne 0) {
-        Write-Host "[ERROR] mvn dependency:resolve 執行失敗 (mavenSourceProxy)"
+        Write-Host "[ERROR] mvn dependency:resolve 執行失敗 (mavenRepository)"
         $exitCode = 1
         break
     }
