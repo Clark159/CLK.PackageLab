@@ -197,7 +197,6 @@ do {
     Write-Host "[INFO] 已建立 packages-adding.txt"
 
     # 建立 packages-missing.txt
-    # type → @{ ext; classifier }，pom 不在表內（無 binary artifact）
     $artifactSpecMap = @{
         'jar'         = @{ ext = 'jar'; classifier = ''        }
         'war'         = @{ ext = 'war'; classifier = ''        }

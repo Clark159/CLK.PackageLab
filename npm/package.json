@@ -1,8 +1,0 @@
-﻿{
-    "name": "packages",
-    "version": "1.0.0",
-    "private": true,
-    "dependencies": {
-        "esbuild": "0.28.0"
-    }
-}
