@@ -72,6 +72,7 @@ do {
     # 建立 package-lock.json
     & dotnet restore `
         "--use-lock-file" `
+        "--lock-file-path" "package-lock.json" `
         "--configfile" "nuget.config" `
         "--packages" "packages"
     if ($LASTEXITCODE -ne 0) {
@@ -79,11 +80,15 @@ do {
         $exitCode = 1
         break
     }
+    Write-Host
+	Write-Host
+	Write-Host "[INFO] ------------------------------------------------------------------------"
+    Write-Host "[INFO] 已建立 package-lock.json"
 
     # 讀取 package-lock.json
     $lockJson = Get-Content 'package-lock.json' -Encoding UTF8 -Raw | ConvertFrom-Json
     if ($null -eq $lockJson) {
-        Write-Host "[ERROR] package-lock.json 解析失敗"
+        Write-Host "[ERROR] package-lock.json 讀取失敗"
         $exitCode = 1
         break
     }
