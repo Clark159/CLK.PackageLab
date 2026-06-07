@@ -117,9 +117,12 @@ do {
         break
     }
     
+    # 讀取 package.txt
     $packageList = Get-Content 'package.txt' -Encoding UTF8 | Where-Object { $_ -match '^\s+\S+:\S+:\S+:\S+' } | ForEach-Object {
         ($_ -replace '\s*-- module.*', '').Trim()
     }
+
+    # 整理 package.txt
     $packageContent = $packageList | ForEach-Object {
         $packageParts = $_ -split ':'
         "$($packageParts[0]):$($packageParts[1]):$($packageParts[3])"

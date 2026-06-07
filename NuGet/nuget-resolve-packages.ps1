@@ -16,12 +16,14 @@ do {
 
     # ===== Require =====
     # 檢查檔案
-    $csprojFiles = @(Get-ChildItem -Filter '*.csproj' -ErrorAction SilentlyContinue)
-    if ($csprojFiles.Count -eq 0) {
-        Write-Host "[ERROR] 找不到 *.csproj"
-        $exitCode = 1
-        break
+    foreach ($fileName in 'package.csproj') {
+        if (-not (Test-Path $fileName)) {
+            Write-Host "[ERROR] 找不到 $fileName"
+            $exitCode = 1
+            break
+        }
     }
+    if ($exitCode -ne 0) { break }
 
     # 移除資料夾
     foreach ($directoryPath in './packages', './obj') {
@@ -78,7 +80,7 @@ do {
         break
     }
 
-    # 解析 package-lock.json
+    # 讀取 package-lock.json
     $lockJson = Get-Content 'package-lock.json' -Encoding UTF8 -Raw | ConvertFrom-Json
     if ($null -eq $lockJson) {
         Write-Host "[ERROR] package-lock.json 解析失敗"
