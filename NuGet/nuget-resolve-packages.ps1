@@ -15,6 +15,7 @@ do {
 
 
     # ===== Require =====
+    # 檢查檔案
     $csprojFiles = @(Get-ChildItem -Filter '*.csproj' -ErrorAction SilentlyContinue)
     if ($csprojFiles.Count -eq 0) {
         Write-Host "[ERROR] 找不到 *.csproj"

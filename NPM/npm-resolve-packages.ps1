@@ -15,6 +15,7 @@ do {
 
 
     # ===== Require =====
+    # 檢查檔案
     foreach ($fileName in 'package.json') {
         if (-not (Test-Path $fileName)) {
             Write-Host "[ERROR] 找不到 $fileName"
