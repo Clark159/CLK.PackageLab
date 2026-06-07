@@ -234,10 +234,16 @@ do {
 
     # 顯示下載結果
     if ($missingList.Count -eq 0) {
+        Write-Host
+        Write-Host
+        Write-Host "[INFO] ------------------------------------------------------------------------"
         $packageList | ForEach-Object { Write-Host "[INFO] $_" }
         Write-Host "[INFO] 套件下載完成，取得 $($packageList.Count) 個套件"
         Write-Host "[INFO] ------------------------------------------------------------------------"
     } else {
+        Write-Host
+        Write-Host
+        Write-Host "[INFO] ------------------------------------------------------------------------"
         $missingList | ForEach-Object { Write-Host "[ERROR] $_" }
         Write-Host "[ERROR] 套件下載失敗，缺少 $($missingList.Count) 個套件"
         Write-Host "[ERROR] ------------------------------------------------------------------------"
