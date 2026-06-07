@@ -67,6 +67,10 @@ do {
         $exitCode = 1
         break
     }
+	Write-Host
+	Write-Host
+	Write-Host "[INFO] ------------------------------------------------------------------------"
+    Write-Host "[INFO] 已建立 package-lock.json"
     
     # ConvertFrom-Json 無法處理空字串 key，先將 "" 重新命名再解析
     $rawJson = (Get-Content 'package-lock.json' -Encoding UTF8 -Raw) -replace '(?s)"packages"\s*:\s*\{\s*"":', '"packages":{"__root__":'
