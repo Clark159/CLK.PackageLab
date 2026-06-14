@@ -77,7 +77,7 @@ do {
     Set-Content './package.json' -Value $packageJsonStr -Encoding UTF8
 
     # 下載所有套件
-    & npm install --ignore-scripts --no-audit --verbose
+    & npm install --ignore-scripts --no-audit --force --verbose
     $installExitCode = $LASTEXITCODE
     if ($installExitCode -ne 0) {
         Write-Host "[ERROR] npm install 執行失敗 (npmSourceList)"
@@ -122,7 +122,7 @@ do {
     }
 
     # 下載目標套件
-    & npm install --ignore-scripts --no-audit --verbose
+    & npm install --ignore-scripts --no-audit --force --verbose
     $installExitCode = $LASTEXITCODE
     if ($installExitCode -ne 0) {
         Write-Host "[ERROR] npm install 執行失敗 (npmRepository)"
