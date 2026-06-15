@@ -1,7 +1,7 @@
 {
-  "name": "npm-resolve-packages",
+  "name": "packages",
   "version": "1.0.0",
   "dependencies": {
-    "axios": "1.17.0"
+    "vite-plugin-vue-devtools": "7.7.5"
   }
 }
