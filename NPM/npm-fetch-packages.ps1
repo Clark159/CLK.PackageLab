@@ -25,6 +25,12 @@ do {
     }
     if ($exitCode -ne 0) { break }
 
+    # 檢查資料夾
+    $folderName = Split-Path $PSScriptRoot -Leaf
+    if ($folderName -match '^\d{12}-\d{2}$') {
+        $npmRepository.url = "$($npmRepository.url.TrimEnd('/'))/$folderName"
+    }
+
     # 移除資料夾
     foreach ($directoryPath in './npm_caches', './node_modules', './packages') {
         if (Test-Path $directoryPath) {

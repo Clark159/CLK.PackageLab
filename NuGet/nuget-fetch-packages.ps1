@@ -25,6 +25,12 @@ do {
     }
     if ($exitCode -ne 0) { break }
 
+    # 檢查資料夾
+    $folderName = Split-Path $PSScriptRoot -Leaf
+    if ($folderName -match '^\d{12}-\d{2}$') {
+        $nugetRepository.url = "$($nugetRepository.url.TrimEnd('/'))/$folderName"
+    }
+
     # 移除資料夾
     foreach ($directoryPath in './nuget_caches', './obj', './packages') {
         if (Test-Path $directoryPath) {
