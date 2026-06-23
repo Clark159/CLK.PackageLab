@@ -48,18 +48,19 @@ do {
 
     # 建立 .npmrc - npmSourceList
     $npmrcContent = [System.Collections.Generic.List[string]]::new()
-    $npmrcContent.Add("registry=$($npmSourceList[0].url)")
-    foreach ($npmSource in $npmSourceList) {
-        if ($npmSource.scope) {
-            $npmrcContent.Add("$($npmSource.scope):registry=$($npmSource.url)")
-        }
-        if ($npmSource.username -and $npmSource.password) {
-            $authUrl = $npmSource.url -replace '^https?:', ''
-            $token   = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes("$($npmSource.username):$($npmSource.password)"))
-            $npmrcContent.Add("$authUrl/:_auth=$token")
+    $npmrcContent.Add("registry=$($npmSourceList[0].url.TrimEnd('/'))")
+    foreach ($npmSource in $npmSourceList) {        
+        if ($npmSource.token) {
+            $authUrl = $npmSource.url.TrimEnd('/') -replace '^https?:', ''
+            $npmrcContent.Add("$authUrl/:_authToken=$($npmSource.token)")
+        } elseif ($npmSource.username -and $npmSource.password) {
+            $authUrl  = $npmSource.url.TrimEnd('/') -replace '^https?:', ''
+            $b64token = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes("$($npmSource.username):$($npmSource.password)"))
+            $npmrcContent.Add("$authUrl/:_auth=$b64token")
+            $npmrcContent.Add("$authUrl/:always-auth=true")
         }
     }
-    Set-Content '.npmrc' -Value $npmrcContent -Encoding UTF8
+    [System.IO.File]::WriteAllLines("$PSScriptRoot\.npmrc", $npmrcContent, [System.Text.UTF8Encoding]::new($false))
 
     # 建立 package-lock.json
     & npm install --package-lock-only --ignore-scripts --no-audit

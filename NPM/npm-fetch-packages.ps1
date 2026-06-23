@@ -54,19 +54,20 @@ do {
    
     # 建立 .npmrc - npmSourceList
     $npmrcContent = [System.Collections.Generic.List[string]]::new()
-    $npmrcContent.Add("registry=$($npmSourceList[0].url)")
+    $npmrcContent.Add("registry=$($npmSourceList[0].url.TrimEnd('/'))")
     $npmrcContent.Add("cache=./npm_caches")
     foreach ($npmSource in $npmSourceList) {
-        if ($npmSource.scope) {
-            $npmrcContent.Add("$($npmSource.scope):registry=$($npmSource.url)")
-        }
-        if ($npmSource.username -and $npmSource.password) {
-            $authUrl = $npmSource.url -replace '^https?:', ''
-            $token   = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes("$($npmSource.username):$($npmSource.password)"))
-            $npmrcContent.Add("$authUrl/:_auth=$token")
+        if ($npmSource.token) {
+            $authUrl = $npmSource.url.TrimEnd('/') -replace '^https?:', ''
+            $npmrcContent.Add("$authUrl/:_authToken=$($npmSource.token)")
+        } elseif ($npmSource.username -and $npmSource.password) {
+            $authUrl  = $npmSource.url.TrimEnd('/') -replace '^https?:', ''
+            $b64token = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes("$($npmSource.username):$($npmSource.password)"))
+            $npmrcContent.Add("$authUrl/:_auth=$b64token")
+            $npmrcContent.Add("$authUrl/:always-auth=true")
         }
     }
-    Set-Content './.npmrc' -Value $npmrcContent -Encoding UTF8
+    [System.IO.File]::WriteAllLines("$PSScriptRoot\.npmrc", $npmrcContent, [System.Text.UTF8Encoding]::new($false))
 
     # 讀取 package.txt
     $packageList = Get-Content 'package.txt' -Encoding UTF8 | Where-Object { 
@@ -95,17 +96,18 @@ do {
 
     # 建立 .npmrc - npmRepository
     $npmrcContent = [System.Collections.Generic.List[string]]::new()
-    $npmrcContent.Add("registry=$($npmRepository.url)")
+    $npmrcContent.Add("registry=$($npmRepository.url.TrimEnd('/'))")
     $npmrcContent.Add("cache=./npm_caches")
-    if ($npmRepository.scope) {
-        $npmrcContent.Add("$($npmRepository.scope):registry=$($npmRepository.url)")
+    if ($npmRepository.token) {
+        $authUrl = $npmRepository.url.TrimEnd('/') -replace '^https?:', ''
+        $npmrcContent.Add("$authUrl/:_authToken=$($npmRepository.token)")
+    } elseif ($npmRepository.username -and $npmRepository.password) {
+        $authUrl  = $npmRepository.url.TrimEnd('/') -replace '^https?:', ''
+        $b64token = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes("$($npmRepository.username):$($npmRepository.password)"))
+        $npmrcContent.Add("$authUrl/:_auth=$b64token")
+        $npmrcContent.Add("$authUrl/:always-auth=true")
     }
-    if ($npmRepository.username -and $npmRepository.password) {
-        $authUrl = $npmRepository.url -replace '^https?:', ''
-        $token   = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes("$($npmRepository.username):$($npmRepository.password)"))
-        $npmrcContent.Add("$authUrl/:_auth=$token")
-    }
-    Set-Content './.npmrc' -Value $npmrcContent -Encoding UTF8
+    [System.IO.File]::WriteAllLines("$PSScriptRoot\.npmrc", $npmrcContent, [System.Text.UTF8Encoding]::new($false))
 
     # 刪除目標套件
     foreach ($package in $packageList) {
