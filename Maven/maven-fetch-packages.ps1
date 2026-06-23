@@ -92,12 +92,21 @@ do {
     $settingsContent.Add('    </mirrors>')
     $settingsContent.Add('    <servers>')
     foreach ($mavenSource in $mavenSourceList) {
-        if (-not $mavenSource.username -or -not $mavenSource.password) { continue }
-        $settingsContent.Add('        <server>')
-        $settingsContent.Add("            <id>$($mavenSource.id)</id>")
-        $settingsContent.Add("            <username>$($mavenSource.username)</username>")
-        $settingsContent.Add("            <password>$($mavenSource.password)</password>")
-        $settingsContent.Add('        </server>')
+        if ($mavenSource.token) {
+            $settingsContent.Add('        <server>')
+            $settingsContent.Add("            <id>$($mavenSource.id)</id>")
+            if ($mavenSource.username) {
+                $settingsContent.Add("            <username>$($mavenSource.username)</username>")
+            }
+            $settingsContent.Add("            <password>$($mavenSource.token)</password>")
+            $settingsContent.Add('        </server>')
+        } elseif ($mavenSource.username -and $mavenSource.password) {
+            $settingsContent.Add('        <server>')
+            $settingsContent.Add("            <id>$($mavenSource.id)</id>")
+            $settingsContent.Add("            <username>$($mavenSource.username)</username>")
+            $settingsContent.Add("            <password>$($mavenSource.password)</password>")
+            $settingsContent.Add('        </server>')
+        }
     }
     $settingsContent.Add('    </servers>')
     $settingsContent.Add('    <activeProfiles>')
@@ -179,7 +188,15 @@ do {
     }
     $settingsContent.Add('    </mirrors>')
     $settingsContent.Add('    <servers>')
-    if ($mavenRepository.username -and $mavenRepository.password) {
+    if ($mavenRepository.token) {
+        $settingsContent.Add('        <server>')
+        $settingsContent.Add("            <id>$($mavenRepository.id)</id>")
+        if ($mavenRepository.username) {
+            $settingsContent.Add("            <username>$($mavenRepository.username)</username>")
+        }
+        $settingsContent.Add("            <password>$($mavenRepository.token)</password>")
+        $settingsContent.Add('        </server>')
+    } elseif ($mavenRepository.username -and $mavenRepository.password) {
         $settingsContent.Add('        <server>')
         $settingsContent.Add("            <id>$($mavenRepository.id)</id>")
         $settingsContent.Add("            <username>$($mavenRepository.username)</username>")
