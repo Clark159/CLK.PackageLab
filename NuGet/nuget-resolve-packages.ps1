@@ -10,7 +10,7 @@ $exitCode = 0
 $nugetSourceList = @(
     @{ id = 'nuget.org'; url = 'https://api.nuget.org/v3/index.json' }
 )
-$nugetRepository = @{ id = 'nuget.org'; url = 'https://api.nuget.org/v3-flatcontainer' }
+$nugetRepository = @{ id = 'nuget.org'; url = 'https://api.nuget.org/v3/index.json' }
 do {
 
 
