@@ -64,7 +64,12 @@ do {
     $nugetConfigContent.Add('    </packageSources>')
     $nugetConfigContent.Add('    <packageSourceCredentials>')
     foreach ($nugetSource in $nugetSourceList) {
-        if ($nugetSource.username -and $nugetSource.password) {
+        if ($nugetSource.token) {
+            $nugetConfigContent.Add("        <$($nugetSource.id)>")
+            $nugetConfigContent.Add("            <add key=""Username"" value=""PAT"" />")
+            $nugetConfigContent.Add("            <add key=""ClearTextPassword"" value=""$($nugetSource.token)"" />")
+            $nugetConfigContent.Add("        </$($nugetSource.id)>")
+        } elseif ($nugetSource.username -and $nugetSource.password) {
             $nugetConfigContent.Add("        <$($nugetSource.id)>")
             $nugetConfigContent.Add("            <add key=""Username"" value=""$($nugetSource.username)"" />")
             $nugetConfigContent.Add("            <add key=""ClearTextPassword"" value=""$($nugetSource.password)"" />")
@@ -117,7 +122,12 @@ do {
     $nugetConfigContent.Add("        <add key=""$($nugetRepository.id)"" value=""$($nugetRepository.url)"" />")
     $nugetConfigContent.Add('    </packageSources>')
     $nugetConfigContent.Add('    <packageSourceCredentials>')
-    if ($nugetRepository.username -and $nugetRepository.password) {
+    if ($nugetRepository.token) {
+        $nugetConfigContent.Add("        <$($nugetRepository.id)>")
+        $nugetConfigContent.Add("            <add key=""Username"" value=""PAT"" />")
+        $nugetConfigContent.Add("            <add key=""ClearTextPassword"" value=""$($nugetRepository.token)"" />")
+        $nugetConfigContent.Add("        </$($nugetRepository.id)>")
+    } elseif ($nugetRepository.username -and $nugetRepository.password) {
         $nugetConfigContent.Add("        <$($nugetRepository.id)>")
         $nugetConfigContent.Add("            <add key=""Username"" value=""$($nugetRepository.username)"" />")
         $nugetConfigContent.Add("            <add key=""ClearTextPassword"" value=""$($nugetRepository.password)"" />")

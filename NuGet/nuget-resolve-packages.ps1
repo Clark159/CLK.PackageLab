@@ -58,7 +58,12 @@ do {
     $nugetConfigContent.Add('    </packageSources>')
     $nugetConfigContent.Add('    <packageSourceCredentials>')
     foreach ($nugetSource in $nugetSourceList) {
-        if ($nugetSource.username -and $nugetSource.password) {
+        if ($nugetSource.token) {
+            $nugetConfigContent.Add("        <$($nugetSource.id)>")
+            $nugetConfigContent.Add("            <add key=""Username"" value=""PAT"" />")
+            $nugetConfigContent.Add("            <add key=""ClearTextPassword"" value=""$($nugetSource.token)"" />")
+            $nugetConfigContent.Add("        </$($nugetSource.id)>")
+        } elseif ($nugetSource.username -and $nugetSource.password) {
             $nugetConfigContent.Add("        <$($nugetSource.id)>")
             $nugetConfigContent.Add("            <add key=""Username"" value=""$($nugetSource.username)"" />")
             $nugetConfigContent.Add("            <add key=""ClearTextPassword"" value=""$($nugetSource.password)"" />")
