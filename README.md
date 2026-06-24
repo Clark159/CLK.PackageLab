@@ -1,62 +1,127 @@
 # CLK.PackageLab
 
-## Maven
+套件管理工具集，提供 Maven、NPM、NuGet 套件的計算與下載腳本。
 
-### 操作流程
+---
 
-```
-packages.txt  →  maven-resolve-packages  →  packages-lock.txt
-                                         →  packages-lock.xml
-                                         →  pom.xml
+## 套件計算腳本 (Maven / NPM / NuGet)
 
-packages-lock.txt  →  maven-fetch-packages  →  packages/
-packages-lock.xml  →
-pom.xml            →
-```
+### 功能說明
 
-### 步驟一：編輯套件清單
-
-編輯 [Maven/packages.txt](Maven/packages.txt)，每行一個套件，格式如下：
-
-```
-groupId:artifactId:version
-```
-
-範例：
-
-```
-org.apache.httpcomponents.client5:httpclient5:5.3
-```
-
-### 步驟二：解析套件相依
-
-執行 [Maven/maven-resolve-packages.bat](Maven/maven-resolve-packages.bat)。
-
-此步驟會依據 `packages.txt` 解析完整的相依樹，並產生以下三個檔案：
+從套件引用檔解析所有相依套件（含遞移相依），並產生以下輸出檔案：
 
 | 檔案 | 說明 |
 |------|------|
-| `pom.xml` | Maven 專案描述，包含所有直接相依 |
-| `packages-lock.txt` | 鎖定所有相依（含遞移）的版本清單 |
-| `packages-lock.xml` | 鎖定版本的 BOM（Bill of Materials） |
+| `package.txt` | 所有相依套件的完整清單（含版本） |
+| `package-lock.*` | 相依套件的鎖定清單（**Maven** 用 `.xml`，**NPM / NuGet** 用 `.json`） |
+| `package-adding.txt` | **需要新套件審查**的套件清單 |
+| `package-missing.txt` | **需要升級套件版本**的套件清單 |
 
-執行結果：
+### 腳本清單
 
-![maven-resolve-packages](Maven/maven-resolve-packages.png)
+| 類型   | PowerShell | Batch |
+|--------|-----------|-------|
+| Maven  | [Maven/maven-resolve-packages.ps1](Maven/maven-resolve-packages.ps1) | [Maven/maven-resolve-packages.bat](Maven/maven-resolve-packages.bat) |
+| NPM    | [NPM/npm-resolve-packages.ps1](NPM/npm-resolve-packages.ps1) | [NPM/npm-resolve-packages.bat](NPM/npm-resolve-packages.bat) |
+| NuGet  | [NuGet/nuget-resolve-packages.ps1](NuGet/nuget-resolve-packages.ps1) | [NuGet/nuget-resolve-packages.bat](NuGet/nuget-resolve-packages.bat) |
 
-### 步驟三：下載套件
+### 操作說明
 
-執行 [Maven/maven-fetch-packages.bat](Maven/maven-fetch-packages.bat)。
+1. 建立一個空資料夾，將腳本與套件引用檔一同放入。
 
-此步驟會依據前一步產生的鎖定檔，從 Maven Central 下載所有套件（含遞移相依）至 `Maven/packages/` 目錄。
+   目錄結構範例：
+   ```
+   my-folder/
+   ├── pom.xml                        ← Maven 套件引用檔
+   ├── maven-resolve-packages.bat
+   ├── package.json                   ← NPM 套件引用檔
+   ├── npm-resolve-packages.bat
+   ├── package.csproj                 ← NuGet 套件引用檔
+   └── nuget-resolve-packages.bat
+   ```
 
-執行結果：
+2. 執行腳本：
 
-![maven-fetch-packages](Maven/maven-fetch-packages.png)
+   ```batch
+   :: Maven
+   maven-resolve-packages.bat
 
-### 注意事項
+   :: NPM
+   npm-resolve-packages.bat
 
-- 執行前須確認系統已安裝 `mvn` 並加入 PATH。
-- `maven-resolve-packages` 需連線至 Maven Central 解析相依樹。
-- `maven-fetch-packages` 執行前必須先完成 `maven-resolve-packages`，確保 `pom.xml`、`packages-lock.txt`、`packages-lock.xml` 均存在。
-- 每次執行 `maven-fetch-packages` 時，`packages/` 和 `.m2/` 目錄都會被清除重建。
+   :: NuGet
+   nuget-resolve-packages.bat
+   ```
+
+3. 腳本執行中，看到下列畫面，代表執行完畢：
+
+   <!-- 截圖 -->
+
+4. 執行完成後，確認 `package.txt`、`package-lock.*`、`package-adding.txt`、`package-missing.txt` 已產生。
+
+---
+
+## 套件下載腳本 (Maven / NPM / NuGet)
+
+### 功能說明
+
+根據 `package.txt` 清單，從來源 Registry 下載套件，並產生以下輸出資料夾：
+
+| 資料夾 | 說明 |
+|--------|------|
+| `packages/` | 所有下載的套件檔案 |
+
+### 腳本清單
+
+| 類型   | PowerShell | Batch |
+|--------|-----------|-------|
+| Maven  | [Maven/maven-fetch-packages.ps1](Maven/maven-fetch-packages.ps1) | [Maven/maven-fetch-packages.bat](Maven/maven-fetch-packages.bat) |
+| NPM    | [NPM/npm-fetch-packages.ps1](NPM/npm-fetch-packages.ps1) | [NPM/npm-fetch-packages.bat](NPM/npm-fetch-packages.bat) |
+| NuGet  | [NuGet/nuget-fetch-packages.ps1](NuGet/nuget-fetch-packages.ps1) | [NuGet/nuget-fetch-packages.bat](NuGet/nuget-fetch-packages.bat) |
+
+### 操作說明
+
+> **注意：下載腳本必須放在需求單資料夾內才能正確執行。**
+>
+> 資料夾名稱格式：`XXXXXXXXXXXX-XX`（12 位數字 + 連字號 + 2 位數字）
+>
+> 範例：`202406240001-01`
+
+1. 在需求單資料夾中建立對應的子資料夾，並將腳本與 `package.txt` 一同放入。
+
+   目錄結構範例：
+   ```
+   202406240001-01/
+   ├── package.txt
+   ├── maven-fetch-packages.ps1
+   ├── maven-fetch-packages.bat
+   ```
+
+2. 確認 `package.txt` 存在，格式依生態系不同：
+
+   | 類型   | 格式 | 範例 |
+   |--------|------|------|
+   | Maven  | `groupId:artifactId:version` | `org.springframework:spring-core:6.1.0` |
+   | NPM    | `name@version` | `lodash@4.17.21` |
+   | NuGet  | `name/version` | `Newtonsoft.Json/13.0.3` |
+
+3. 執行腳本：
+
+   ```batch
+   :: Maven
+   maven-fetch-packages.bat
+
+   :: NPM
+   npm-fetch-packages.bat
+
+   :: NuGet
+   nuget-fetch-packages.bat
+   ```
+
+4. 執行腳本後，看到下列畫面，代表執行完畢：
+
+   <!-- 截圖 -->
+
+5. 執行完成後，確認 `packages/` 資料夾已產生，內含所有套件檔案。
+
+   <!-- 截圖 -->
