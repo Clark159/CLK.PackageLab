@@ -28,7 +28,7 @@ do {
     # 檢查資料夾
     $folderName = Split-Path $PSScriptRoot -Leaf
     if ($folderName -match '^\d{12}-\d{2}$') {
-        $nugetRepository.url = "$($nugetRepository.url.TrimEnd('/'))/$folderName"
+        $nugetRepository.url = $nugetRepository.url -replace '(?<=/)(index\.json)$', "$folderName/`$1"
     }
 
     # 移除資料夾
