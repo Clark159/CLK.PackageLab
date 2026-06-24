@@ -8,9 +8,9 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 # ===== Variables =====
 $exitCode = 0
 $npmSourceList = @(
-    @{ id = 'npmjs'; url = 'https://registry.npmjs.org' }
+    @{ id = 'npmjs'; url = 'https://registry.npmjs.org/' }
 )
-$npmRepository = @{ id = 'npmjs'; url = 'https://registry.npmjs.org' }
+$npmRepository = @{ id = 'npmjs'; url = 'https://registry.npmjs.org/' }
 do {
 
 
