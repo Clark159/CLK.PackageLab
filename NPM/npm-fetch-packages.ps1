@@ -28,7 +28,7 @@ do {
     # 檢查資料夾
     $folderName = Split-Path $PSScriptRoot -Leaf
     if ($folderName -match '^\d{12}-\d{2}$') {
-        $npmRepository.url = "$($npmRepository.url.TrimEnd('/'))/$folderName"
+        $npmRepository.url = "$($npmRepository.url.TrimEnd('/'))/$folderName/"
     }
 
     # 移除資料夾
