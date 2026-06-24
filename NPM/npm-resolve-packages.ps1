@@ -48,7 +48,7 @@ do {
 
     # 建立 .npmrc - npmSourceList
     $npmrcContent = [System.Collections.Generic.List[string]]::new()
-    $npmrcContent.Add("registry=$($npmSourceList[0].url.TrimEnd('/'))")
+    $npmrcContent.Add("registry=$($npmSourceList[0].url.TrimEnd('/'))/")
     foreach ($npmSource in $npmSourceList) {        
         if ($npmSource.token) {
             $authUrl = $npmSource.url.TrimEnd('/') -replace '^https?:', ''

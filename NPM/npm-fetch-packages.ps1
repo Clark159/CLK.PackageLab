@@ -54,7 +54,7 @@ do {
    
     # 建立 .npmrc - npmSourceList
     $npmrcContent = [System.Collections.Generic.List[string]]::new()
-    $npmrcContent.Add("registry=$($npmSourceList[0].url.TrimEnd('/'))")
+    $npmrcContent.Add("registry=$($npmSourceList[0].url.TrimEnd('/'))/")
     $npmrcContent.Add("cache=./npm_caches")
     foreach ($npmSource in $npmSourceList) {
         if ($npmSource.token) {
@@ -96,7 +96,7 @@ do {
 
     # 建立 .npmrc - npmRepository
     $npmrcContent = [System.Collections.Generic.List[string]]::new()
-    $npmrcContent.Add("registry=$($npmRepository.url.TrimEnd('/'))")
+    $npmrcContent.Add("registry=$($npmRepository.url.TrimEnd('/'))/")
     $npmrcContent.Add("cache=./npm_caches")
     if ($npmRepository.token) {
         $authUrl = $npmRepository.url.TrimEnd('/') -replace '^https?:', ''
