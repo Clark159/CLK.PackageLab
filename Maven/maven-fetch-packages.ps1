@@ -8,10 +8,10 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 # ===== Variables =====
 $exitCode = 0
 $mavenSourceList  = @(
-    @{ id = 'central';   url = 'https://repo.maven.apache.org/maven2'  }
-    @{ id = 'atlassian'; url = 'https://maven.artifacts.atlassian.com' }
+    @{ id = 'central';   url = 'https://repo.maven.apache.org/maven2/'  }
+    @{ id = 'atlassian'; url = 'https://maven.artifacts.atlassian.com/' }
 )
-$mavenRepository = @{ id = 'central'; url = 'https://repo.maven.apache.org/maven2' }
+$mavenRepository = @{ id = 'central'; url = 'https://repo.maven.apache.org/maven2/' }
 do {
 
 
