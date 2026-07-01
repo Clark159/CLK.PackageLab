@@ -7,6 +7,7 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 
 # ===== Variables =====
 $exitCode = 0
+$targetFramework = 'net8.0'
 $nugetSourceList = @(
     @{ id = 'nuget.org'; url = 'https://api.nuget.org/v3/index.json' }
 )
@@ -89,7 +90,7 @@ do {
     $csprojContent = [System.Collections.Generic.List[string]]::new()
     $csprojContent.Add('<Project Sdk="Microsoft.NET.Sdk">')
     $csprojContent.Add('    <PropertyGroup>')
-    $csprojContent.Add('        <TargetFramework>net8.0</TargetFramework>')
+    $csprojContent.Add("        <TargetFramework>$targetFramework</TargetFramework>")
     $csprojContent.Add('    </PropertyGroup>')
     $csprojContent.Add('    <ItemGroup>')
     foreach ($package in $packageList) {

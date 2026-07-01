@@ -11,7 +11,7 @@ $projectGroupId    = 'com.example'
 $projectArtifactId = 'packages'
 $projectVersion    = '1.0.0'
 $mavenSourceList   = @(
-    @{ id = 'central';   url = 'https://repo.maven.apache.org/maven2/'  }
+    @{ id = 'central'; url = 'https://repo.maven.apache.org/maven2/' }
     @{ id = 'atlassian'; url = 'https://maven.artifacts.atlassian.com/' }
 )
 $mavenRepository   = @{ id = 'central'; url = 'https://repo.maven.apache.org/maven2/' }
@@ -125,7 +125,10 @@ do {
         $exitCode = 1
         break
     }
-    
+    Write-Host
+    Write-Host
+    Write-Host "[INFO] ------------------------------------------------------------------------"
+
     # 讀取 package.txt
     $packageList = Get-Content 'package.txt' -Encoding UTF8 | Where-Object { $_ -match '^\s+\S+:\S+:\S+:\S+' } | ForEach-Object {
         ($_ -replace '\s*-- module.*', '').Trim()

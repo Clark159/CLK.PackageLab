@@ -49,7 +49,7 @@ do {
     # 建立 .npmrc - npmSourceList
     $npmrcContent = [System.Collections.Generic.List[string]]::new()
     $npmrcContent.Add("registry=$($npmSourceList[0].url.TrimEnd('/'))/")
-    foreach ($npmSource in $npmSourceList) {        
+    foreach ($npmSource in $npmSourceList) {
         if ($npmSource.token) {
             $authUrl = $npmSource.url.TrimEnd('/') -replace '^https?:', ''
             $npmrcContent.Add("$authUrl/:_authToken=$($npmSource.token)")
@@ -69,11 +69,11 @@ do {
         $exitCode = 1
         break
     }
-	Write-Host
-	Write-Host
-	Write-Host "[INFO] ------------------------------------------------------------------------"
+    Write-Host
+    Write-Host
+    Write-Host "[INFO] ------------------------------------------------------------------------"
     Write-Host "[INFO] 已建立 package-lock.json"
-    
+
     # 讀取 package-lock.json
     $lockJson = (Get-Content 'package-lock.json' -Encoding UTF8 -Raw) -replace '(?s)"packages"\s*:\s*\{\s*"":', '"packages":{"__root__":' | ConvertFrom-Json
     if ($null -eq $lockJson) {
@@ -102,7 +102,7 @@ do {
             }
         }
     }
-    $packageList = @($packageMap.Values | Sort-Object { $_.name })    
+    $packageList = @($packageMap.Values | Sort-Object { $_.name })
     $packageContent = $packageList | ForEach-Object { "$($_.name)@$($_.version)" }
     Set-Content 'package.txt' -Value $packageContent -Encoding UTF8
     Write-Host "[INFO] 已建立 package.txt"

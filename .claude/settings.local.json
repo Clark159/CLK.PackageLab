@@ -3,7 +3,19 @@
     "allow": [
       "PowerShell($null = [System.Management.Automation.Language.Parser]::ParseFile\\('C:\\\\Lab\\\\CLK.PackageLab\\\\npm\\\\npm-resolve-packages.ps1', [ref]$null, [ref]$errors\\); $errors)",
       "PowerShell($errors = $null; $tokens = $null; [System.Management.Automation.Language.Parser]::ParseFile\\('C:\\\\Lab\\\\CLK.PackageLab\\\\npm\\\\npm-resolve-packages.ps1', [ref]$tokens, [ref]$errors\\) | Out-Null; $errors)",
-      "PowerShell($bytes = [System.IO.File]::ReadAllBytes\\('npm/npm-resolve-packages.ps1'\\); if \\($bytes[0] -eq 0xFF -and $bytes[1] -eq 0xFE\\) { 'UTF-16 LE \\(BOM\\)' } elseif \\($bytes[0] -eq 0xFE -and $bytes[1] -eq 0xFF\\) { 'UTF-16 BE \\(BOM\\)' } elseif \\($bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF\\) { 'UTF-8 BOM' } else { \"No BOM — first bytes: $\\($bytes[0]\\) $\\($bytes[1]\\) $\\($bytes[2]\\)\" })"
+      "PowerShell($bytes = [System.IO.File]::ReadAllBytes\\('npm/npm-resolve-packages.ps1'\\); if \\($bytes[0] -eq 0xFF -and $bytes[1] -eq 0xFE\\) { 'UTF-16 LE \\(BOM\\)' } elseif \\($bytes[0] -eq 0xFE -and $bytes[1] -eq 0xFF\\) { 'UTF-16 BE \\(BOM\\)' } elseif \\($bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF\\) { 'UTF-8 BOM' } else { \"No BOM — first bytes: $\\($bytes[0]\\) $\\($bytes[1]\\) $\\($bytes[2]\\)\" })",
+      "Bash(git -C /c/Lab/CLK.PackageLab diff -- NuGet/nuget-resolve-packages.ps1 NuGet/nuget-fetch-packages.ps1)",
+      "PowerShell(try { $r = Invoke-WebRequest -Uri \"https://api.nuget.org/v3/index.json/newtonsoft.json/index.json\" -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop; \"Status: $\\($r.StatusCode\\)\" } catch { \"Exception: $\\($_.Exception.Message\\); StatusCode: $\\($_.Exception.Response.StatusCode.value__\\)\" })",
+      "PowerShell(try { $r = Invoke-WebRequest -Uri \"https://api.nuget.org/v3-flatcontainer/newtonsoft.json/index.json\" -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop; \"Status: $\\($r.StatusCode\\)\" } catch { \"Exception: $\\($_.Exception.Message\\); StatusCode: $\\($_.Exception.Response.StatusCode.value__\\)\" })",
+      "PowerShell(try { $r = Invoke-WebRequest -Uri \"https://api.nuget.org/v3/index.json/newtonsoft.json/13.0.3/newtonsoft.json.13.0.3.nuspec\" -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop; \"Status: $\\($r.StatusCode\\)\" } catch { \"Exception: $\\($_.Exception.Message\\); StatusCode: $\\($_.Exception.Response.StatusCode.value__\\)\" })",
+      "Bash(dotnet --version)",
+      "PowerShell(& \"c:\\\\Lab\\\\CLK.PackageLab\\\\NuGet\\\\nuget-fetch-packages.ps1\")",
+      "PowerShell(& \"c:\\\\Lab\\\\CLK.PackageLab\\\\NuGet\\\\nuget-fetch-packages.ps1\"; \"EXITCODE=$LASTEXITCODE\")",
+      "Bash(git check-ignore *)",
+      "Bash(git status *)",
+      "Bash(git checkout *)",
+      "PowerShell($files = 'NuGet\\\\nuget-fetch-packages.ps1','Maven\\\\maven-fetch-packages.ps1','NPM\\\\npm-fetch-packages.ps1'; foreach \\($f in $files\\) { $errors = $null; [System.Management.Automation.Language.Parser]::ParseFile\\(\\(Resolve-Path $f\\), [ref]$null, [ref]$errors\\) | Out-Null; if \\($errors.Count -gt 0\\) { \"FAIL: $f\"; $errors } else { \"OK: $f\" } })",
+      "PowerShell($files = 'NuGet\\\\nuget-fetch-packages.ps1','NuGet\\\\nuget-resolve-packages.ps1','NPM\\\\npm-fetch-packages.ps1','NPM\\\\npm-resolve-packages.ps1','Maven\\\\maven-fetch-packages.ps1','Maven\\\\maven-resolve-packages.ps1'; foreach \\($f in $files\\) { $errors = $null; [System.Management.Automation.Language.Parser]::ParseFile\\(\\(Resolve-Path $f\\), [ref]$null, [ref]$errors\\) | Out-Null; if \\($errors.Count -gt 0\\) { \"FAIL: $f\"; $errors } else { \"OK: $f\" } })"
     ]
   }
 }

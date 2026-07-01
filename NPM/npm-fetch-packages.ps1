@@ -7,10 +7,12 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 
 # ===== Variables =====
 $exitCode = 0
-$npmSourceList = @(
+$projectName    = 'fetch-packages'
+$projectVersion = '1.0.0'
+$npmSourceList  = @(
     @{ id = 'npmjs'; url = 'https://registry.npmjs.org/' }
 )
-$npmRepository = @{ id = 'npmjs'; url = 'https://registry.npmjs.org/' }
+$npmRepository  = @{ id = 'npmjs'; url = 'https://registry.npmjs.org/' }
 do {
 
 
@@ -51,7 +53,7 @@ do {
     Write-Host "npm-fetch-packages"
     Write-Host "-------------------------------------------------------------------------------"
     Write-Host
-   
+
     # 建立 .npmrc - npmSourceList
     $npmrcContent = [System.Collections.Generic.List[string]]::new()
     $npmrcContent.Add("registry=$($npmSourceList[0].url.TrimEnd('/'))/")
@@ -70,29 +72,34 @@ do {
     [System.IO.File]::WriteAllLines("$PSScriptRoot\.npmrc", $npmrcContent, [System.Text.UTF8Encoding]::new($false))
 
     # 讀取 package.txt
-    $packageList = Get-Content 'package.txt' -Encoding UTF8 | Where-Object { 
-        $_.Trim() -ne '' 
+    $packageList = Get-Content 'package.txt' -Encoding UTF8 | Where-Object {
+        $_.Trim() -ne ''
     }
 
     # 產生 package.json
-    $depsStr = ($packageList | ForEach-Object {
-        if ($_ -match '^(@[^@]+/[^@]+|[^@]+)@(.+)$') {
-            "    `"$($Matches[1])`": `"$($Matches[2])`""
+    $dependencyList = [System.Collections.Generic.List[string]]::new()
+    foreach ($package in $packageList) {
+        if ($package -match '^(@[^@]+/[^@]+|[^@]+)@(.+)$') {
+            $dependencyList.Add("        `"$($Matches[1])`": `"$($Matches[2])`"")
         }
-    }) -join ",`n"
-    $packageJsonStr = "{`n  `"name`": `"fetch-packages`",`n  `"version`": `"1.0.0`",`n  `"dependencies`": {`n$depsStr`n  }`n}"
-    Set-Content './package.json' -Value $packageJsonStr -Encoding UTF8
+    }
+    $packageJsonContent = [System.Collections.Generic.List[string]]::new()
+    $packageJsonContent.Add('{')
+    $packageJsonContent.Add("    `"name`": `"$projectName`",")
+    $packageJsonContent.Add("    `"version`": `"$projectVersion`",")
+    $packageJsonContent.Add('    "dependencies": {')
+    $packageJsonContent.Add(($dependencyList -join ",`n"))
+    $packageJsonContent.Add('    }')
+    $packageJsonContent.Add('}')
+    Set-Content './package.json' -Value $packageJsonContent -Encoding UTF8
 
     # 下載所有套件
     & npm install --ignore-scripts --no-audit --force --verbose
-    $installExitCode = $LASTEXITCODE
-    if ($installExitCode -ne 0) {
+    if ($LASTEXITCODE -ne 0) {
         Write-Host "[ERROR] npm install 執行失敗 (npmSourceList)"
         $exitCode = 1
         break
     }
-    Write-Host "-------------------------------------------------------------------------------"
-    Write-Host
 
     # 建立 .npmrc - npmRepository
     $npmrcContent = [System.Collections.Generic.List[string]]::new()
@@ -133,8 +140,7 @@ do {
 
     # 下載目標套件
     & npm install --ignore-scripts --no-audit --force --verbose
-    $installExitCode = $LASTEXITCODE
-    if ($installExitCode -ne 0) {
+    if ($LASTEXITCODE -ne 0) {
         Write-Host "[ERROR] npm install 執行失敗 (npmRepository)"
         $exitCode = 1
         break

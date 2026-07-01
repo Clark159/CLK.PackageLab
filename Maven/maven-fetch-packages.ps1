@@ -7,11 +7,14 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 
 # ===== Variables =====
 $exitCode = 0
-$mavenSourceList  = @(
-    @{ id = 'central';   url = 'https://repo.maven.apache.org/maven2/'  }
+$projectGroupId    = 'com.example'
+$projectArtifactId = 'packages'
+$projectVersion    = '1.0.0'
+$mavenSourceList   = @(
+    @{ id = 'central'; url = 'https://repo.maven.apache.org/maven2/' }
     @{ id = 'atlassian'; url = 'https://maven.artifacts.atlassian.com/' }
 )
-$mavenRepository = @{ id = 'central'; url = 'https://repo.maven.apache.org/maven2/' }
+$mavenRepository   = @{ id = 'central'; url = 'https://repo.maven.apache.org/maven2/' }
 do {
 
 
@@ -31,7 +34,7 @@ do {
     if ($folderName -match '^\d{12}-\d{2}$') {
         $mavenRepository.url = "$($mavenRepository.url.TrimEnd('/'))/$folderName/"
     }
-    
+
     # 移除資料夾
     foreach ($directoryPath in './.m2', './packages') {
         if (Test-Path $directoryPath) {
@@ -118,7 +121,7 @@ do {
 
     # 讀取 package.txt
     $packageList = Get-Content 'package.txt' -Encoding UTF8 | Where-Object {
-        $_.Trim() -ne '' 
+        $_.Trim() -ne ''
     }
 
     # 產生 pom.xml
@@ -126,9 +129,9 @@ do {
     $pomContent.Add('<?xml version="1.0" encoding="UTF-8"?>')
     $pomContent.Add('<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">')
     $pomContent.Add('    <modelVersion>4.0.0</modelVersion>')
-    $pomContent.Add('    <groupId>com.example</groupId>')
-    $pomContent.Add('    <artifactId>packages</artifactId>')
-    $pomContent.Add('    <version>1.0.0</version>')
+    $pomContent.Add("    <groupId>$projectGroupId</groupId>")
+    $pomContent.Add("    <artifactId>$projectArtifactId</artifactId>")
+    $pomContent.Add("    <version>$projectVersion</version>")
     $pomContent.Add('    <packaging>pom</packaging>')
     $pomContent.Add('    <dependencies>')
     foreach ($package in $packageList) {

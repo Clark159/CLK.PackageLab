@@ -86,14 +86,14 @@ do {
         break
     }
     Write-Host
-	Write-Host
-	Write-Host "[INFO] ------------------------------------------------------------------------"
+    Write-Host
+    Write-Host "[INFO] ------------------------------------------------------------------------"
     Write-Host "[INFO] 已建立 package-lock.json"
 
     # 讀取 package-lock.json
     $lockJson = Get-Content 'package-lock.json' -Encoding UTF8 -Raw | ConvertFrom-Json
     if ($null -eq $lockJson) {
-        Write-Host "[ERROR] package-lock.json 讀取失敗"
+        Write-Host "[ERROR] package-lock.json 解析失敗"
         $exitCode = 1
         break
     }
