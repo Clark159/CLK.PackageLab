@@ -15,7 +15,36 @@
       "Bash(git status *)",
       "Bash(git checkout *)",
       "PowerShell($files = 'NuGet\\\\nuget-fetch-packages.ps1','Maven\\\\maven-fetch-packages.ps1','NPM\\\\npm-fetch-packages.ps1'; foreach \\($f in $files\\) { $errors = $null; [System.Management.Automation.Language.Parser]::ParseFile\\(\\(Resolve-Path $f\\), [ref]$null, [ref]$errors\\) | Out-Null; if \\($errors.Count -gt 0\\) { \"FAIL: $f\"; $errors } else { \"OK: $f\" } })",
-      "PowerShell($files = 'NuGet\\\\nuget-fetch-packages.ps1','NuGet\\\\nuget-resolve-packages.ps1','NPM\\\\npm-fetch-packages.ps1','NPM\\\\npm-resolve-packages.ps1','Maven\\\\maven-fetch-packages.ps1','Maven\\\\maven-resolve-packages.ps1'; foreach \\($f in $files\\) { $errors = $null; [System.Management.Automation.Language.Parser]::ParseFile\\(\\(Resolve-Path $f\\), [ref]$null, [ref]$errors\\) | Out-Null; if \\($errors.Count -gt 0\\) { \"FAIL: $f\"; $errors } else { \"OK: $f\" } })"
+      "PowerShell($files = 'NuGet\\\\nuget-fetch-packages.ps1','NuGet\\\\nuget-resolve-packages.ps1','NPM\\\\npm-fetch-packages.ps1','NPM\\\\npm-resolve-packages.ps1','Maven\\\\maven-fetch-packages.ps1','Maven\\\\maven-resolve-packages.ps1'; foreach \\($f in $files\\) { $errors = $null; [System.Management.Automation.Language.Parser]::ParseFile\\(\\(Resolve-Path $f\\), [ref]$null, [ref]$errors\\) | Out-Null; if \\($errors.Count -gt 0\\) { \"FAIL: $f\"; $errors } else { \"OK: $f\" } })",
+      "Bash(npm --version)",
+      "Bash(mvn --version)",
+      "PowerShell(& '.\\\\NuGet\\\\nuget-resolve-packages.ps1'; \"EXITCODE=$LASTEXITCODE\")",
+      "PowerShell(& '.\\\\NuGet\\\\nuget-fetch-packages.ps1'; \"EXITCODE=$LASTEXITCODE\")",
+      "PowerShell(& 'C:\\\\Lab\\\\CLK.PackageLab\\\\NuGet\\\\nuget-fetch-packages.ps1'; \"EXITCODE=$LASTEXITCODE\")",
+      "PowerShell(& 'C:\\\\Lab\\\\CLK.PackageLab\\\\NPM\\\\npm-resolve-packages.ps1'; \"EXITCODE=$LASTEXITCODE\")",
+      "PowerShell(& 'C:\\\\Lab\\\\CLK.PackageLab\\\\NPM\\\\npm-fetch-packages.ps1'; \"EXITCODE=$LASTEXITCODE\")",
+      "PowerShell(& 'C:\\\\Lab\\\\CLK.PackageLab\\\\Maven\\\\maven-resolve-packages.ps1'; \"EXITCODE=$LASTEXITCODE\")",
+      "PowerShell(& 'C:\\\\Lab\\\\CLK.PackageLab\\\\Maven\\\\maven-fetch-packages.ps1'; \"EXITCODE=$LASTEXITCODE\")",
+      "Bash(mkdir -p /c/Users/clark/AppData/Local/Temp/claude/c--Lab-CLK-PackageLab/372590fc-2b23-4599-9482-1cf13e083d69/scratchpad/foldertest/202601020001-01)",
+      "Bash(cp /c/Lab/CLK.PackageLab/NuGet/nuget-fetch-packages.ps1 /c/Users/clark/AppData/Local/Temp/claude/c--Lab-CLK-PackageLab/372590fc-2b23-4599-9482-1cf13e083d69/scratchpad/foldertest/202601020001-01/)",
+      "Bash(printf 'Newtonsoft.Json/13.0.3\\\\n')",
+      "Read(//c/Users/clark/AppData/Local/Temp/claude/c--Lab-CLK-PackageLab/372590fc-2b23-4599-9482-1cf13e083d69/scratchpad/foldertest/**)",
+      "Bash(SCRATCH=\"/c/Users/clark/AppData/Local/Temp/claude/c--Lab-CLK-PackageLab/372590fc-2b23-4599-9482-1cf13e083d69/scratchpad\" *)",
+      "PowerShell($files = 'NuGet\\\\nuget-fetch-packages.ps1','Maven\\\\maven-fetch-packages.ps1'; foreach \\($f in $files\\) { $errors = $null; [System.Management.Automation.Language.Parser]::ParseFile\\(\\(Resolve-Path $f\\), [ref]$null, [ref]$errors\\) | Out-Null; if \\($errors.Count -gt 0\\) { \"FAIL: $f\"; $errors } else { \"OK: $f\" } })",
+      "Bash(pip --version)",
+      "Bash(pip download *)",
+      "PowerShell(python --version 2>&1)",
+      "PowerShell(py --version 2>&1)",
+      "PowerShell(pip --version 2>&1)",
+      "PowerShell($files = 'PyPI\\\\pypi-resolve-packages.ps1','PyPI\\\\pypi-fetch-packages.ps1'; foreach \\($f in $files\\) { $errors = $null; [System.Management.Automation.Language.Parser]::ParseFile\\(\\(Resolve-Path $f\\), [ref]$null, [ref]$errors\\) | Out-Null; if \\($errors.Count -gt 0\\) { \"FAIL: $f\"; $errors } else { \"OK: $f\" } })",
+      "Bash(grep -n ' `$' \"/c/Lab/CLK.PackageLab/PyPI/pypi-fetch-packages.ps1\")",
+      "Bash(grep -nP '`[ \\\\t]+$' \"/c/Lab/CLK.PackageLab/PyPI/pypi-fetch-packages.ps1\")",
+      "Bash(grep -nP '`[^\\\\r\\\\n$]' \"/c/Lab/CLK.PackageLab/PyPI/pypi-fetch-packages.ps1\")",
+      "Bash(xxd)",
+      "PowerShell($files = 'PyPI\\\\pypi-resolve-packages.ps1','PyPI\\\\pypi-fetch-packages.ps1'; foreach \\($f in $files\\) { $errors = $null; [System.Management.Automation.Language.Parser]::ParseFile\\(\\(Resolve-Path $f\\), [ref]$null, [ref]$errors\\) | Out-Null; if \\($errors.Count -gt 0\\) { \"FAIL: $f\"; $errors | ForEach-Object { \"  Line $\\($_.Extent.StartLineNumber\\): $\\($_.Message\\)\" } } else { \"OK: $f\" } })"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\clark\\AppData\\Local\\Temp\\claude\\c--Lab-CLK-PackageLab\\372590fc-2b23-4599-9482-1cf13e083d69\\scratchpad\\pkgtest"
     ]
   }
 }
