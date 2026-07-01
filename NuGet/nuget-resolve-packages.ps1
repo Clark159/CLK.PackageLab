@@ -26,7 +26,7 @@ do {
     if ($exitCode -ne 0) { break }
 
     # 移除資料夾
-    foreach ($directoryPath in './packages', './obj') {
+    foreach ($directoryPath in './nuget_caches', './obj', './packages') {
         if (Test-Path $directoryPath) {
             Remove-Item -Path $directoryPath -Recurse -Force
         }
@@ -79,7 +79,7 @@ do {
         "--use-lock-file" `
         "--lock-file-path" "package-lock.json" `
         "--configfile" "nuget.config" `
-        "--packages" "packages"
+        "--packages" "./nuget_caches"
     if ($LASTEXITCODE -ne 0) {
         Write-Host "[ERROR] dotnet restore 執行失敗 (nugetSourceList)"
         $exitCode = 1
@@ -180,7 +180,7 @@ do {
     Write-Host "[INFO] ------------------------------------------------------------------------"
 
     # 移除資料夾
-    foreach ($directoryPath in './packages', './obj') {
+    foreach ($directoryPath in './nuget_caches', './obj') {
         if (Test-Path $directoryPath) {
             Remove-Item -Path $directoryPath -Recurse -Force
         }

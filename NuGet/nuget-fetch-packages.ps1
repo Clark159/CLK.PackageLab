@@ -179,6 +179,7 @@ do {
             }
         }
     }
+    Get-ChildItem -Path './packages' -Recurse -Filter '.nupkg.metadata' | Remove-Item -Force
 
     # 顯示下載結果
     if ($missingList.Count -eq 0) {
@@ -206,7 +207,7 @@ do {
     }
 
     # 移除檔案
-    foreach ($fileName in 'nuget.config', 'package.csproj', 'package-lock.json') {
+    foreach ($fileName in 'nuget.config', 'package.csproj') {
         if (Test-Path $fileName) {
             Remove-Item $fileName -Force
         }
