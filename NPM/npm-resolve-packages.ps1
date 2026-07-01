@@ -112,18 +112,18 @@ do {
     foreach ($package in $packageList) {
         $encodedName = $package.name -replace '/', '%2F'
         $packageUrl  = "$($npmRepository.url.TrimEnd('/'))/$encodedName"
-        $exists = $false
+        $isAdding = $true
         try {
             $null = Invoke-WebRequest -Uri $packageUrl -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
-            $exists = $true
+            $isAdding = $false
         } catch {
             if ($_.Exception.Response -and $_.Exception.Response.StatusCode.value__ -eq 404) {
-                $exists = $false
+                $isAdding = $true
             } else {
-                $exists = $true
+                $isAdding = $false
             }
         }
-        if (-not $exists) {
+        if ($isAdding) {
             $addingList.Add("$($package.name)@$($package.version)")
         }
     }
@@ -133,30 +133,16 @@ do {
     # 建立 package-missing.txt
     $missingList = [System.Collections.Generic.List[string]]::new()
     foreach ($package in $packageList) {
-        $isMissing   = $false
         $encodedName = $package.name -replace '/', '%2F'
-
-        # 檢查 version
-        $versionUrl = "$($npmRepository.url.TrimEnd('/'))/$encodedName/$($package.version)"
+        $tarballUrl  = "$($npmRepository.url.TrimEnd('/'))/$encodedName/-/$($package.name.Split('/')[-1])-$($package.version).tgz"
+        $isMissing   = $false
         try {
-            $null = Invoke-WebRequest -Uri $versionUrl -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
+            $null = Invoke-WebRequest -Uri $tarballUrl -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
         } catch {
             if ($_.Exception.Response -and $_.Exception.Response.StatusCode.value__ -eq 404) {
                 $isMissing = $true
             }
         }
-
-        # 檢查 tarball
-        if (-not $isMissing -and $package.resolved) {
-            try {
-                $null = Invoke-WebRequest -Uri $package.resolved -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
-            } catch {
-                if ($_.Exception.Response -and $_.Exception.Response.StatusCode.value__ -eq 404) {
-                    $isMissing = $true
-                }
-            }
-        }
-
         if ($isMissing) {
             $missingList.Add("$($package.name)@$($package.version)")
         }

@@ -189,18 +189,18 @@ do {
             $groupPath  = $packageParts[0] -replace '\.', '/'
             $artifactId = $packageParts[1]
             $packageUrl = "$($mavenRepository.url.TrimEnd('/'))/$groupPath/$artifactId/"
-            $exists = $false
+            $isAdding = $true
             try {
                 $null = Invoke-WebRequest -Uri $packageUrl -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
-                $exists = $true
+                $isAdding = $false
             } catch {
                 if ($_.Exception.Response -and $_.Exception.Response.StatusCode.value__ -eq 404) {
-                    $exists = $false
+                    $isAdding = $true
                 } else {
-                    $exists = $true
+                    $isAdding = $false
                 }
             }
-            if (-not $exists) {
+            if ($isAdding) {
                 $addingList.Add("$($packageParts[0]):$($packageParts[1]):$($packageParts[3])")
             }
         }

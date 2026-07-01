@@ -125,18 +125,18 @@ do {
     foreach ($package in $packageList) {
         $packageIdLower = $package.name.ToLower()
         $packageUrl     = "$($nugetRepository.url.TrimEnd('/'))/$packageIdLower/index.json"
-        $exists         = $false
+        $isAdding = $true
         try {
             $null = Invoke-WebRequest -Uri $packageUrl -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
-            $exists = $true
+            $isAdding = $false
         } catch {
             if ($_.Exception.Response -and $_.Exception.Response.StatusCode.value__ -eq 404) {
-                $exists = $false
+                $isAdding = $true
             } else {
-                $exists = $true
+                $isAdding = $false
             }
         }
-        if (-not $exists) {
+        if ($isAdding) {
             $addingList.Add("$($package.name)/$($package.version)")
         }
     }
