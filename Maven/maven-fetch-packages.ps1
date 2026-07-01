@@ -253,7 +253,9 @@ do {
             }
         }
     }
-    Get-ChildItem -Path './packages' -Recurse -Filter '_remote.repositories' | Remove-Item -Force
+    if (Test-Path './packages') {
+        Get-ChildItem -Path './packages' -Recurse -Filter '_remote.repositories' | Remove-Item -Force
+    }
 
     # 顯示下載結果
     if ($missingList.Count -eq 0) {

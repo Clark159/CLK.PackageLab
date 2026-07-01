@@ -118,7 +118,9 @@ do {
             }
         }
     }
-    Remove-Item -Path './npm_caches' -Recurse -Force
+    if (Test-Path './npm_caches') {
+        Remove-Item -Path './npm_caches' -Recurse -Force
+    }
 
     # 修改 package-lock.json 的 registry 來源
     if (Test-Path './package-lock.json') {
