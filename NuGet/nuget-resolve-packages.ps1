@@ -120,11 +120,26 @@ do {
     Set-Content 'package.txt' -Value $packageContent -Encoding UTF8
     Write-Host "[INFO] 已建立 package.txt"
 
+    # 取得 packageBaseAddress
+    $packageBaseAddress = $null
+    try {
+        $serviceIndex       = Invoke-RestMethod -Uri $nugetRepository.url -Method Get -TimeoutSec 15 -ErrorAction Stop
+        $packageBaseAddress = ($serviceIndex.resources | Where-Object { $_.'@type' -like 'PackageBaseAddress/*' } | Select-Object -First 1).'@id'
+    } catch {
+        $packageBaseAddress = $null
+    }
+    if (-not $packageBaseAddress) {
+        Write-Host "[ERROR] 無法解析 nugetRepository 的 PackageBaseAddress"
+        $exitCode = 1
+        break
+    }
+    $packageBaseAddress = $packageBaseAddress.TrimEnd('/')
+
     # 建立 package-adding.txt
     $addingList = [System.Collections.Generic.List[string]]::new()
     foreach ($package in $packageList) {
-        $packageIdLower = $package.name.ToLower()
-        $packageUrl     = "$($nugetRepository.url.TrimEnd('/'))/$packageIdLower/index.json"
+        $packageId  = $package.name.ToLower()
+        $packageUrl = "$packageBaseAddress/$packageId/index.json"
         $isAdding = $true
         try {
             $null = Invoke-WebRequest -Uri $packageUrl -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
@@ -146,31 +161,17 @@ do {
     # 建立 package-missing.txt
     $missingList = [System.Collections.Generic.List[string]]::new()
     foreach ($package in $packageList) {
-        $packageIdLower      = $package.name.ToLower()
-        $packageVersionLower = $package.version.ToLower()
-        $baseUrl             = "$($nugetRepository.url.TrimEnd('/'))/$packageIdLower/$packageVersionLower"
-        $isMissing           = $false
-
-        # 檢查 nuspec
+        $packageId      = $package.name.ToLower()
+        $packageVersion = $package.version.ToLower()
+        $nupkgUrl       = "$packageBaseAddress/$packageId/$packageVersion/$packageId.$packageVersion.nupkg"
+        $isMissing      = $false
         try {
-            $null = Invoke-WebRequest -Uri "$baseUrl/$packageIdLower.$packageVersionLower.nuspec" -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
+            $null = Invoke-WebRequest -Uri $nupkgUrl -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
         } catch {
             if ($_.Exception.Response -and $_.Exception.Response.StatusCode.value__ -eq 404) {
                 $isMissing = $true
             }
         }
-
-        # 檢查 nupkg
-        if (-not $isMissing) {
-            try {
-                $null = Invoke-WebRequest -Uri "$baseUrl/$packageIdLower.$packageVersionLower.nupkg" -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
-            } catch {
-                if ($_.Exception.Response -and $_.Exception.Response.StatusCode.value__ -eq 404) {
-                    $isMissing = $true
-                }
-            }
-        }
-
         if ($isMissing) {
             $missingList.Add("$($package.name)/$($package.version)")
         }
