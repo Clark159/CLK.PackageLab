@@ -111,7 +111,7 @@ do {
     $addingList = [System.Collections.Generic.List[string]]::new()
     foreach ($package in $packageList) {
         $encodedName = $package.name -replace '/', '%2F'
-        $packageUrl  = "$($npmRepository.url)/$encodedName"
+        $packageUrl  = "$($npmRepository.url.TrimEnd('/'))/$encodedName"
         $exists = $false
         try {
             $null = Invoke-WebRequest -Uri $packageUrl -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
@@ -137,7 +137,7 @@ do {
         $encodedName = $package.name -replace '/', '%2F'
 
         # 檢查 version
-        $versionUrl = "$($npmRepository.url)/$encodedName/$($package.version)"
+        $versionUrl = "$($npmRepository.url.TrimEnd('/'))/$encodedName/$($package.version)"
         try {
             $null = Invoke-WebRequest -Uri $versionUrl -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
         } catch {

@@ -124,7 +124,7 @@ do {
     $addingList = [System.Collections.Generic.List[string]]::new()
     foreach ($package in $packageList) {
         $packageIdLower = $package.name.ToLower()
-        $packageUrl     = "$($nugetRepository.url)/$packageIdLower/index.json"
+        $packageUrl     = "$($nugetRepository.url.TrimEnd('/'))/$packageIdLower/index.json"
         $exists         = $false
         try {
             $null = Invoke-WebRequest -Uri $packageUrl -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
@@ -148,7 +148,7 @@ do {
     foreach ($package in $packageList) {
         $packageIdLower      = $package.name.ToLower()
         $packageVersionLower = $package.version.ToLower()
-        $baseUrl             = "$($nugetRepository.url)/$packageIdLower/$packageVersionLower"
+        $baseUrl             = "$($nugetRepository.url.TrimEnd('/'))/$packageIdLower/$packageVersionLower"
         $isMissing           = $false
 
         # 檢查 nuspec

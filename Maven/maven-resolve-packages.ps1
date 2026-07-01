@@ -188,7 +188,7 @@ do {
         if ($packageParts.Count -ge 4) {
             $groupPath  = $packageParts[0] -replace '\.', '/'
             $artifactId = $packageParts[1]
-            $packageUrl = "$($mavenRepository.url)/$groupPath/$artifactId/"
+            $packageUrl = "$($mavenRepository.url.TrimEnd('/'))/$groupPath/$artifactId/"
             $exists = $false
             try {
                 $null = Invoke-WebRequest -Uri $packageUrl -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
@@ -232,7 +232,7 @@ do {
             $artifactId = $packageParts[1]
             $type       = $packageParts[2]
             $version    = $packageParts[3]
-            $baseUrl    = "$($mavenRepository.url)/$groupPath/$artifactId/$version/$artifactId-$version"
+            $baseUrl    = "$($mavenRepository.url.TrimEnd('/'))/$groupPath/$artifactId/$version/$artifactId-$version"
             $isMissing  = $false
 
             # 檢查 .pom
