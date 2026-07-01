@@ -180,9 +180,7 @@ do {
             }
         }
     }
-    if (Test-Path './packages') {
-        Get-ChildItem -Path './packages' -Recurse -Filter '.nupkg.metadata' | Remove-Item -Force
-    }
+    Get-ChildItem -Path './packages' -Recurse -Filter '.nupkg.metadata' | Remove-Item -Force
 
     # 顯示下載結果
     if ($missingList.Count -eq 0) {
