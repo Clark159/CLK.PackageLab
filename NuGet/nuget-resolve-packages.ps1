@@ -137,26 +137,34 @@ do {
     Set-Content 'package.txt' -Value $packageContent -Encoding UTF8
     Write-Host "[INFO] 已建立 package.txt"
 
-    # 取得 packageBaseAddress
-    $packageBaseAddress = $null
+    # 取得 packageBaseUrl 
+    $packageBaseUrl = $null
+    $resourceMode    = $null
     try {
-        $serviceIndex       = Invoke-RestMethod -Uri $nugetRepository.url -Method Get -TimeoutSec 15 -ErrorAction Stop
-        $packageBaseAddress = ($serviceIndex.resources | Where-Object { $_.'@type' -like 'PackageBaseAddress/*' } | Select-Object -First 1).'@id'
+        $serviceIndex = Invoke-RestMethod -Uri $nugetRepository.url -Method Get -TimeoutSec 15 -ErrorAction Stop
+        if (-not $packageBaseUrl) {
+            $packageBaseUrl = ($serviceIndex.resources | Where-Object { $_.'@type' -like 'PackageBaseAddress/*' } | Select-Object -First 1).'@id'
+            if ($packageBaseUrl) { $resourceMode = 'flat' }
+        }
+        if (-not $packageBaseUrl) {
+            $packageBaseUrl = ($serviceIndex.resources | Where-Object { $_.'@type' -eq 'RegistrationsBaseUrl' } | Select-Object -First 1).'@id'
+            if ($packageBaseUrl) { $resourceMode = 'registration' }
+        }
     } catch {
-        $packageBaseAddress = $null
+        $packageBaseUrl = $null
     }
-    if (-not $packageBaseAddress) {
-        Write-Host "[ERROR] 無法解析 nugetRepository 的 PackageBaseAddress"
+    if (-not $packageBaseUrl) {
+        Write-Host "[ERROR] 無法解析 nugetRepository 的 PackageBaseAddress 或 RegistrationsBaseUrl"
         $exitCode = 1
         break
     }
-    $packageBaseAddress = $packageBaseAddress.TrimEnd('/')
+    $packageBaseUrl = $packageBaseUrl.TrimEnd('/')
 
     # 建立 package-adding.txt
     $addingList = [System.Collections.Generic.List[string]]::new()
     foreach ($package in $packageList) {
         $packageId  = $package.name.ToLower()
-        $packageUrl = "$packageBaseAddress/$packageId/index.json"
+        $packageUrl = "$packageBaseUrl/$packageId/index.json"
         $isAdding = $true
         try {
             $null = Invoke-WebRequest -Uri $packageUrl -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
@@ -180,10 +188,19 @@ do {
     foreach ($package in $packageList) {
         $packageId      = $package.name.ToLower()
         $packageVersion = $package.version.ToLower()
-        $nupkgUrl       = "$packageBaseAddress/$packageId/$packageVersion/$packageId.$packageVersion.nupkg"
+        $packageUrl     = $null
         $isMissing      = $false
+        switch ($resourceMode) {
+            'flat'         { $packageUrl = "$packageBaseUrl/$packageId/$packageVersion/$packageId.$packageVersion.nupkg" }
+            'registration' { $packageUrl = "$packageBaseUrl/$packageId/$packageVersion.json" }
+            default {
+                Write-Host "[ERROR] 未知的 resourceMode: $resourceMode"
+                $exitCode = 1
+                break
+            }
+        }
         try {
-            $null = Invoke-WebRequest -Uri $nupkgUrl -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
+            $null = Invoke-WebRequest -Uri $packageUrl -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
         } catch {
             if ($_.Exception.Response -and $_.Exception.Response.StatusCode.value__ -eq 404) {
                 $isMissing = $true
