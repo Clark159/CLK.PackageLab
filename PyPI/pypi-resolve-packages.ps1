@@ -39,6 +39,23 @@ do {
         }
     }
 
+    # 整併 pypiRepository 至 pypiSourceList (以 url 為 key，id 重複則重新命名)
+    if (-not ($pypiSourceList | Where-Object { $_.url -eq $pypiRepository.url })) {
+
+        # pypiSourceId
+        $suffix = 2
+        $pypiSourceId = $pypiRepository.id
+        while ($pypiSourceList | Where-Object { $_.id -eq $pypiSourceId }) {
+            $pypiSourceId = "$($pypiRepository.id)$suffix"
+            $suffix++
+        }
+
+        # pypiSource
+        $pypiSource = $pypiRepository.Clone()
+        $pypiSource.id = $pypiSourceId
+        $pypiSourceList += $pypiSource
+    }
+
 
     # ===== Execute =====
     Write-Host "-------------------------------------------------------------------------------"

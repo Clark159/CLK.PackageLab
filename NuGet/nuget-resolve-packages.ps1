@@ -39,6 +39,23 @@ do {
         }
     }
 
+    # 整併 nugetRepository 至 nugetSourceList (以 url 為 key，id 重複則重新命名)
+    if (-not ($nugetSourceList | Where-Object { $_.url -eq $nugetRepository.url })) {
+
+        # nugetSourceId
+        $suffix = 2
+        $nugetSourceId = $nugetRepository.id
+        while ($nugetSourceList | Where-Object { $_.id -eq $nugetSourceId }) {
+            $nugetSourceId = "$($nugetRepository.id)$suffix"
+            $suffix++
+        }
+
+        # nugetSource
+        $nugetSource = $nugetRepository.Clone()
+        $nugetSource.id = $nugetSourceId
+        $nugetSourceList += $nugetSource
+    }
+
 
     # ===== Execute =====
     Write-Host "-------------------------------------------------------------------------------"

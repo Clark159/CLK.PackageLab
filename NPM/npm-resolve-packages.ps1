@@ -39,6 +39,23 @@ do {
         }
     }
 
+    # 整併 npmRepository 至 npmSourceList (以 url 為 key，id 重複則重新命名)
+    if (-not ($npmSourceList | Where-Object { $_.url -eq $npmRepository.url })) {
+
+        # npmSourceId
+        $suffix = 2
+        $npmSourceId = $npmRepository.id
+        while ($npmSourceList | Where-Object { $_.id -eq $npmSourceId }) {
+            $npmSourceId = "$($npmRepository.id)$suffix"
+            $suffix++
+        }
+
+        # npmSource
+        $npmSource = $npmRepository.Clone()
+        $npmSource.id = $npmSourceId
+        $npmSourceList += $npmSource
+    }
+
 
     # ===== Execute =====
     Write-Host "-------------------------------------------------------------------------------"
