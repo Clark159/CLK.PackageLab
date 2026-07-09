@@ -16,12 +16,11 @@ do {
 
     # ===== Require =====
     # 檢查檔案
-    foreach ($fileName in 'package.csproj') {
-        if (-not (Test-Path $fileName)) {
-            Write-Host "[ERROR] 找不到 $fileName"
-            $exitCode = 1
-            break
-        }
+    $csprojFile = Get-ChildItem -Path . -Filter '*.csproj' -File | Select-Object -First 1
+    if (-not $csprojFile) {
+        Write-Host "[ERROR] 找不到 .csproj 檔案"
+        $exitCode = 1
+        break
     }
     if ($exitCode -ne 0) { break }
 
@@ -93,6 +92,7 @@ do {
 
     # 建立 package-lock.json
     & dotnet restore `
+        $csprojFile.FullName `
         "--use-lock-file" `
         "--lock-file-path" "package-lock.json" `
         "--configfile" "nuget.config" `
