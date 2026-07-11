@@ -151,7 +151,8 @@ do {
     # 下載所有套件
     & mvn dependency:go-offline `
         "-f" "pom.xml" `
-        "-s" "settings.xml"
+        "-s" "settings.xml" `
+        "-gs" "settings.xml"
     if ($LASTEXITCODE -ne 0) {
         Write-Host "[ERROR] mvn dependency:go-offline 執行失敗 (mavenSourceList)"
         $exitCode = 1
@@ -231,7 +232,8 @@ do {
     # 下載目標套件
     & mvn dependency:resolve `
         "-f" "pom.xml" `
-        "-s" "settings.xml"
+        "-s" "settings.xml" `
+        "-gs" "settings.xml"
     if ($LASTEXITCODE -ne 0) {
         Write-Host "[ERROR] mvn dependency:resolve 執行失敗 (mavenRepository)"
         $exitCode = 1
