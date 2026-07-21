@@ -80,7 +80,7 @@ do {
     [System.IO.File]::WriteAllLines("$PSScriptRoot\.npmrc", $npmrcContent, [System.Text.UTF8Encoding]::new($false))
 
     # 建立 package-lock.json
-    & npm install --package-lock-only --ignore-scripts --no-audit
+    & npm install --package-lock-only --ignore-scripts --no-audit --legacy-peer-deps
     if ($LASTEXITCODE -ne 0) {
         Write-Host "[ERROR] npm install 執行失敗 (npmSourceList)"
         $exitCode = 1
