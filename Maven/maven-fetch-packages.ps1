@@ -11,10 +11,10 @@ $projectGroupId    = 'com.example'
 $projectArtifactId = 'packages'
 $projectVersion    = '1.0.0'
 $mavenSourceList   = @(
-    @{ id = 'central'; url = 'https://repo.maven.apache.org/maven2/' }
-    @{ id = 'atlassian'; url = 'https://maven.artifacts.atlassian.com/' }
+    @{ id = 'central'; url = 'https://repo.maven.apache.org/maven2/'; username = ''; token = '' }
+    @{ id = 'atlassian'; url = 'https://maven.artifacts.atlassian.com/'; username = ''; token = '' }
 )
-$mavenRepository   = @{ id = 'central'; url = 'https://repo.maven.apache.org/maven2/' }
+$mavenRepository   = @{ id = 'central'; url = 'https://repo.maven.apache.org/maven2/'; username = ''; token = '' }
 do {
 
 
@@ -95,19 +95,11 @@ do {
     $settingsContent.Add('    </mirrors>')
     $settingsContent.Add('    <servers>')
     foreach ($mavenSource in $mavenSourceList) {
-        if ($mavenSource.token) {
-            $settingsContent.Add('        <server>')
-            $settingsContent.Add("            <id>$($mavenSource.id)</id>")
-            if ($mavenSource.username) {
-                $settingsContent.Add("            <username>$($mavenSource.username)</username>")
-            }
-            $settingsContent.Add("            <password>$($mavenSource.token)</password>")
-            $settingsContent.Add('        </server>')
-        } elseif ($mavenSource.username -and $mavenSource.password) {
+        if ($mavenSource.username -and $mavenSource.token) {
             $settingsContent.Add('        <server>')
             $settingsContent.Add("            <id>$($mavenSource.id)</id>")
             $settingsContent.Add("            <username>$($mavenSource.username)</username>")
-            $settingsContent.Add("            <password>$($mavenSource.password)</password>")
+            $settingsContent.Add("            <password>$($mavenSource.token)</password>")
             $settingsContent.Add('        </server>')
         }
     }
@@ -192,19 +184,11 @@ do {
     }
     $settingsContent.Add('    </mirrors>')
     $settingsContent.Add('    <servers>')
-    if ($mavenRepository.token) {
-        $settingsContent.Add('        <server>')
-        $settingsContent.Add("            <id>$($mavenRepository.id)</id>")
-        if ($mavenRepository.username) {
-            $settingsContent.Add("            <username>$($mavenRepository.username)</username>")
-        }
-        $settingsContent.Add("            <password>$($mavenRepository.token)</password>")
-        $settingsContent.Add('        </server>')
-    } elseif ($mavenRepository.username -and $mavenRepository.password) {
+    if ($mavenRepository.username -and $mavenRepository.token) {
         $settingsContent.Add('        <server>')
         $settingsContent.Add("            <id>$($mavenRepository.id)</id>")
         $settingsContent.Add("            <username>$($mavenRepository.username)</username>")
-        $settingsContent.Add("            <password>$($mavenRepository.password)</password>")
+        $settingsContent.Add("            <password>$($mavenRepository.token)</password>")
         $settingsContent.Add('        </server>')
     }
     $settingsContent.Add('    </servers>')

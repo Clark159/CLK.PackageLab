@@ -10,9 +10,9 @@ $exitCode = 0
 $projectName    = 'fetch-packages'
 $projectVersion = '1.0.0'
 $npmSourceList  = @(
-    @{ id = 'npmjs'; url = 'https://registry.npmjs.org/' }
+    @{ id = 'npmjs'; url = 'https://registry.npmjs.org/'; username = ''; token = '' }
 )
-$npmRepository  = @{ id = 'npmjs'; url = 'https://registry.npmjs.org/' }
+$npmRepository  = @{ id = 'npmjs'; url = 'https://registry.npmjs.org/'; username = ''; token = '' }
 do {
 
 
@@ -62,11 +62,6 @@ do {
         if ($npmSource.token) {
             $authUrl = $npmSource.url.TrimEnd('/') -replace '^https?:', ''
             $npmrcContent.Add("$authUrl/:_authToken=$($npmSource.token)")
-        } elseif ($npmSource.username -and $npmSource.password) {
-            $authUrl  = $npmSource.url.TrimEnd('/') -replace '^https?:', ''
-            $b64token = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes("$($npmSource.username):$($npmSource.password)"))
-            $npmrcContent.Add("$authUrl/:_auth=$b64token")
-            $npmrcContent.Add("$authUrl/:always-auth=true")
         }
     }
     [System.IO.File]::WriteAllLines("$PSScriptRoot\.npmrc", $npmrcContent, [System.Text.UTF8Encoding]::new($false))
@@ -108,11 +103,6 @@ do {
     if ($npmRepository.token) {
         $authUrl = $npmRepository.url.TrimEnd('/') -replace '^https?:', ''
         $npmrcContent.Add("$authUrl/:_authToken=$($npmRepository.token)")
-    } elseif ($npmRepository.username -and $npmRepository.password) {
-        $authUrl  = $npmRepository.url.TrimEnd('/') -replace '^https?:', ''
-        $b64token = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes("$($npmRepository.username):$($npmRepository.password)"))
-        $npmrcContent.Add("$authUrl/:_auth=$b64token")
-        $npmrcContent.Add("$authUrl/:always-auth=true")
     }
     [System.IO.File]::WriteAllLines("$PSScriptRoot\.npmrc", $npmrcContent, [System.Text.UTF8Encoding]::new($false))
 

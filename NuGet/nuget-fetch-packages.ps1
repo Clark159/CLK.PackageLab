@@ -9,9 +9,9 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 $exitCode = 0
 $targetFramework = 'net8.0'
 $nugetSourceList = @(
-    @{ id = 'nuget.org'; url = 'https://api.nuget.org/v3/index.json' }
+    @{ id = 'nuget.org'; url = 'https://api.nuget.org/v3/index.json'; username = ''; token = '' }
 )
-$nugetRepository = @{ id = 'nuget.org'; url = 'https://api.nuget.org/v3/index.json' }
+$nugetRepository = @{ id = 'nuget.org'; url = 'https://api.nuget.org/v3/index.json'; username = ''; token = '' }
 do {
 
 
@@ -70,11 +70,6 @@ do {
             $nugetConfigContent.Add("            <add key=""Username"" value=""PAT"" />")
             $nugetConfigContent.Add("            <add key=""ClearTextPassword"" value=""$($nugetSource.token)"" />")
             $nugetConfigContent.Add("        </$($nugetSource.id)>")
-        } elseif ($nugetSource.username -and $nugetSource.password) {
-            $nugetConfigContent.Add("        <$($nugetSource.id)>")
-            $nugetConfigContent.Add("            <add key=""Username"" value=""$($nugetSource.username)"" />")
-            $nugetConfigContent.Add("            <add key=""ClearTextPassword"" value=""$($nugetSource.password)"" />")
-            $nugetConfigContent.Add("        </$($nugetSource.id)>")
         }
     }
     $nugetConfigContent.Add('    </packageSourceCredentials>')
@@ -127,11 +122,6 @@ do {
         $nugetConfigContent.Add("        <$($nugetRepository.id)>")
         $nugetConfigContent.Add("            <add key=""Username"" value=""PAT"" />")
         $nugetConfigContent.Add("            <add key=""ClearTextPassword"" value=""$($nugetRepository.token)"" />")
-        $nugetConfigContent.Add("        </$($nugetRepository.id)>")
-    } elseif ($nugetRepository.username -and $nugetRepository.password) {
-        $nugetConfigContent.Add("        <$($nugetRepository.id)>")
-        $nugetConfigContent.Add("            <add key=""Username"" value=""$($nugetRepository.username)"" />")
-        $nugetConfigContent.Add("            <add key=""ClearTextPassword"" value=""$($nugetRepository.password)"" />")
         $nugetConfigContent.Add("        </$($nugetRepository.id)>")
     }
     $nugetConfigContent.Add('    </packageSourceCredentials>')

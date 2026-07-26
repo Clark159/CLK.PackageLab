@@ -8,9 +8,9 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 # ===== Variables =====
 $exitCode = 0
 $pypiSourceList = @(
-    @{ id = 'pypi'; url = 'https://pypi.org/simple/' }
+    @{ id = 'pypi'; url = 'https://pypi.org/simple/'; username = ''; token = '' }
 )
-$pypiRepository = @{ id = 'pypi'; url = 'https://pypi.org/simple/' }
+$pypiRepository = @{ id = 'pypi'; url = 'https://pypi.org/simple/'; username = ''; token = '' }
 do {
 
 
@@ -59,8 +59,6 @@ do {
     $firstUrl = $firstSource.url
     if ($firstSource.token) {
         $firstUrl = $firstUrl -replace '^(https?://)', "`$1$($firstSource.token)@"
-    } elseif ($firstSource.username -and $firstSource.password) {
-        $firstUrl = $firstUrl -replace '^(https?://)', "`$1$($firstSource.username):$($firstSource.password)@"
     }
     $pipIniContent.Add("index-url = $firstUrl")
     if ($pypiSourceList.Count -gt 1) {
@@ -69,8 +67,6 @@ do {
             $extraUrl = $pypiSource.url
             if ($pypiSource.token) {
                 $extraUrl = $extraUrl -replace '^(https?://)', "`$1$($pypiSource.token)@"
-            } elseif ($pypiSource.username -and $pypiSource.password) {
-                $extraUrl = $extraUrl -replace '^(https?://)', "`$1$($pypiSource.username):$($pypiSource.password)@"
             }
             $pipIniContent.Add("    $extraUrl")
         }
@@ -108,8 +104,6 @@ do {
     $repositoryUrl = $pypiRepository.url
     if ($pypiRepository.token) {
         $repositoryUrl = $repositoryUrl -replace '^(https?://)', "`$1$($pypiRepository.token)@"
-    } elseif ($pypiRepository.username -and $pypiRepository.password) {
-        $repositoryUrl = $repositoryUrl -replace '^(https?://)', "`$1$($pypiRepository.username):$($pypiRepository.password)@"
     }
     $pipIniContent.Add("index-url = $repositoryUrl")
     Set-Content 'pip.ini' -Value $pipIniContent -Encoding UTF8
