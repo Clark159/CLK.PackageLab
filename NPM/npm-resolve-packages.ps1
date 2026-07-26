@@ -26,7 +26,7 @@ do {
     if ($exitCode -ne 0) { break }
 
     # 移除資料夾
-    foreach ($directoryPath in './node_modules', './packages') {
+    foreach ($directoryPath in './npm_caches', './node_modules', './packages') {
         if (Test-Path $directoryPath) {
             Remove-Item -Path $directoryPath -Recurse -Force
         }
@@ -66,6 +66,7 @@ do {
     # 建立 .npmrc - npmSourceList
     $npmrcContent = [System.Collections.Generic.List[string]]::new()
     $npmrcContent.Add("registry=$($npmSourceList[0].url.TrimEnd('/'))/")
+    $npmrcContent.Add("cache=./npm_caches")
     foreach ($npmSource in $npmSourceList) {
         if ($npmSource.token) {
             $authUrl = $npmSource.url.TrimEnd('/') -replace '^https?:', ''
@@ -169,7 +170,7 @@ do {
     Write-Host "[INFO] ------------------------------------------------------------------------"
 
     # 移除資料夾
-    foreach ($directoryPath in './node_modules') {
+    foreach ($directoryPath in './npm_caches', './node_modules') {
         if (Test-Path $directoryPath) {
             Remove-Item -Path $directoryPath -Recurse -Force
         }

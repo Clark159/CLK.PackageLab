@@ -126,6 +126,7 @@ do {
     $settingsContent.Add('    <activeProfiles>')
     $settingsContent.Add('        <activeProfile>default</activeProfile>')
     $settingsContent.Add('    </activeProfiles>')
+    $settingsContent.Add('    <localRepository>./.m2</localRepository>')
     $settingsContent.Add('</settings>')
     Set-Content 'settings.xml' -Value $settingsContent -Encoding UTF8
 
