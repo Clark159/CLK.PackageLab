@@ -32,7 +32,7 @@ do {
     # 檢查資料夾
     $folderName = Split-Path $PSScriptRoot -Leaf
     if ($folderName -match '^\d{12}-\d{2}$') {
-        $mavenRepository.url = "$($mavenRepository.url.TrimEnd('/'))/$folderName/"
+        $mavenRepository.url = "$($mavenRepository.url.TrimEnd('/'))/$folderName-AP/"
     }
 
     # 移除資料夾
