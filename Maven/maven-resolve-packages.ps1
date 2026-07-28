@@ -15,6 +15,16 @@ $mavenSourceList   = @(
     @{ id = 'atlassian'; url = 'https://maven.artifacts.atlassian.com/' }
 )
 $mavenRepository   = @{ id = 'central'; url = 'https://repo.maven.apache.org/maven2/' }
+
+# 依 mvn dependency:list 慣例組座標字串：無 classifier 為 5 欄，有 classifier 才補上該欄 (不輸出 ::)
+function Format-PackageCoordinate {
+    param($Package)
+    if ($Package.Classifier) {
+        "$($Package.GroupId):$($Package.ArtifactId):$($Package.Packaging):$($Package.Classifier):$($Package.Version):$($Package.Scope)"
+    } else {
+        "$($Package.GroupId):$($Package.ArtifactId):$($Package.Packaging):$($Package.Version):$($Package.Scope)"
+    }
+}
 do {
 
 
@@ -148,16 +158,32 @@ do {
     Write-Host
     Write-Host "[INFO] ------------------------------------------------------------------------"
 
-    # 讀取 package.txt
+    # 讀取 package.txt (groupId:artifactId:packaging:version:scope 或 groupId:artifactId:packaging:classifier:version:scope)
     $packageList = Get-Content 'package.txt' -Encoding UTF8 | Where-Object { $_ -match '^\s+\S+:\S+:\S+:\S+' } | ForEach-Object {
-        ($_ -replace '\s*-- module.*', '').Trim()
+        $packageParts = ($_ -replace '\s*-- module.*', '').Trim() -split ':'
+        if ($packageParts.Count -ge 6) {
+            [PSCustomObject]@{
+                GroupId    = $packageParts[0]
+                ArtifactId = $packageParts[1]
+                Packaging  = $packageParts[2]
+                Classifier = $packageParts[3]
+                Version    = $packageParts[4]
+                Scope      = $packageParts[5]
+            }
+        } else {
+            [PSCustomObject]@{
+                GroupId    = $packageParts[0]
+                ArtifactId = $packageParts[1]
+                Packaging  = $packageParts[2]
+                Classifier = ''
+                Version    = $packageParts[3]
+                Scope      = if ($packageParts.Count -ge 5) { $packageParts[4] } else { 'compile' }
+            }
+        }
     }
 
     # 整理 package.txt
-    $packageContent = $packageList | ForEach-Object {
-        $packageParts = $_ -split ':'
-        "$($packageParts[0]):$($packageParts[1]):$($packageParts[3])"
-    }
+    $packageContent = $packageList | ForEach-Object { Format-PackageCoordinate $_ }
     Set-Content 'package.txt' -Value $packageContent -Encoding UTF8
     Write-Host "[INFO] 已建立 package.txt"
 
@@ -177,25 +203,20 @@ do {
     $lockContent.Add('    <dependencyManagement>')
     $lockContent.Add('        <dependencies>')
     foreach ($package in $packageList) {
-        $packageParts = $package -split ':'
-        if ($packageParts.Count -ge 4) {
-            $groupId    = $packageParts[0]
-            $artifactId = $packageParts[1]
-            $type       = $packageParts[2]
-            $version    = $packageParts[3]
-            $scope      = if ($packageParts.Count -ge 5) { $packageParts[4].Trim() } else { 'compile' }
-            $lockContent.Add('            <dependency>')
-            $lockContent.Add("                <groupId>$groupId</groupId>")
-            $lockContent.Add("                <artifactId>$artifactId</artifactId>")
-            $lockContent.Add("                <version>$version</version>")
-            if ($type -ne 'jar') {
-                $lockContent.Add("                <type>$type</type>")
-            }
-            if ($scope -ne 'compile') {
-                $lockContent.Add("                <scope>$scope</scope>")
-            }
-            $lockContent.Add('            </dependency>')
+        $lockContent.Add('            <dependency>')
+        $lockContent.Add("                <groupId>$($package.GroupId)</groupId>")
+        $lockContent.Add("                <artifactId>$($package.ArtifactId)</artifactId>")
+        $lockContent.Add("                <version>$($package.Version)</version>")
+        if ($package.Packaging -ne 'jar') {
+            $lockContent.Add("                <type>$($package.Packaging)</type>")
         }
+        if ($package.Classifier) {
+            $lockContent.Add("                <classifier>$($package.Classifier)</classifier>")
+        }
+        if ($package.Scope -ne 'compile') {
+            $lockContent.Add("                <scope>$($package.Scope)</scope>")
+        }
+        $lockContent.Add('            </dependency>')
     }
     $lockContent.Add('        </dependencies>')
     $lockContent.Add('    </dependencyManagement>')
@@ -206,25 +227,22 @@ do {
     # 建立 package-adding.txt
     $addingList = [System.Collections.Generic.List[string]]::new()
     foreach ($package in $packageList) {
-        $packageParts = $package -split ':'
-        if ($packageParts.Count -ge 4) {
-            $groupPath  = $packageParts[0] -replace '\.', '/'
-            $artifactId = $packageParts[1]
-            $packageUrl = "$($mavenRepository.url.TrimEnd('/'))/$groupPath/$artifactId/"
-            $isAdding = $true
-            try {
-                $null = Invoke-WebRequest -Uri $packageUrl -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
+        $groupPath  = $package.GroupId -replace '\.', '/'
+        $artifactId = $package.ArtifactId
+        $packageUrl = "$($mavenRepository.url.TrimEnd('/'))/$groupPath/$artifactId/"
+        $isAdding = $true
+        try {
+            $null = Invoke-WebRequest -Uri $packageUrl -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
+            $isAdding = $false
+        } catch {
+            if ($_.Exception.Response -and $_.Exception.Response.StatusCode.value__ -eq 404) {
+                $isAdding = $true
+            } else {
                 $isAdding = $false
-            } catch {
-                if ($_.Exception.Response -and $_.Exception.Response.StatusCode.value__ -eq 404) {
-                    $isAdding = $true
-                } else {
-                    $isAdding = $false
-                }
             }
-            if ($isAdding) {
-                $addingList.Add("$($packageParts[0]):$($packageParts[1]):$($packageParts[3])")
-            }
+        }
+        if ($isAdding) {
+            $addingList.Add((Format-PackageCoordinate $package))
         }
     }
     Set-Content 'package-adding.txt' -Value $addingList -Encoding UTF8
@@ -248,40 +266,38 @@ do {
     }
     $missingList = [System.Collections.Generic.List[string]]::new()
     foreach ($package in $packageList) {
-        $packageParts = $package -split ':'
-        if ($packageParts.Count -ge 4) {
-            $groupPath  = $packageParts[0] -replace '\.', '/'
-            $artifactId = $packageParts[1]
-            $type       = $packageParts[2]
-            $version    = $packageParts[3]
-            $baseUrl    = "$($mavenRepository.url.TrimEnd('/'))/$groupPath/$artifactId/$version/$artifactId-$version"
-            $isMissing  = $false
+        $groupPath  = $package.GroupId -replace '\.', '/'
+        $artifactId = $package.ArtifactId
+        $type       = $package.Packaging
+        $version    = $package.Version
+        $baseUrl    = "$($mavenRepository.url.TrimEnd('/'))/$groupPath/$artifactId/$version/$artifactId-$version"
+        $isMissing  = $false
 
-            # 檢查 .pom
+        # 檢查 .pom
+        try {
+            $null = Invoke-WebRequest -Uri "$baseUrl.pom" -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
+        } catch {
+            if ($_.Exception.Response -and $_.Exception.Response.StatusCode.value__ -eq 404) {
+                $isMissing = $true
+            }
+        }
+
+        # 檢查 artifact (有明確 classifier 欄位時優先採用，否則依 type 對應 artifactSpecMap)
+        if (-not $isMissing -and ($package.Classifier -or $artifactSpecMap.ContainsKey($type))) {
+            $ext        = if ($artifactSpecMap.ContainsKey($type)) { $artifactSpecMap[$type].ext } else { 'jar' }
+            $classifier = if ($package.Classifier) { $package.Classifier } else { $artifactSpecMap[$type].classifier }
+            $packageUrl = if ($classifier) { "$baseUrl-$classifier.$ext" } else { "$baseUrl.$ext" }
             try {
-                $null = Invoke-WebRequest -Uri "$baseUrl.pom" -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
+                $null = Invoke-WebRequest -Uri $packageUrl -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
             } catch {
                 if ($_.Exception.Response -and $_.Exception.Response.StatusCode.value__ -eq 404) {
                     $isMissing = $true
                 }
             }
+        }
 
-            # 檢查 artifact
-            if (-not $isMissing -and $artifactSpecMap.ContainsKey($type)) {
-                $spec        = $artifactSpecMap[$type]
-                $packageUrl = if ($spec.classifier) { "$baseUrl-$($spec.classifier).$($spec.ext)" } else { "$baseUrl.$($spec.ext)" }
-                try {
-                    $null = Invoke-WebRequest -Uri $packageUrl -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
-                } catch {
-                    if ($_.Exception.Response -and $_.Exception.Response.StatusCode.value__ -eq 404) {
-                        $isMissing = $true
-                    }
-                }
-            }
-
-            if ($isMissing) {
-                $missingList.Add("$($packageParts[0]):$($packageParts[1]):$($packageParts[3])")
-            }
+        if ($isMissing) {
+            $missingList.Add((Format-PackageCoordinate $package))
         }
     }
     Set-Content 'package-missing.txt' -Value $missingList -Encoding UTF8
