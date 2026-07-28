@@ -32,7 +32,7 @@ do {
     }
 
     # 移除檔案
-    foreach ($fileName in 'nuget.config', 'package.txt', 'package-lock.json', 'package-adding.txt', 'package-missing.txt') {
+    foreach ($fileName in 'nuget.config', 'package.txt', 'package-lock.json', 'package-adding.txt', 'package-updating.txt') {
         if (Test-Path $fileName) {
             Remove-Item $fileName -Force
         }
@@ -161,7 +161,7 @@ do {
     $packageBaseUrl = $packageBaseUrl.TrimEnd('/')
 
     # 建立 package-adding.txt
-    $addingList = [System.Collections.Generic.List[string]]::new()
+    $addingList = [System.Collections.Generic.List[object]]::new()
     foreach ($package in $packageList) {
         $packageId  = $package.name.ToLower()
         $packageUrl = "$packageBaseUrl/$packageId/index.json"
@@ -177,19 +177,19 @@ do {
             }
         }
         if ($isAdding) {
-            $addingList.Add("$($package.name)/$($package.version)")
+            $addingList.Add($package)
         }
     }
-    Set-Content 'package-adding.txt' -Value $addingList -Encoding UTF8
+    Set-Content 'package-adding.txt' -Value ($addingList | ForEach-Object { "$($_.name)/$($_.version)" }) -Encoding UTF8
     Write-Host "[INFO] 已建立 package-adding.txt"
 
-    # 建立 package-missing.txt
-    $missingList = [System.Collections.Generic.List[string]]::new()
+    # 建立 package-updating.txt (已列在 package-adding.txt 的套件本來就不存在，不重複列入)
+    $updatingList = [System.Collections.Generic.List[string]]::new()
     foreach ($package in $packageList) {
         $packageId      = $package.name.ToLower()
         $packageVersion = $package.version.ToLower()
         $packageUrl     = $null
-        $isMissing      = $false
+        $isUpdating     = $false
         switch ($resourceMode) {
             'flat'         { $packageUrl = "$packageBaseUrl/$packageId/$packageVersion/$packageId.$packageVersion.nupkg" }
             'registration' { $packageUrl = "$packageBaseUrl/$packageId/$packageVersion.json" }
@@ -203,15 +203,16 @@ do {
             $null = Invoke-WebRequest -Uri $packageUrl -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
         } catch {
             if ($_.Exception.Response -and $_.Exception.Response.StatusCode.value__ -eq 404) {
-                $isMissing = $true
+                $isUpdating = $true
             }
         }
-        if ($isMissing) {
-            $missingList.Add("$($package.name)/$($package.version)")
+        $isAdding = $addingList | Where-Object { $_.name -eq $package.name }
+        if ($isUpdating -and -not $isAdding) {
+            $updatingList.Add("$($package.name)/$($package.version)")
         }
     }
-    Set-Content 'package-missing.txt' -Value $missingList -Encoding UTF8
-    Write-Host "[INFO] 已建立 package-missing.txt"
+    Set-Content 'package-updating.txt' -Value $updatingList -Encoding UTF8
+    Write-Host "[INFO] 已建立 package-updating.txt"
     Write-Host "[INFO] ------------------------------------------------------------------------"
 
     # 移除資料夾

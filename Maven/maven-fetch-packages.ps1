@@ -53,7 +53,7 @@ do {
     }
 
     # 移除檔案
-    foreach ($fileName in 'settings.xml', 'pom.xml', 'package-lock.xml', 'package-adding.txt', 'package-missing.txt') {
+    foreach ($fileName in 'settings.xml', 'pom.xml', 'package-lock.xml', 'package-adding.txt', 'package-updating.txt') {
         if (Test-Path $fileName) {
             Remove-Item $fileName -Force
         }

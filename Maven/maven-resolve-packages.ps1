@@ -47,7 +47,7 @@ do {
     }
 
     # 移除檔案
-    foreach ($fileName in 'settings.xml', 'package.txt', 'package-lock.xml', 'package-adding.txt', 'package-missing.txt') {
+    foreach ($fileName in 'settings.xml', 'package.txt', 'package-lock.xml', 'package-adding.txt', 'package-updating.txt') {
         if (Test-Path $fileName) {
             Remove-Item $fileName -Force
         }
@@ -248,7 +248,7 @@ do {
     Set-Content 'package-adding.txt' -Value ($addingList | ForEach-Object { Format-PackageCoordinate $_ }) -Encoding UTF8
     Write-Host "[INFO] 已建立 package-adding.txt"
 
-    # 建立 package-missing.txt (已列在 package-adding.txt 的 artifact 資料夾本來就不存在，不重複檢查)
+    # 建立 package-updating.txt (已列在 package-adding.txt 的 artifact 資料夾本來就不存在，不重複檢查)
     $artifactSpecMap = @{
         'jar'         = @{ ext = 'jar'; classifier = ''        }
         'war'         = @{ ext = 'war'; classifier = ''        }
@@ -264,7 +264,7 @@ do {
         'java-source' = @{ ext = 'jar'; classifier = 'sources' }
         'javadoc'     = @{ ext = 'jar'; classifier = 'javadoc' }
     }
-    $missingList = [System.Collections.Generic.List[string]]::new()
+    $updatingList = [System.Collections.Generic.List[string]]::new()
     foreach ($package in $packageList) {
         $groupPath  = $package.GroupId -replace '\.', '/'
         $artifactId = $package.ArtifactId
@@ -273,21 +273,21 @@ do {
         $ext        = if ($artifactSpecMap.ContainsKey($type)) { $artifactSpecMap[$type].ext } else { 'jar' }
         $classifier = if ($package.Classifier) { $package.Classifier } elseif ($artifactSpecMap.ContainsKey($type)) { $artifactSpecMap[$type].classifier } else { '' }
         $packageUrl = if ($classifier) { "$($mavenRepository.url.TrimEnd('/'))/$groupPath/$artifactId/$version/$artifactId-$version-$classifier.$ext" } else { "$($mavenRepository.url.TrimEnd('/'))/$groupPath/$artifactId/$version/$artifactId-$version.$ext" }
-        $isMissing  = $false
+        $isUpdating = $false
         try {
             $null = Invoke-WebRequest -Uri $packageUrl -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
         } catch {
             if ($_.Exception.Response -and $_.Exception.Response.StatusCode.value__ -eq 404) {
-                $isMissing = $true
+                $isUpdating = $true
             }
         }
         $isAdding = $addingList | Where-Object { $_.GroupId -eq $package.GroupId -and $_.ArtifactId -eq $package.ArtifactId }
-        if ($isMissing -and -not $isAdding) {
-            $missingList.Add((Format-PackageCoordinate $package))
+        if ($isUpdating -and -not $isAdding) {
+            $updatingList.Add((Format-PackageCoordinate $package))
         }
     }
-    Set-Content 'package-missing.txt' -Value $missingList -Encoding UTF8
-    Write-Host "[INFO] 已建立 package-missing.txt"
+    Set-Content 'package-updating.txt' -Value $updatingList -Encoding UTF8
+    Write-Host "[INFO] 已建立 package-updating.txt"
     Write-Host "[INFO] ------------------------------------------------------------------------"
 
     # 移除資料夾
