@@ -99,12 +99,13 @@ do {
     Set-Content 'package.csproj' -Value $csprojContent -Encoding UTF8
 
     # 下載所有套件
-    & dotnet restore `
+    & nuget restore `
         "package.csproj" `
-        "--configfile" "nuget.config" `
-        "--packages" "./nuget_caches"
+        "-ConfigFile" "nuget.config" `
+        "-PackagesDirectory" "./nuget_caches" `
+        "-NonInteractive"
     if ($LASTEXITCODE -ne 0) {
-        Write-Host "[ERROR] dotnet restore 執行失敗 (nugetSourceList)"
+        Write-Host "[ERROR] nuget restore 執行失敗 (nugetSourceList)"
         $exitCode = 1
         break
     }
@@ -142,13 +143,14 @@ do {
     }
 
     # 下載目標套件
-    & dotnet restore `
+    & nuget restore `
         "package.csproj" `
-        "--configfile" "nuget.config" `
-        "--packages" "./nuget_caches" `
-        "--force"
+        "-ConfigFile" "nuget.config" `
+        "-PackagesDirectory" "./nuget_caches" `
+        "-Force" `
+        "-NonInteractive"
     if ($LASTEXITCODE -ne 0) {
-        Write-Host "[ERROR] dotnet restore 執行失敗 (nugetRepository)"
+        Write-Host "[ERROR] nuget restore 執行失敗 (nugetRepository)"
         $exitCode = 1
         break
     }
