@@ -42,7 +42,9 @@
       "Bash(grep -nP '`[^\\\\r\\\\n$]' \"/c/Lab/CLK.PackageLab/PyPI/pypi-fetch-packages.ps1\")",
       "Bash(xxd)",
       "PowerShell($files = 'PyPI\\\\pypi-resolve-packages.ps1','PyPI\\\\pypi-fetch-packages.ps1'; foreach \\($f in $files\\) { $errors = $null; [System.Management.Automation.Language.Parser]::ParseFile\\(\\(Resolve-Path $f\\), [ref]$null, [ref]$errors\\) | Out-Null; if \\($errors.Count -gt 0\\) { \"FAIL: $f\"; $errors | ForEach-Object { \"  Line $\\($_.Extent.StartLineNumber\\): $\\($_.Message\\)\" } } else { \"OK: $f\" } })",
-      "PowerShell(powershell -NoProfile -Command \"$null = [System.Management.Automation.PSParser]::Tokenize\\(\\(Get-Content -Raw 'c:\\\\Lab\\\\CLK.PackageLab\\\\Maven\\\\maven-fetch-packages.ps1'\\), [ref]$null\\); Write-Output 'Syntax OK'\")"
+      "PowerShell(powershell -NoProfile -Command \"$null = [System.Management.Automation.PSParser]::Tokenize\\(\\(Get-Content -Raw 'c:\\\\Lab\\\\CLK.PackageLab\\\\Maven\\\\maven-fetch-packages.ps1'\\), [ref]$null\\); Write-Output 'Syntax OK'\")",
+      "WebSearch",
+      "PowerShell($errors = $null; [System.Management.Automation.Language.Parser]::ParseFile\\(\"c:\\\\Lab\\\\CLK.PackageLab\\\\Maven\\\\maven-resolve-packages.ps1\", [ref]$null, [ref]$errors\\) | Out-Null; if \\($errors.Count -eq 0\\) { \"OK\" } else { $errors })"
     ],
     "additionalDirectories": [
       "C:\\Users\\clark\\AppData\\Local\\Temp\\claude\\c--Lab-CLK-PackageLab\\372590fc-2b23-4599-9482-1cf13e083d69\\scratchpad\\pkgtest"

@@ -15,6 +15,16 @@ $mavenSourceList   = @(
     @{ id = 'atlassian'; url = 'https://maven.artifacts.atlassian.com/'; username = ''; token = '' }
 )
 $mavenRepository   = @{ id = 'central'; url = 'https://repo.maven.apache.org/maven2/'; username = ''; token = '' }
+
+# 依 mvn dependency:list 慣例組座標字串：無 classifier 為 5 欄，有 classifier 才補上該欄 (不輸出 ::)
+function Format-PackageCoordinate {
+    param($Package)
+    if ($Package.Classifier) {
+        "$($Package.GroupId):$($Package.ArtifactId):$($Package.Packaging):$($Package.Classifier):$($Package.Version):$($Package.Scope)"
+    } else {
+        "$($Package.GroupId):$($Package.ArtifactId):$($Package.Packaging):$($Package.Version):$($Package.Scope)"
+    }
+}
 do {
 
 
@@ -111,9 +121,39 @@ do {
     $settingsContent.Add('</settings>')
     Set-Content 'settings.xml' -Value $settingsContent -Encoding UTF8
 
-    # 讀取 package.txt
+    # 讀取 package.txt (groupId:artifactId:version 或 groupId:artifactId:packaging:version:scope 或 groupId:artifactId:packaging:classifier:version:scope)
     $packageList = Get-Content 'package.txt' -Encoding UTF8 | Where-Object {
         $_.Trim() -ne ''
+    } | ForEach-Object {
+        $packageParts = $_.Trim() -split ':'
+        if ($packageParts.Count -ge 6) {
+            [PSCustomObject]@{
+                GroupId    = $packageParts[0]
+                ArtifactId = $packageParts[1]
+                Packaging  = $packageParts[2]
+                Classifier = $packageParts[3]
+                Version    = $packageParts[4]
+                Scope      = $packageParts[5]
+            }
+        } elseif ($packageParts.Count -eq 5) {
+            [PSCustomObject]@{
+                GroupId    = $packageParts[0]
+                ArtifactId = $packageParts[1]
+                Packaging  = $packageParts[2]
+                Classifier = ''
+                Version    = $packageParts[3]
+                Scope      = $packageParts[4]
+            }
+        } else {
+            [PSCustomObject]@{
+                GroupId    = $packageParts[0]
+                ArtifactId = $packageParts[1]
+                Packaging  = 'jar'
+                Classifier = ''
+                Version    = $packageParts[2]
+                Scope      = 'compile'
+            }
+        }
     }
 
     # 產生 pom.xml
@@ -127,14 +167,20 @@ do {
     $pomContent.Add('    <packaging>pom</packaging>')
     $pomContent.Add('    <dependencies>')
     foreach ($package in $packageList) {
-        $packageParts = $package -split ':'
-        if ($packageParts.Count -ge 3) {
-            $pomContent.Add('        <dependency>')
-            $pomContent.Add("            <groupId>$($packageParts[0])</groupId>")
-            $pomContent.Add("            <artifactId>$($packageParts[1])</artifactId>")
-            $pomContent.Add("            <version>$($packageParts[2])</version>")
-            $pomContent.Add('        </dependency>')
+        $pomContent.Add('        <dependency>')
+        $pomContent.Add("            <groupId>$($package.GroupId)</groupId>")
+        $pomContent.Add("            <artifactId>$($package.ArtifactId)</artifactId>")
+        $pomContent.Add("            <version>$($package.Version)</version>")
+        if ($package.Packaging -ne 'jar') {
+            $pomContent.Add("            <type>$($package.Packaging)</type>")
         }
+        if ($package.Classifier) {
+            $pomContent.Add("            <classifier>$($package.Classifier)</classifier>")
+        }
+        if ($package.Scope -ne 'compile') {
+            $pomContent.Add("            <scope>$($package.Scope)</scope>")
+        }
+        $pomContent.Add('        </dependency>')
     }
     $pomContent.Add('    </dependencies>')
     $pomContent.Add('</project>')
@@ -201,15 +247,9 @@ do {
 
     # 刪除目標套件
     foreach ($package in $packageList) {
-        $packageParts = $package -split ':'
-        if ($packageParts.Count -ge 3) {
-            $groupId    = $packageParts[0]
-            $artifactId = $packageParts[1]
-            $version    = $packageParts[2]
-            $packagePath = "./.m2/$($groupId -replace '\.', '/')/$artifactId/$version"
-            if (Test-Path $packagePath) {
-                Remove-Item -Path $packagePath -Recurse -Force
-            }
+        $packagePath = "./.m2/$($package.GroupId -replace '\.', '/')/$($package.ArtifactId)/$($package.Version)"
+        if (Test-Path $packagePath) {
+            Remove-Item -Path $packagePath -Recurse -Force
         }
     }
 
@@ -227,19 +267,13 @@ do {
     # 複製目標套件
     $missingList = @()
     foreach ($package in $packageList) {
-        $packageParts = $package -split ':'
-        if ($packageParts.Count -ge 3) {
-            $groupId    = $packageParts[0]
-            $artifactId = $packageParts[1]
-            $version    = $packageParts[2]
-            $packagePath = "./.m2/$($groupId -replace '\.', '/')/$artifactId/$version"
-            if (Test-Path $packagePath) {
-                $destinationDirectory = "./packages/$($groupId -replace '\.', '/')/$artifactId"
-                New-Item -ItemType Directory -Force $destinationDirectory | Out-Null
-                Copy-Item -Path $packagePath -Destination $destinationDirectory -Recurse -Force
-            } else {
-                $missingList += $package
-            }
+        $packagePath = "./.m2/$($package.GroupId -replace '\.', '/')/$($package.ArtifactId)/$($package.Version)"
+        if (Test-Path $packagePath) {
+            $destinationDirectory = "./packages/$($package.GroupId -replace '\.', '/')/$($package.ArtifactId)"
+            New-Item -ItemType Directory -Force $destinationDirectory | Out-Null
+            Copy-Item -Path $packagePath -Destination $destinationDirectory -Recurse -Force
+        } else {
+            $missingList += $package
         }
     }
     Get-ChildItem -Path './packages' -Recurse -Filter '_remote.repositories' | Remove-Item -Force
@@ -249,14 +283,14 @@ do {
         Write-Host
         Write-Host
         Write-Host "[INFO] ------------------------------------------------------------------------"
-        $packageList | ForEach-Object { Write-Host "[INFO] $_" }
+        $packageList | ForEach-Object { Write-Host "[INFO] $(Format-PackageCoordinate $_)" }
         Write-Host "[INFO] 套件下載完成，取得 $($packageList.Count) 個套件"
         Write-Host "[INFO] ------------------------------------------------------------------------"
     } else {
         Write-Host
         Write-Host
         Write-Host "[INFO] ------------------------------------------------------------------------"
-        $missingList | ForEach-Object { Write-Host "[ERROR] $_" }
+        $missingList | ForEach-Object { Write-Host "[ERROR] $(Format-PackageCoordinate $_)" }
         Write-Host "[ERROR] 套件下載失敗，缺少 $($missingList.Count) 個套件"
         Write-Host "[ERROR] ------------------------------------------------------------------------"
         $exitCode = 1

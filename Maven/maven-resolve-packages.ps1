@@ -225,7 +225,7 @@ do {
     Write-Host "[INFO] 已建立 package-lock.xml"
 
     # 建立 package-adding.txt
-    $addingList = [System.Collections.Generic.List[string]]::new()
+    $addingList = [System.Collections.Generic.List[object]]::new()
     foreach ($package in $packageList) {
         $groupPath  = $package.GroupId -replace '\.', '/'
         $artifactId = $package.ArtifactId
@@ -242,13 +242,13 @@ do {
             }
         }
         if ($isAdding) {
-            $addingList.Add((Format-PackageCoordinate $package))
+            $addingList.Add($package)
         }
     }
-    Set-Content 'package-adding.txt' -Value $addingList -Encoding UTF8
+    Set-Content 'package-adding.txt' -Value ($addingList | ForEach-Object { Format-PackageCoordinate $_ }) -Encoding UTF8
     Write-Host "[INFO] 已建立 package-adding.txt"
 
-    # 建立 package-missing.txt
+    # 建立 package-missing.txt (已列在 package-adding.txt 的 artifact 資料夾本來就不存在，不重複檢查)
     $artifactSpecMap = @{
         'jar'         = @{ ext = 'jar'; classifier = ''        }
         'war'         = @{ ext = 'war'; classifier = ''        }
@@ -270,33 +270,19 @@ do {
         $artifactId = $package.ArtifactId
         $type       = $package.Packaging
         $version    = $package.Version
-        $baseUrl    = "$($mavenRepository.url.TrimEnd('/'))/$groupPath/$artifactId/$version/$artifactId-$version"
+        $ext        = if ($artifactSpecMap.ContainsKey($type)) { $artifactSpecMap[$type].ext } else { 'jar' }
+        $classifier = if ($package.Classifier) { $package.Classifier } elseif ($artifactSpecMap.ContainsKey($type)) { $artifactSpecMap[$type].classifier } else { '' }
+        $packageUrl = if ($classifier) { "$($mavenRepository.url.TrimEnd('/'))/$groupPath/$artifactId/$version/$artifactId-$version-$classifier.$ext" } else { "$($mavenRepository.url.TrimEnd('/'))/$groupPath/$artifactId/$version/$artifactId-$version.$ext" }
         $isMissing  = $false
-
-        # 檢查 .pom
         try {
-            $null = Invoke-WebRequest -Uri "$baseUrl.pom" -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
+            $null = Invoke-WebRequest -Uri $packageUrl -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
         } catch {
             if ($_.Exception.Response -and $_.Exception.Response.StatusCode.value__ -eq 404) {
                 $isMissing = $true
             }
         }
-
-        # 檢查 artifact (有明確 classifier 欄位時優先採用，否則依 type 對應 artifactSpecMap)
-        if (-not $isMissing -and ($package.Classifier -or $artifactSpecMap.ContainsKey($type))) {
-            $ext        = if ($artifactSpecMap.ContainsKey($type)) { $artifactSpecMap[$type].ext } else { 'jar' }
-            $classifier = if ($package.Classifier) { $package.Classifier } else { $artifactSpecMap[$type].classifier }
-            $packageUrl = if ($classifier) { "$baseUrl-$classifier.$ext" } else { "$baseUrl.$ext" }
-            try {
-                $null = Invoke-WebRequest -Uri $packageUrl -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
-            } catch {
-                if ($_.Exception.Response -and $_.Exception.Response.StatusCode.value__ -eq 404) {
-                    $isMissing = $true
-                }
-            }
-        }
-
-        if ($isMissing) {
+        $isAdding = $addingList | Where-Object { $_.GroupId -eq $package.GroupId -and $_.ArtifactId -eq $package.ArtifactId }
+        if ($isMissing -and -not $isAdding) {
             $missingList.Add((Format-PackageCoordinate $package))
         }
     }
