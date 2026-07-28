@@ -103,6 +103,7 @@ do {
         "package.csproj" `
         "-ConfigFile" "nuget.config" `
         "-PackagesDirectory" "./nuget_caches" `
+        "-NoHttpCache" `
         "-NonInteractive"
     if ($LASTEXITCODE -ne 0) {
         Write-Host "[ERROR] nuget restore 執行失敗 (nugetSourceList)"
@@ -148,6 +149,7 @@ do {
         "-ConfigFile" "nuget.config" `
         "-PackagesDirectory" "./nuget_caches" `
         "-Force" `
+        "-NoHttpCache" `
         "-NonInteractive"
     if ($LASTEXITCODE -ne 0) {
         Write-Host "[ERROR] nuget restore 執行失敗 (nugetRepository)"

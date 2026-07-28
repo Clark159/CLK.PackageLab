@@ -44,10 +44,30 @@
       "PowerShell($files = 'PyPI\\\\pypi-resolve-packages.ps1','PyPI\\\\pypi-fetch-packages.ps1'; foreach \\($f in $files\\) { $errors = $null; [System.Management.Automation.Language.Parser]::ParseFile\\(\\(Resolve-Path $f\\), [ref]$null, [ref]$errors\\) | Out-Null; if \\($errors.Count -gt 0\\) { \"FAIL: $f\"; $errors | ForEach-Object { \"  Line $\\($_.Extent.StartLineNumber\\): $\\($_.Message\\)\" } } else { \"OK: $f\" } })",
       "PowerShell(powershell -NoProfile -Command \"$null = [System.Management.Automation.PSParser]::Tokenize\\(\\(Get-Content -Raw 'c:\\\\Lab\\\\CLK.PackageLab\\\\Maven\\\\maven-fetch-packages.ps1'\\), [ref]$null\\); Write-Output 'Syntax OK'\")",
       "WebSearch",
-      "PowerShell($errors = $null; [System.Management.Automation.Language.Parser]::ParseFile\\(\"c:\\\\Lab\\\\CLK.PackageLab\\\\Maven\\\\maven-resolve-packages.ps1\", [ref]$null, [ref]$errors\\) | Out-Null; if \\($errors.Count -eq 0\\) { \"OK\" } else { $errors })"
+      "PowerShell($errors = $null; [System.Management.Automation.Language.Parser]::ParseFile\\(\"c:\\\\Lab\\\\CLK.PackageLab\\\\Maven\\\\maven-resolve-packages.ps1\", [ref]$null, [ref]$errors\\) | Out-Null; if \\($errors.Count -eq 0\\) { \"OK\" } else { $errors })",
+      "PowerShell(& \"C:\\\\Users\\\\clark\\\\AppData\\\\Local\\\\Microsoft\\\\WinGet\\\\Packages\\\\Microsoft.NuGet_Microsoft.Winget.Source_8wekyb3d8bbwe\\\\nuget.exe\" help 2>&1)",
+      "Bash(echo \"=== global-packages folder for humanizer.core ===\" *)",
+      "Read(//c/Users/clark/.nuget/packages//**)",
+      "Read(//c/Users/clark/AppData/Local/NuGet/v3-cache/**)",
+      "Bash(rm -rf \"/c/Users/clark/AppData/Local/Temp/claude/c--Lab-CLK-PackageLab/058c9124-f4a5-4737-9692-76c9244dda1b/scratchpad/nuget-test\")",
+      "Bash(ls \"/c/Users/clark/AppData/Local/NuGet/v3-cache/670c1461c29885f9aa22c281d8b7da90845b38e4\\\\$ps_api.nuget.org_v3_index.json/\" 2>&1 | grep -i \"polly\\\\|list_polly\")",
+      "Read(//c/Users/clark/AppData/Local/NuGet/v3-cache/670c1461c29885f9aa22c281d8b7da90845b38e4\\\\$ps_api.nuget.org_v3_index.json//**)",
+      "Bash(mkdir -p \"/c/Users/clark/AppData/Local/Temp/claude/c--Lab-CLK-PackageLab/058c9124-f4a5-4737-9692-76c9244dda1b/scratchpad/nuget-test2\")",
+      "Read(//c/Users/clark/AppData/Local/Temp/claude/c--Lab-CLK-PackageLab/058c9124-f4a5-4737-9692-76c9244dda1b/scratchpad/**)",
+      "Bash(cat)",
+      "Bash(\"/c/Users/clark/AppData/Local/Microsoft/WinGet/Packages/Microsoft.NuGet_Microsoft.Winget.Source_8wekyb3d8bbwe/nuget.exe\" restore *)",
+      "Bash(echo \"---exit $?---\")",
+      "Bash(echo \"=== v3-cache entries for polly \\(should be empty if -NoCache worked\\) ===\" *)",
+      "Bash(rm -rf \"/c/Users/clark/AppData/Local/Temp/claude/c--Lab-CLK-PackageLab/058c9124-f4a5-4737-9692-76c9244dda1b/scratchpad/nuget-test2\")",
+      "Bash(dotnet restore *)",
+      "Bash(ls \"/c/Users/clark/AppData/Local/NuGet/v3-cache/670c1461c29885f9aa22c281d8b7da90845b38e4\\\\$ps_api.nuget.org_v3_index.json/\" 2>&1 | grep -i \"async\")",
+      "Bash(mkdir -p \"/c/Users/clark/AppData/Local/Temp/claude/c--Lab-CLK-PackageLab/058c9124-f4a5-4737-9692-76c9244dda1b/scratchpad/nuget-test3\")"
     ],
     "additionalDirectories": [
-      "C:\\Users\\clark\\AppData\\Local\\Temp\\claude\\c--Lab-CLK-PackageLab\\372590fc-2b23-4599-9482-1cf13e083d69\\scratchpad\\pkgtest"
+      "C:\\Users\\clark\\AppData\\Local\\Temp\\claude\\c--Lab-CLK-PackageLab\\372590fc-2b23-4599-9482-1cf13e083d69\\scratchpad\\pkgtest",
+      "C:\\Users\\clark\\AppData\\Local\\Temp\\claude\\c--Lab-CLK-PackageLab\\058c9124-f4a5-4737-9692-76c9244dda1b\\scratchpad\\nuget-test",
+      "C:\\Users\\clark\\AppData\\Local\\Temp\\claude\\c--Lab-CLK-PackageLab\\058c9124-f4a5-4737-9692-76c9244dda1b\\scratchpad\\nuget-test2",
+      "C:\\Users\\clark\\AppData\\Local\\Temp\\claude\\c--Lab-CLK-PackageLab\\058c9124-f4a5-4737-9692-76c9244dda1b\\scratchpad\\nuget-test3"
     ]
   }
 }

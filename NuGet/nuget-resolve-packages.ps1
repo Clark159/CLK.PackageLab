@@ -96,7 +96,8 @@ do {
         "--use-lock-file" `
         "--lock-file-path" "package-lock.json" `
         "--configfile" "nuget.config" `
-        "--packages" "./nuget_caches"
+        "--packages" "./nuget_caches" `
+        "--no-http-cache"
     if ($LASTEXITCODE -ne 0) {
         Write-Host "[ERROR] dotnet restore 執行失敗 (nugetSourceList)"
         $exitCode = 1
