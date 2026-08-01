@@ -28,7 +28,7 @@ do {
     # 檢查資料夾
     $folderName = Split-Path $PSScriptRoot -Leaf
     if ($folderName -match '^\d{12}-\d{2}$') {
-        $pypiRepository.url = "$($pypiRepository.url.TrimEnd('/'))/$folderName-AP/"
+        $pypiRepository.url = "$($pypiRepository.url.TrimEnd('/'))/$folderName/"
     }
 
     # 移除資料夾
