@@ -34,7 +34,7 @@ do {
     }
 
     # 移除檔案
-    foreach ($fileName in 'pip.ini', 'package-lock.json', 'package-all.txt', 'package-adding.txt', 'package-missing.txt') {
+    foreach ($fileName in 'pip.ini', 'package-lock.json', 'package-all.txt', 'package-adding.txt', 'package-updating.txt') {
         if (Test-Path $fileName) {
             Remove-Item $fileName -Force
         }
@@ -158,26 +158,27 @@ do {
     Set-Content 'package-adding.txt' -Value $addingList -Encoding UTF8
     Write-Host "[INFO] 已建立 package-adding.txt"
 
-    # 建立 package-missing.txt
-    $missingList = [System.Collections.Generic.List[string]]::new()
+    # 建立 package-updating.txt (已列在 package-adding.txt 的套件本來就不存在，不重複列入)
+    $updatingList = [System.Collections.Generic.List[string]]::new()
     foreach ($package in $allList) {
         $normalizedName = ($package.name.ToLower() -replace '[-_.]+', '-')
         $packageUrl = "$($pypiRepository.url.TrimEnd('/'))/$normalizedName/"
-        $isMissing = $true
+        $isUpdating = $true
         try {
             $indexPage = Invoke-WebRequest -Uri $packageUrl -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
             if ($indexPage.Content -match [regex]::Escape($package.version)) {
-                $isMissing = $false
+                $isUpdating = $false
             }
         } catch {
-            $isMissing = $true
+            $isUpdating = $true
         }
-        if ($isMissing) {
-            $missingList.Add("$($package.name)==$($package.version)")
+        $isAdding = $addingList | Where-Object { ($_ -split '==')[0] -eq $package.name }
+        if ($isUpdating -and -not $isAdding) {
+            $updatingList.Add("$($package.name)==$($package.version)")
         }
     }
-    Set-Content 'package-missing.txt' -Value $missingList -Encoding UTF8
-    Write-Host "[INFO] 已建立 package-missing.txt"
+    Set-Content 'package-updating.txt' -Value $updatingList -Encoding UTF8
+    Write-Host "[INFO] 已建立 package-updating.txt"
     Write-Host "[INFO] ------------------------------------------------------------------------"
 
     # 移除資料夾
