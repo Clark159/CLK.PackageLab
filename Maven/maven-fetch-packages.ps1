@@ -54,7 +54,7 @@ do {
     }
 
     # 移除檔案
-    foreach ($fileName in 'settings.xml', 'pom.xml', 'package-lock.xml', 'package-adding.txt', 'package-updating.txt') {
+    foreach ($fileName in 'settings.xml') {
         if (Test-Path $fileName) {
             Remove-Item $fileName -Force
         }
@@ -305,7 +305,7 @@ do {
     }
 
     # 移除檔案
-    foreach ($fileName in 'settings.xml', 'pom.xml') {
+    foreach ($fileName in 'settings.xml') {
         if (Test-Path $fileName) {
             Remove-Item $fileName -Force
         }

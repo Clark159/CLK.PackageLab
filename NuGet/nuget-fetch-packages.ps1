@@ -41,7 +41,7 @@ do {
     }
 
     # 移除檔案
-    foreach ($fileName in 'nuget.config', 'package.csproj', 'package-lock.json', 'package-adding.txt', 'package-updating.txt') {
+    foreach ($fileName in 'nuget.config'') {
         if (Test-Path $fileName) {
             Remove-Item $fileName -Force
         }
@@ -203,7 +203,7 @@ do {
     }
 
     # 移除檔案
-    foreach ($fileName in 'nuget.config', 'package.csproj') {
+    foreach ($fileName in 'nuget.config') {
         if (Test-Path $fileName) {
             Remove-Item $fileName -Force
         }

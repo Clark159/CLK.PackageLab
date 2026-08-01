@@ -40,7 +40,7 @@ do {
     }
 
     # 移除檔案
-    foreach ($fileName in 'pip.ini', 'requirements.txt', 'package-lock.json', 'package-adding.txt', 'package-missing.txt') {
+    foreach ($fileName in 'pip.ini') {
         if (Test-Path $fileName) {
             Remove-Item $fileName -Force
         }
@@ -168,7 +168,7 @@ do {
     }
 
     # 移除檔案
-    foreach ($fileName in 'pip.ini', 'requirements.txt') {
+    foreach ($fileName in 'pip.ini') {
         if (Test-Path $fileName) {
             Remove-Item $fileName -Force
         }

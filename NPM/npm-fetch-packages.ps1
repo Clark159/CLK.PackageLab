@@ -42,7 +42,7 @@ do {
     }
 
     # 移除檔案
-    foreach ($fileName in '.npmrc', 'package.json', 'package-lock.json', 'package-adding.txt', 'package-updating.txt') {
+    foreach ($fileName in '.npmrc') {
         if (Test-Path $fileName) {
             Remove-Item $fileName -Force
         }
@@ -184,7 +184,7 @@ do {
     }
 
     # 移除檔案
-    foreach ($fileName in '.npmrc', 'package.json', 'package-lock.json') {
+    foreach ($fileName in '.npmrc') {
         if (Test-Path $fileName) {
             Remove-Item $fileName -Force
         }
