@@ -6,6 +6,7 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 # ===== Variables =====
+$scriptVersion = '20260801-00'
 $exitCode = 0
 $npmSourceList = @(
     @{ id = 'npmjs'; url = 'https://registry.npmjs.org/' }
@@ -190,6 +191,8 @@ do {
 if ($exitCode -eq 0) {
     Write-Host '[SUCCESS] 所有作業已完成'
 }
+Write-Host "[VERSION] $scriptVersion"
+
 if ($Pause) {
     Write-Host
     Write-Host '按任意鍵繼續...'
