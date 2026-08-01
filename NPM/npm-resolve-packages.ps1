@@ -130,10 +130,10 @@ do {
     $addingList = [System.Collections.Generic.List[object]]::new()
     foreach ($package in $allList) {
         $encodedName = $package.name -replace '/', '%2F'
-        $packageUrl  = "$($npmRepository.url.TrimEnd('/'))/$encodedName"
+        $packageUrl  = "$($npmRepository.url.TrimEnd('/'))/-/package/$encodedName/dist-tags"
         $isAdding = $true
         try {
-            $null = Invoke-WebRequest -Uri $packageUrl -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
+            $null = Invoke-WebRequest -Uri $packageUrl -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
             $isAdding = $false
         } catch {
             if ($_.Exception.Response -and $_.Exception.Response.StatusCode.value__ -eq 404) {
