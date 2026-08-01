@@ -121,14 +121,14 @@ do {
             }
         }
     }
-    $packageList = @($packageMap.Values | Sort-Object { $_.name })
-    $packageContent = $packageList | ForEach-Object { "$($_.name)@$($_.version)" }
+    $allList = @($packageMap.Values | Sort-Object { $_.name })
+    $packageContent = $allList | ForEach-Object { "$($_.name)@$($_.version)" }
     Set-Content 'package-all.txt' -Value $packageContent -Encoding UTF8
     Write-Host "[INFO] 已建立 package-all.txt"
 
     # 建立 package-adding.txt
     $addingList = [System.Collections.Generic.List[object]]::new()
-    foreach ($package in $packageList) {
+    foreach ($package in $allList) {
         $encodedName = $package.name -replace '/', '%2F'
         $packageUrl  = "$($npmRepository.url.TrimEnd('/'))/$encodedName"
         $isAdding = $true
@@ -151,7 +151,7 @@ do {
 
     # 建立 package-updating.txt (已列在 package-adding.txt 的套件本來就不存在，不重複列入)
     $updatingList = [System.Collections.Generic.List[string]]::new()
-    foreach ($package in $packageList) {
+    foreach ($package in $allList) {
         $encodedName = $package.name -replace '/', '%2F'
         $tarballUrl  = "$($npmRepository.url.TrimEnd('/'))/$encodedName/-/$($package.name.Split('/')[-1])-$($package.version).tgz"
         $isUpdating  = $false

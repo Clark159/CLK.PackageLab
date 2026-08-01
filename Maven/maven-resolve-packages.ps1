@@ -160,7 +160,7 @@ do {
     Write-Host "[INFO] ------------------------------------------------------------------------"
 
     # 讀取 package-all.txt (groupId:artifactId:packaging:version:scope 或 groupId:artifactId:packaging:classifier:version:scope)
-    $packageList = Get-Content 'package-all.txt' -Encoding UTF8 | Where-Object { $_ -match '^\s+\S+:\S+:\S+:\S+' } | ForEach-Object {
+    $allList = Get-Content 'package-all.txt' -Encoding UTF8 | Where-Object { $_ -match '^\s+\S+:\S+:\S+:\S+' } | ForEach-Object {
         $packageParts = ($_ -replace '\s*-- module.*', '').Trim() -split ':'
         if ($packageParts.Count -ge 6) {
             [PSCustomObject]@{
@@ -184,7 +184,7 @@ do {
     }
 
     # 整理 package-all.txt
-    $packageContent = $packageList | ForEach-Object { Format-PackageCoordinate $_ }
+    $packageContent = $allList | ForEach-Object { Format-PackageCoordinate $_ }
     Set-Content 'package-all.txt' -Value $packageContent -Encoding UTF8
     Write-Host "[INFO] 已建立 package-all.txt"
 
@@ -203,7 +203,7 @@ do {
     $lockContent.Add('')
     $lockContent.Add('    <dependencyManagement>')
     $lockContent.Add('        <dependencies>')
-    foreach ($package in $packageList) {
+    foreach ($package in $allList) {
         $lockContent.Add('            <dependency>')
         $lockContent.Add("                <groupId>$($package.GroupId)</groupId>")
         $lockContent.Add("                <artifactId>$($package.ArtifactId)</artifactId>")
@@ -227,7 +227,7 @@ do {
 
     # 建立 package-adding.txt
     $addingList = [System.Collections.Generic.List[object]]::new()
-    foreach ($package in $packageList) {
+    foreach ($package in $allList) {
         $groupPath  = $package.GroupId -replace '\.', '/'
         $artifactId = $package.ArtifactId
         $packageUrl = "$($mavenRepository.url.TrimEnd('/'))/$groupPath/$artifactId/"
@@ -266,7 +266,7 @@ do {
         'javadoc'     = @{ ext = 'jar'; classifier = 'javadoc' }
     }
     $updatingList = [System.Collections.Generic.List[string]]::new()
-    foreach ($package in $packageList) {
+    foreach ($package in $allList) {
         $groupPath  = $package.GroupId -replace '\.', '/'
         $artifactId = $package.ArtifactId
         $type       = $package.Packaging

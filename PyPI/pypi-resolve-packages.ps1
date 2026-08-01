@@ -130,14 +130,14 @@ do {
             }
         }
     }
-    $packageList    = @($packageMap.Values | Sort-Object { $_.name })
-    $packageContent = $packageList | ForEach-Object { "$($_.name)==$($_.version)" }
+    $allList        = @($packageMap.Values | Sort-Object { $_.name })
+    $packageContent = $allList | ForEach-Object { "$($_.name)==$($_.version)" }
     Set-Content 'package-all.txt' -Value $packageContent -Encoding UTF8
     Write-Host "[INFO] 已建立 package-all.txt"
 
     # 建立 package-adding.txt
     $addingList = [System.Collections.Generic.List[string]]::new()
-    foreach ($package in $packageList) {
+    foreach ($package in $allList) {
         $normalizedName = ($package.name.ToLower() -replace '[-_.]+', '-')
         $packageUrl = "$($pypiRepository.url.TrimEnd('/'))/$normalizedName/"
         $isAdding = $true
@@ -160,7 +160,7 @@ do {
 
     # 建立 package-missing.txt
     $missingList = [System.Collections.Generic.List[string]]::new()
-    foreach ($package in $packageList) {
+    foreach ($package in $allList) {
         $normalizedName = ($package.name.ToLower() -replace '[-_.]+', '-')
         $packageUrl = "$($pypiRepository.url.TrimEnd('/'))/$normalizedName/"
         $isMissing = $true
