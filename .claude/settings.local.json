@@ -61,7 +61,16 @@
       "Bash(rm -rf \"/c/Users/clark/AppData/Local/Temp/claude/c--Lab-CLK-PackageLab/058c9124-f4a5-4737-9692-76c9244dda1b/scratchpad/nuget-test2\")",
       "Bash(dotnet restore *)",
       "Bash(ls \"/c/Users/clark/AppData/Local/NuGet/v3-cache/670c1461c29885f9aa22c281d8b7da90845b38e4\\\\$ps_api.nuget.org_v3_index.json/\" 2>&1 | grep -i \"async\")",
-      "Bash(mkdir -p \"/c/Users/clark/AppData/Local/Temp/claude/c--Lab-CLK-PackageLab/058c9124-f4a5-4737-9692-76c9244dda1b/scratchpad/nuget-test3\")"
+      "Bash(mkdir -p \"/c/Users/clark/AppData/Local/Temp/claude/c--Lab-CLK-PackageLab/058c9124-f4a5-4737-9692-76c9244dda1b/scratchpad/nuget-test3\")",
+      "Bash(mvn -v)",
+      "Bash(npm -v)",
+      "PowerShell(& powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"Maven\\\\maven-resolve-packages.ps1\")",
+      "PowerShell(& powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"Maven\\\\maven-fetch-packages.ps1\" 2>&1 | Select-String -Pattern '\\\\[ERROR\\\\]|\\\\[SUCCESS\\\\]|\\\\[VERSION\\\\]|BUILD SUCCESS|BUILD FAILURE')",
+      "PowerShell(& powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"NPM\\\\npm-resolve-packages.ps1\" 2>&1 | Select-String -Pattern '\\\\[ERROR\\\\]|\\\\[SUCCESS\\\\]|\\\\[VERSION\\\\]|npm error|npm warn')",
+      "PowerShell(& powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"NPM\\\\npm-fetch-packages.ps1\" 2>&1 | Select-String -Pattern '\\\\[ERROR\\\\]|\\\\[SUCCESS\\\\]|\\\\[VERSION\\\\]|npm error|npm warn')",
+      "PowerShell(& powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"NuGet\\\\nuget-resolve-packages.ps1\" 2>&1 | Select-String -Pattern '\\\\[ERROR\\\\]|\\\\[SUCCESS\\\\]|\\\\[VERSION\\\\]|error |Restored')",
+      "PowerShell(& powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"NuGet\\\\nuget-fetch-packages.ps1\" 2>&1 | Select-String -Pattern '\\\\[ERROR\\\\]|\\\\[SUCCESS\\\\]|\\\\[VERSION\\\\]|error |Restored')",
+      "Bash(python -m pip --version)"
     ],
     "additionalDirectories": [
       "C:\\Users\\clark\\AppData\\Local\\Temp\\claude\\c--Lab-CLK-PackageLab\\372590fc-2b23-4599-9482-1cf13e083d69\\scratchpad\\pkgtest",
