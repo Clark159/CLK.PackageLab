@@ -18,11 +18,12 @@ do {
 
     # ===== Require =====
     # 檢查檔案
-    foreach ($fileName in 'package.txt') {
-        if (-not (Test-Path $fileName)) {
-            Write-Host "[ERROR] 找不到 $fileName"
+    if (-not (Test-Path 'package.txt')) {
+        if (Test-Path 'package-all.txt') {
+            Copy-Item -Path 'package-all.txt' -Destination 'package.txt' -Force
+        } else {
+            Write-Host "[ERROR] 找不到 package.txt"
             $exitCode = 1
-            break
         }
     }
     if ($exitCode -ne 0) { break }
@@ -41,7 +42,7 @@ do {
     }
 
     # 移除檔案
-    foreach ($fileName in 'nuget.config'') {
+    foreach ($fileName in 'nuget.config') {
         if (Test-Path $fileName) {
             Remove-Item $fileName -Force
         }
