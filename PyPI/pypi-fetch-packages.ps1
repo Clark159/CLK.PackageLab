@@ -177,11 +177,11 @@ do {
 
 # ===== End =====
 } while ($false)
+
+Write-Host "[VERSION] $scriptVersion"
 if ($exitCode -eq 0) {
     Write-Host '[SUCCESS] 所有作業已完成'
 }
-Write-Host "[VERSION] $scriptVersion"
-
 if ($Pause) {
     Write-Host
     Write-Host '按任意鍵繼續...'
