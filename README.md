@@ -12,8 +12,8 @@
 
 | 檔案 | 說明 |
 |------|------|
-| `package-all.txt` | 所有相依套件的完整清單（含版本） |
 | `package-lock.*` | 相依套件的鎖定清單（**Maven** 用 `.xml`，**NPM / NuGet** 用 `.json`） |
+| `package-all.txt` | 完整相依的套件清單 |
 | `package-adding.txt` | **需要新套件審查**的套件清單 |
 | `package-updating.txt` | **需要升級套件版本**的套件清單 |
 
@@ -63,7 +63,7 @@
 
    <!-- 截圖 -->
 
-4. 執行完成後，確認 `package-all.txt`、`package-lock.*`、`package-adding.txt`、`package-missing.txt` 已產生。
+4. 執行完成後，確認 `package-lock.*`、`package-all.txt`、`package-adding.txt`、`package-missing.txt` 已產生。
 
 ---
 
