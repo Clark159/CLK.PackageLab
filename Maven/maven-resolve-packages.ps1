@@ -48,7 +48,7 @@ do {
     }
 
     # 移除檔案
-    foreach ($fileName in 'settings.xml', 'package.txt', 'package-lock.xml', 'package-adding.txt', 'package-updating.txt') {
+    foreach ($fileName in 'settings.xml', 'package-lock.xml', 'package-all.txt', 'package-adding.txt', 'package-updating.txt') {
         if (Test-Path $fileName) {
             Remove-Item $fileName -Force
         }
@@ -141,9 +141,9 @@ do {
     $settingsContent.Add('</settings>')
     Set-Content 'settings.xml' -Value $settingsContent -Encoding UTF8
 
-    # 建立 package.txt
+    # 建立 package-all.txt
     & mvn dependency:list `
-        "-DoutputFile=package.txt" `
+        "-DoutputFile=package-all.txt" `
         "-Dsort=true" `
         "-Dstyle.color=never" `
         "-DappendOutput=false" `
@@ -159,8 +159,8 @@ do {
     Write-Host
     Write-Host "[INFO] ------------------------------------------------------------------------"
 
-    # 讀取 package.txt (groupId:artifactId:packaging:version:scope 或 groupId:artifactId:packaging:classifier:version:scope)
-    $packageList = Get-Content 'package.txt' -Encoding UTF8 | Where-Object { $_ -match '^\s+\S+:\S+:\S+:\S+' } | ForEach-Object {
+    # 讀取 package-all.txt (groupId:artifactId:packaging:version:scope 或 groupId:artifactId:packaging:classifier:version:scope)
+    $packageList = Get-Content 'package-all.txt' -Encoding UTF8 | Where-Object { $_ -match '^\s+\S+:\S+:\S+:\S+' } | ForEach-Object {
         $packageParts = ($_ -replace '\s*-- module.*', '').Trim() -split ':'
         if ($packageParts.Count -ge 6) {
             [PSCustomObject]@{
@@ -183,10 +183,10 @@ do {
         }
     }
 
-    # 整理 package.txt
+    # 整理 package-all.txt
     $packageContent = $packageList | ForEach-Object { Format-PackageCoordinate $_ }
-    Set-Content 'package.txt' -Value $packageContent -Encoding UTF8
-    Write-Host "[INFO] 已建立 package.txt"
+    Set-Content 'package-all.txt' -Value $packageContent -Encoding UTF8
+    Write-Host "[INFO] 已建立 package-all.txt"
 
     # 建立 package-lock.xml
     $lockContent = [System.Collections.Generic.List[string]]::new()

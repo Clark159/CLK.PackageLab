@@ -34,7 +34,7 @@ do {
     }
 
     # 移除檔案
-    foreach ($fileName in '.npmrc', 'package.txt', 'package-lock.json', 'package-adding.txt', 'package-updating.txt') {
+    foreach ($fileName in '.npmrc', 'package-lock.json', 'package-all.txt', 'package-adding.txt', 'package-updating.txt') {
         if (Test-Path $fileName) {
             Remove-Item $fileName -Force
         }
@@ -101,7 +101,7 @@ do {
         break
     }
 
-    # 建立 package.txt
+    # 建立 package-all.txt
     $packageMap = @{}
     foreach ($packageParts in $lockJson.packages.PSObject.Properties) {
         $key = $packageParts.Name
@@ -123,8 +123,8 @@ do {
     }
     $packageList = @($packageMap.Values | Sort-Object { $_.name })
     $packageContent = $packageList | ForEach-Object { "$($_.name)@$($_.version)" }
-    Set-Content 'package.txt' -Value $packageContent -Encoding UTF8
-    Write-Host "[INFO] 已建立 package.txt"
+    Set-Content 'package-all.txt' -Value $packageContent -Encoding UTF8
+    Write-Host "[INFO] 已建立 package-all.txt"
 
     # 建立 package-adding.txt
     $addingList = [System.Collections.Generic.List[object]]::new()

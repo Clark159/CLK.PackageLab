@@ -33,7 +33,7 @@ do {
     }
 
     # 移除檔案
-    foreach ($fileName in 'nuget.config', 'package.txt', 'package-lock.json', 'package-adding.txt', 'package-updating.txt') {
+    foreach ($fileName in 'nuget.config', 'package-lock.json', 'package-all.txt', 'package-adding.txt', 'package-updating.txt') {
         if (Test-Path $fileName) {
             Remove-Item $fileName -Force
         }
@@ -117,7 +117,7 @@ do {
         break
     }
 
-    # 建立 package.txt
+    # 建立 package-all.txt
     $packageMap = @{}
     foreach ($frameworkProperty in $lockJson.dependencies.PSObject.Properties) {
         foreach ($packageProperty in $frameworkProperty.Value.PSObject.Properties) {
@@ -136,8 +136,8 @@ do {
     }
     $packageList    = @($packageMap.Values | Sort-Object { $_.name })
     $packageContent = $packageList | ForEach-Object { "$($_.name)/$($_.version)" }
-    Set-Content 'package.txt' -Value $packageContent -Encoding UTF8
-    Write-Host "[INFO] 已建立 package.txt"
+    Set-Content 'package-all.txt' -Value $packageContent -Encoding UTF8
+    Write-Host "[INFO] 已建立 package-all.txt"
 
     # 取得 packageBaseUrl 
     $packageBaseUrl = $null

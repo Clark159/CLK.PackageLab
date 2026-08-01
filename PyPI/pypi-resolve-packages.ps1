@@ -34,7 +34,7 @@ do {
     }
 
     # 移除檔案
-    foreach ($fileName in 'pip.ini', 'package.txt', 'package-lock.json', 'package-adding.txt', 'package-missing.txt') {
+    foreach ($fileName in 'pip.ini', 'package-lock.json', 'package-all.txt', 'package-adding.txt', 'package-missing.txt') {
         if (Test-Path $fileName) {
             Remove-Item $fileName -Force
         }
@@ -115,7 +115,7 @@ do {
         break
     }
 
-    # 建立 package.txt
+    # 建立 package-all.txt
     $packageMap = @{}
     foreach ($installItem in $lockJson.install) {
         $name    = $installItem.metadata.name
@@ -132,8 +132,8 @@ do {
     }
     $packageList    = @($packageMap.Values | Sort-Object { $_.name })
     $packageContent = $packageList | ForEach-Object { "$($_.name)==$($_.version)" }
-    Set-Content 'package.txt' -Value $packageContent -Encoding UTF8
-    Write-Host "[INFO] 已建立 package.txt"
+    Set-Content 'package-all.txt' -Value $packageContent -Encoding UTF8
+    Write-Host "[INFO] 已建立 package-all.txt"
 
     # 建立 package-adding.txt
     $addingList = [System.Collections.Generic.List[string]]::new()
