@@ -87,7 +87,7 @@ do {
             $pipIniContent.Add("    $extraUrl")
         }
     }
-    Set-Content 'pip.ini' -Value $pipIniContent -Encoding UTF8
+    [System.IO.File]::WriteAllLines("$PSScriptRoot\pip.ini", $pipIniContent, [System.Text.UTF8Encoding]::new($false))
     $env:PIP_CONFIG_FILE = Join-Path $PSScriptRoot 'pip.ini'
 
     # 建立 package-lock.json

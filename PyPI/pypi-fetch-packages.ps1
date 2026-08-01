@@ -73,7 +73,7 @@ do {
             $pipIniContent.Add("    $extraUrl")
         }
     }
-    Set-Content 'pip.ini' -Value $pipIniContent -Encoding UTF8
+    [System.IO.File]::WriteAllLines("$PSScriptRoot\pip.ini", $pipIniContent, [System.Text.UTF8Encoding]::new($false))
     $env:PIP_CONFIG_FILE = Join-Path $PSScriptRoot 'pip.ini'
 
     # 讀取 package.txt
@@ -108,7 +108,7 @@ do {
         $repositoryUrl = $repositoryUrl -replace '^(https?://)', "`$1$($pypiRepository.token)@"
     }
     $pipIniContent.Add("index-url = $repositoryUrl")
-    Set-Content 'pip.ini' -Value $pipIniContent -Encoding UTF8
+    [System.IO.File]::WriteAllLines("$PSScriptRoot\pip.ini", $pipIniContent, [System.Text.UTF8Encoding]::new($false))
 
     # 清除快取
     if (Test-Path './pip_caches') {
