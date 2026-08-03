@@ -131,12 +131,13 @@ do {
     $settingsContent.Add('</settings>')
     Set-Content 'settings.xml' -Value $settingsContent -Encoding UTF8
 
-    # 建立 package-all.txt
+    # 建立 package-all.txt (outputFile 用絕對路徑 + appendOutput=true，
+    # 讓 reactor 內每個子模組的解析結果都彙總進同一份檔案，而不是各自寫進自己的模組目錄)
     & mvn dependency:list `
-        "-DoutputFile=package-all.txt" `
+        "-DoutputFile=$PSScriptRoot/package-all.txt" `
         "-Dsort=true" `
         "-Dstyle.color=never" `
-        "-DappendOutput=false" `
+        "-DappendOutput=true" `
         "-DexcludeTransitive=false" `
         "-s" "settings.xml" `
         "-gs" "settings.xml"
@@ -171,9 +172,10 @@ do {
                 Scope      = if ($packageParts.Count -ge 5) { $packageParts[4] } else { 'compile' }
             }
         }
-    }
+    }    
+    $allList = $allList | Sort-Object GroupId, ArtifactId, Packaging, Classifier, Version, Scope -Unique
 
-    # 整理 package-all.txt 
+    # 整理 package-all.txt
     $packageContent = $allList | ForEach-Object {
         if ($_.Classifier) {
             "$($_.GroupId):$($_.ArtifactId):$($_.Packaging):$($_.Classifier):$($_.Version):$($_.Scope)"
