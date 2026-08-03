@@ -131,8 +131,7 @@ do {
     $settingsContent.Add('</settings>')
     Set-Content 'settings.xml' -Value $settingsContent -Encoding UTF8
 
-    # 建立 package-all.txt (outputFile 用絕對路徑 + appendOutput=true，
-    # 讓 reactor 內每個子模組的解析結果都彙總進同一份檔案，而不是各自寫進自己的模組目錄)
+    # 建立 package-all.txt
     & mvn dependency:list `
         "-DoutputFile=$PSScriptRoot/package-all.txt" `
         "-Dsort=true" `
