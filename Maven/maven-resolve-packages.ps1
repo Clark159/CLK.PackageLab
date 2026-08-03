@@ -16,16 +16,6 @@ $mavenSourceList   = @(
     @{ id = 'atlassian'; url = 'https://maven.artifacts.atlassian.com/' }
 )
 $mavenRepository   = @{ id = 'central'; url = 'https://repo.maven.apache.org/maven2/' }
-
-# 依 mvn dependency:list 慣例組座標字串：無 classifier 為 5 欄，有 classifier 才補上該欄 (不輸出 ::)
-function Format-PackageCoordinate {
-    param($Package)
-    if ($Package.Classifier) {
-        "$($Package.GroupId):$($Package.ArtifactId):$($Package.Packaging):$($Package.Classifier):$($Package.Version):$($Package.Scope)"
-    } else {
-        "$($Package.GroupId):$($Package.ArtifactId):$($Package.Packaging):$($Package.Version):$($Package.Scope)"
-    }
-}
 do {
 
 
@@ -159,7 +149,7 @@ do {
     Write-Host
     Write-Host "[INFO] ------------------------------------------------------------------------"
 
-    # 讀取 package-all.txt (groupId:artifactId:packaging:version:scope 或 groupId:artifactId:packaging:classifier:version:scope)
+    # 讀取 package-all.txt
     $allList = Get-Content 'package-all.txt' -Encoding UTF8 | Where-Object { $_ -match '^\s+\S+:\S+:\S+:\S+' } | ForEach-Object {
         $packageParts = ($_ -replace '\s*-- module.*', '').Trim() -split ':'
         if ($packageParts.Count -ge 6) {
@@ -183,8 +173,14 @@ do {
         }
     }
 
-    # 整理 package-all.txt
-    $packageContent = $allList | ForEach-Object { Format-PackageCoordinate $_ }
+    # 整理 package-all.txt 
+    $packageContent = $allList | ForEach-Object {
+        if ($_.Classifier) {
+            "$($_.GroupId):$($_.ArtifactId):$($_.Packaging):$($_.Classifier):$($_.Version):$($_.Scope)"
+        } else {
+            "$($_.GroupId):$($_.ArtifactId):$($_.Packaging):$($_.Version):$($_.Scope)"
+        }
+    }
     Set-Content 'package-all.txt' -Value $packageContent -Encoding UTF8
     Write-Host "[INFO] 已建立 package-all.txt"
 
@@ -246,7 +242,14 @@ do {
             $addingList.Add($package)
         }
     }
-    Set-Content 'package-adding.txt' -Value ($addingList | ForEach-Object { Format-PackageCoordinate $_ }) -Encoding UTF8
+    $addingContent = $addingList | ForEach-Object {
+        if ($_.Classifier) {
+            "$($_.GroupId):$($_.ArtifactId):$($_.Packaging):$($_.Classifier):$($_.Version):$($_.Scope)"
+        } else {
+            "$($_.GroupId):$($_.ArtifactId):$($_.Packaging):$($_.Version):$($_.Scope)"
+        }
+    }
+    Set-Content 'package-adding.txt' -Value $addingContent -Encoding UTF8
     Write-Host "[INFO] 已建立 package-adding.txt"
 
     # 建立 package-updating.txt (已列在 package-adding.txt 的 artifact 資料夾本來就不存在，不重複檢查)
@@ -284,7 +287,11 @@ do {
         }
         $isAdding = $addingList | Where-Object { $_.GroupId -eq $package.GroupId -and $_.ArtifactId -eq $package.ArtifactId }
         if ($isUpdating -and -not $isAdding) {
-            $updatingList.Add((Format-PackageCoordinate $package))
+            $updatingList.Add($(if ($package.Classifier) {
+                "$($package.GroupId):$($package.ArtifactId):$($package.Packaging):$($package.Classifier):$($package.Version):$($package.Scope)"
+            } else {
+                "$($package.GroupId):$($package.ArtifactId):$($package.Packaging):$($package.Version):$($package.Scope)"
+            }))
         }
     }
     Set-Content 'package-updating.txt' -Value $updatingList -Encoding UTF8
