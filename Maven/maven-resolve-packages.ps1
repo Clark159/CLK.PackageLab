@@ -131,7 +131,7 @@ do {
     $settingsContent.Add('</settings>')
     Set-Content 'settings.xml' -Value $settingsContent -Encoding UTF8
 
-    # 建立 package-all.txt
+    # 建立 package-all.txt (專案依賴)
     & mvn dependency:list `
         "-DoutputFile=$PSScriptRoot/package-all.txt" `
         "-Dsort=true" `
@@ -142,6 +142,21 @@ do {
         "-gs" "settings.xml"
     if ($LASTEXITCODE -ne 0) {
         Write-Host "[ERROR] mvn dependency:list 執行失敗 (mavenSourceList)"
+        $exitCode = 1
+        break
+    }
+
+    # 建立 package-all.txt (編譯依賴)
+    & mvn dependency:resolve-plugins `
+        "-DoutputFile=$PSScriptRoot/package-all.txt" `
+        "-Dsort=true" `
+        "-Dstyle.color=never" `
+        "-DappendOutput=true" `
+        "-DexcludeTransitive=false" `
+        "-s" "settings.xml" `
+        "-gs" "settings.xml"
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "[ERROR] mvn dependency:resolve-plugins 執行失敗 (mavenSourceList)"
         $exitCode = 1
         break
     }
@@ -253,7 +268,7 @@ do {
     Set-Content 'package-adding.txt' -Value $addingContent -Encoding UTF8
     Write-Host "[INFO] 已建立 package-adding.txt"
 
-    # 建立 package-updating.txt (已列在 package-adding.txt 的 artifact 資料夾本來就不存在，不重複檢查)
+    # 建立 package-updating.txt 
     $artifactSpecMap = @{
         'jar'         = @{ ext = 'jar'; classifier = ''        }
         'war'         = @{ ext = 'war'; classifier = ''        }
