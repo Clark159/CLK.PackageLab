@@ -6,7 +6,7 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 # ===== Variables =====
-$scriptVersion = '20260801-00'
+$scriptVersion = '20260804-02'
 $exitCode = 0
 $projectGroupId    = 'com.example'
 $projectArtifactId = 'packages'
