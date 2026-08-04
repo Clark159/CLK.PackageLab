@@ -181,6 +181,7 @@ do {
             continue
         }
     }
+    Add-Content 'package-all.txt' -Value $repositoryList -Encoding UTF8
     Write-Host
     Write-Host
     Write-Host "[INFO] ------------------------------------------------------------------------"
