@@ -165,6 +165,7 @@ do {
     Write-Host "[INFO] ------------------------------------------------------------------------"
 
     # 讀取 package-all.txt
+    $mavenScopeList = 'compile', 'provided', 'runtime', 'test', 'system', 'import'
     $allList = Get-Content 'package-all.txt' -Encoding UTF8 | Where-Object { $_ -match '^\s+\S+:\S+:\S+:\S+' } | ForEach-Object {
         $packageParts = ($_ -replace '\s*-- module.*', '').Trim() -split ':'
         if ($packageParts.Count -ge 6) {
@@ -176,6 +177,15 @@ do {
                 Version    = $packageParts[4]
                 Scope      = $packageParts[5]
             }
+        } elseif ($packageParts.Count -eq 5 -and $packageParts[4] -notin $mavenScopeList) {
+            [PSCustomObject]@{
+                GroupId    = $packageParts[0]
+                ArtifactId = $packageParts[1]
+                Packaging  = $packageParts[2]
+                Classifier = $packageParts[3]
+                Version    = $packageParts[4]
+                Scope      = 'compile'
+            }
         } else {
             [PSCustomObject]@{
                 GroupId    = $packageParts[0]
@@ -186,7 +196,7 @@ do {
                 Scope      = if ($packageParts.Count -ge 5) { $packageParts[4] } else { 'compile' }
             }
         }
-    }    
+    }
     $allList = $allList | Sort-Object GroupId, ArtifactId, Packaging, Classifier, Version, Scope -Unique
 
     # 整理 package-all.txt
