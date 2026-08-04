@@ -258,10 +258,10 @@ do {
     }
     $allList = $allList | Where-Object {
         -not ($_.Packaging -eq 'pom' -and $jarVersionSet.Contains("$($_.GroupId):$($_.ArtifactId):$($_.Version)"))
-    } | Sort-Object GroupId, ArtifactId, Packaging, Classifier, Version, Scope
+    }
 
     # 整理 package-all.txt (輸出檔案)
-    $packageContent = $allList | ForEach-Object {
+    $packageContent = $allList | Sort-Object GroupId, ArtifactId, Packaging, Classifier, Version, Scope | ForEach-Object {
         if ($_.Classifier) {
             "$($_.GroupId):$($_.ArtifactId):$($_.Packaging):$($_.Classifier):$($_.Version):$($_.Scope)"
         } else {
