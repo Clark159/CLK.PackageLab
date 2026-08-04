@@ -220,7 +220,7 @@ do {
         }
     }
 
-    # 整理 package-all.txt
+    # 整理 package-all.txt (去除重複)
     $compareVersion = {
         param($versionA, $versionB)
         $segmentsA = $versionA -split '[\.\-_]'
@@ -247,7 +247,10 @@ do {
             }
         }
         $latest
-    } | Sort-Object GroupId, ArtifactId, Packaging, Classifier, Version, Scope    
+    } | Sort-Object GroupId, ArtifactId, Packaging, Classifier, Version, Scope
+
+
+    # 整理 package-all.txt (輸出檔案)
     $packageContent = $allList | ForEach-Object {
         if ($_.Classifier) {
             "$($_.GroupId):$($_.ArtifactId):$($_.Packaging):$($_.Classifier):$($_.Version):$($_.Scope)"
