@@ -17,15 +17,6 @@ $mavenSourceList   = @(
 )
 $mavenRepository   = @{ id = 'central'; url = 'https://repo.maven.apache.org/maven2/'; username = ''; token = '' }
 
-# 依 mvn dependency:list 慣例組座標字串：無 classifier 為 5 欄，有 classifier 才補上該欄 (不輸出 ::)
-function Format-PackageCoordinate {
-    param($Package)
-    if ($Package.Classifier) {
-        "$($Package.GroupId):$($Package.ArtifactId):$($Package.Packaging):$($Package.Classifier):$($Package.Version):$($Package.Scope)"
-    } else {
-        "$($Package.GroupId):$($Package.ArtifactId):$($Package.Packaging):$($Package.Version):$($Package.Scope)"
-    }
-}
 do {
 
 
@@ -285,14 +276,29 @@ do {
         Write-Host
         Write-Host
         Write-Host "[INFO] ------------------------------------------------------------------------"
-        $packageList | ForEach-Object { Write-Host "[INFO] $(Format-PackageCoordinate $_)" }
+        # 依 mvn dependency:list 慣例組座標字串：無 classifier 為 5 欄，有 classifier 才補上該欄 (不輸出 ::)
+        $packageList | ForEach-Object {
+            $coordinate = if ($_.Classifier) {
+                "$($_.GroupId):$($_.ArtifactId):$($_.Packaging):$($_.Classifier):$($_.Version):$($_.Scope)"
+            } else {
+                "$($_.GroupId):$($_.ArtifactId):$($_.Packaging):$($_.Version):$($_.Scope)"
+            }
+            Write-Host "[INFO] $coordinate"
+        }
         Write-Host "[INFO] 套件下載完成，取得 $($packageList.Count) 個套件"
         Write-Host "[INFO] ------------------------------------------------------------------------"
     } else {
         Write-Host
         Write-Host
         Write-Host "[INFO] ------------------------------------------------------------------------"
-        $missingList | ForEach-Object { Write-Host "[ERROR] $(Format-PackageCoordinate $_)" }
+        $missingList | ForEach-Object {
+            $coordinate = if ($_.Classifier) {
+                "$($_.GroupId):$($_.ArtifactId):$($_.Packaging):$($_.Classifier):$($_.Version):$($_.Scope)"
+            } else {
+                "$($_.GroupId):$($_.ArtifactId):$($_.Packaging):$($_.Version):$($_.Scope)"
+            }
+            Write-Host "[ERROR] $coordinate"
+        }
         Write-Host "[ERROR] 套件下載失敗，缺少 $($missingList.Count) 個套件"
         Write-Host "[ERROR] ------------------------------------------------------------------------"
         $exitCode = 1
