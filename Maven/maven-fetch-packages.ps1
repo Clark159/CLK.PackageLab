@@ -16,7 +16,6 @@ $mavenSourceList   = @(
     @{ id = 'atlassian'; url = 'https://maven.artifacts.atlassian.com/'; username = ''; token = '' }
 )
 $mavenRepository   = @{ id = 'central'; url = 'https://repo.maven.apache.org/maven2/'; username = ''; token = '' }
-
 do {
 
 
