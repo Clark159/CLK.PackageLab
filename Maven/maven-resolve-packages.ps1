@@ -160,6 +160,27 @@ do {
         $exitCode = 1
         break
     }
+
+    # 建立 package-all.txt (下載依賴)
+    $repositoryFiles = Get-ChildItem -Path (Join-Path $PSScriptRoot '.m2') -Recurse -File -Include '*.pom', '*.jar' -ErrorAction SilentlyContinue
+    $repositoryList = foreach ($repositoryFile in $repositoryFiles) {
+        $relativePath = $repositoryFile.FullName.Substring((Join-Path $PSScriptRoot '.m2').Length).TrimStart('\', '/')
+        $pathSegments = $relativePath -split '[\\/]'
+        if ($pathSegments.Count -lt 4) { continue }
+        $version    = $pathSegments[$pathSegments.Count - 2]
+        $artifactId = $pathSegments[$pathSegments.Count - 3]
+        $groupId    = ($pathSegments[0..($pathSegments.Count - 4)] -join '.')
+        $packaging  = $repositoryFile.Extension.TrimStart('.')
+        $namePrefix = "$artifactId-$version"
+        if ($repositoryFile.BaseName -eq $namePrefix) {
+            "    $($groupId):$($artifactId):$($packaging):$($version):compile"
+        } elseif ($repositoryFile.BaseName.StartsWith("$namePrefix-")) {
+            $classifier = $repositoryFile.BaseName.Substring($namePrefix.Length + 1)
+            "    $($groupId):$($artifactId):$($packaging):$($classifier):$($version):compile"
+        } else {
+            continue
+        }
+    }
     Write-Host
     Write-Host
     Write-Host "[INFO] ------------------------------------------------------------------------"
@@ -306,6 +327,7 @@ do {
 
     # 建立 package-updating.txt 
     $artifactSpecMap = @{
+        'pom'         = @{ ext = 'pom'; classifier = ''        }
         'jar'         = @{ ext = 'jar'; classifier = ''        }
         'war'         = @{ ext = 'war'; classifier = ''        }
         'ear'         = @{ ext = 'ear'; classifier = ''        }
