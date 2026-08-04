@@ -247,8 +247,18 @@ do {
             }
         }
         $latest
-    } | Sort-Object GroupId, ArtifactId, Packaging, Classifier, Version, Scope
+    }
 
+    # 整理 package-all.txt (保留純pom)
+    $jarVersionSet = [System.Collections.Generic.HashSet[string]]::new()
+    foreach ($package in $allList) {
+        if ($package.Packaging -eq 'jar') {
+            [void]$jarVersionSet.Add("$($package.GroupId):$($package.ArtifactId):$($package.Version)")
+        }
+    }
+    $allList = $allList | Where-Object {
+        -not ($_.Packaging -eq 'pom' -and $jarVersionSet.Contains("$($_.GroupId):$($_.ArtifactId):$($_.Version)"))
+    } | Sort-Object GroupId, ArtifactId, Packaging, Classifier, Version, Scope
 
     # 整理 package-all.txt (輸出檔案)
     $packageContent = $allList | ForEach-Object {
