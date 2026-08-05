@@ -220,7 +220,7 @@ do {
         }
     }
 
-    # 整理 package-all.txt (保留純pom)
+    # 整理 package-all.txt (合併重複，保留純pom)
     $jarVersionSet = [System.Collections.Generic.HashSet[string]]::new()
     foreach ($package in $allList) {
         if ($package.Packaging -eq 'jar') {
