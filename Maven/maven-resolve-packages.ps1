@@ -232,32 +232,8 @@ do {
     }
 
     # 整理 package-all.txt (去除重複)
-    $compareVersion = {
-        param($versionA, $versionB)
-        $segmentsA = $versionA -split '[\.\-_]'
-        $segmentsB = $versionB -split '[\.\-_]'
-        for ($i = 0; $i -lt [Math]::Max($segmentsA.Count, $segmentsB.Count); $i++) {
-            $segmentA = if ($i -lt $segmentsA.Count) { $segmentsA[$i] } else { '0' }
-            $segmentB = if ($i -lt $segmentsB.Count) { $segmentsB[$i] } else { '0' }
-            $numberA = 0
-            $numberB = 0
-            if ([int]::TryParse($segmentA, [ref]$numberA) -and [int]::TryParse($segmentB, [ref]$numberB)) {
-                if ($numberA -ne $numberB) { return $numberA - $numberB }
-            } else {
-                $result = [string]::Compare($segmentA, $segmentB, [StringComparison]::OrdinalIgnoreCase)
-                if ($result -ne 0) { return $result }
-            }
-        }
-        return 0
-    }
     $allList = $allList | Group-Object GroupId, ArtifactId, Packaging, Classifier | ForEach-Object {
-        $latest = $_.Group[0]
-        foreach ($package in $_.Group) {
-            if ((& $compareVersion $package.Version $latest.Version) -gt 0) {
-                $latest = $package
-            }
-        }
-        $latest
+        $_.Group[0]
     }
 
     # 整理 package-all.txt (輸出檔案)
