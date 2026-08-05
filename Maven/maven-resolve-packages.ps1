@@ -220,7 +220,14 @@ do {
         }
     }
 
-    # 整理 package-all.txt (合併重複，保留純pom)
+    # 整理 package-all.txt (合併重複，移除type為maven-plugin)
+    foreach ($package in $allList) {
+        if ($package.Packaging -eq 'maven-plugin') {
+            $package.Packaging = 'jar'
+        }
+    }
+
+    # 整理 package-all.txt (合併重複，移除有jar的pom)
     $jarVersionSet = [System.Collections.Generic.HashSet[string]]::new()
     foreach ($package in $allList) {
         if ($package.Packaging -eq 'jar') {
@@ -231,7 +238,7 @@ do {
         -not ($_.Packaging -eq 'pom' -and $jarVersionSet.Contains("$($_.GroupId):$($_.ArtifactId):$($_.Version)"))
     }
 
-    # 整理 package-all.txt (去除重複)
+    # 整理 package-all.txt (合併重複，保留第一筆)
     $allList = $allList | Group-Object GroupId, ArtifactId, Packaging, Classifier | ForEach-Object {
         $_.Group[0]
     }
