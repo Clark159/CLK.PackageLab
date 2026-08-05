@@ -40,7 +40,7 @@ do {
         }
     }
 
-    # 整併 pypiRepository 至 pypiSourceList (以 url 為 key，id 重複則重新命名)
+    # 整併 pypiRepository 至 pypiSourceList
     if (-not ($pypiSourceList | Where-Object { $_.url -eq $pypiRepository.url })) {
 
         # pypiSourceId

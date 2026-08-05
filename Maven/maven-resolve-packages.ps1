@@ -44,7 +44,7 @@ do {
         }
     }
 
-    # 整併 mavenRepository 至 mavenSourceList (以 url 為 key，id 重複則重新命名)
+    # 整併 mavenRepository 至 mavenSourceList
     if (-not ($mavenSourceList | Where-Object { $_.url -eq $mavenRepository.url })) {
 
         # mavenSourceId
