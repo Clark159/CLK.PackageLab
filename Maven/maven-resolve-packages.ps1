@@ -220,6 +220,17 @@ do {
         }
     }
 
+    # 整理 package-all.txt (保留純pom)
+    $jarVersionSet = [System.Collections.Generic.HashSet[string]]::new()
+    foreach ($package in $allList) {
+        if ($package.Packaging -eq 'jar') {
+            [void]$jarVersionSet.Add("$($package.GroupId):$($package.ArtifactId):$($package.Version)")
+        }
+    }
+    $allList = $allList | Where-Object {
+        -not ($_.Packaging -eq 'pom' -and $jarVersionSet.Contains("$($_.GroupId):$($_.ArtifactId):$($_.Version)"))
+    }
+
     # 整理 package-all.txt (去除重複)
     $compareVersion = {
         param($versionA, $versionB)
@@ -247,17 +258,6 @@ do {
             }
         }
         $latest
-    }
-
-    # 整理 package-all.txt (保留純pom)
-    $jarVersionSet = [System.Collections.Generic.HashSet[string]]::new()
-    foreach ($package in $allList) {
-        if ($package.Packaging -eq 'jar') {
-            [void]$jarVersionSet.Add("$($package.GroupId):$($package.ArtifactId):$($package.Version)")
-        }
-    }
-    $allList = $allList | Where-Object {
-        -not ($_.Packaging -eq 'pom' -and $jarVersionSet.Contains("$($_.GroupId):$($_.ArtifactId):$($_.Version)"))
     }
 
     # 整理 package-all.txt (輸出檔案)

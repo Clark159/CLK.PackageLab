@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "PowerShell($bytes = git show HEAD:npm/npm-resolve-packages.ps1 | Select-Object -First 1; $tmp = [System.IO.Path]::GetTempFileName\\(\\); git show HEAD:npm/npm-resolve-packages.ps1 | Out-File $tmp -Encoding utf8; $b = [System.IO.File]::ReadAllBytes\\($tmp\\); \"First bytes: $\\($b[0]\\) $\\($b[1]\\) $\\($b[2]\\)\"; Remove-Item $tmp)"
+      "PowerShell($bytes = git show HEAD:npm/npm-resolve-packages.ps1 | Select-Object -First 1; $tmp = [System.IO.Path]::GetTempFileName\\(\\); git show HEAD:npm/npm-resolve-packages.ps1 | Out-File $tmp -Encoding utf8; $b = [System.IO.File]::ReadAllBytes\\($tmp\\); \"First bytes: $\\($b[0]\\) $\\($b[1]\\) $\\($b[2]\\)\"; Remove-Item $tmp)",
+      "Bash(awk -F: ' *)",
+      "Bash(sort -o package-dedup.txt package-dedup.txt)",
+      "Bash(sort -o package-conflicts.txt package-conflicts.txt)"
     ]
   }
 }
