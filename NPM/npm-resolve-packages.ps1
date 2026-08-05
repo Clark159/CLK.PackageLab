@@ -6,7 +6,7 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 # ===== Variables =====
-$scriptVersion = '20260806-00'
+$scriptVersion = '20260808-00'
 $exitCode = 0
 $npmSourceList = @(
     @{ id = 'npmjs'; url = 'https://registry.npmjs.org/' }
@@ -40,7 +40,7 @@ do {
         }
     }
 
-    # 整併 npmRepository 至 npmSourceList (以 url 為 key，id 重複則重新命名)
+    # 整併 npmRepository 至 npmSourceList
     if (-not ($npmSourceList | Where-Object { $_.url -eq $npmRepository.url })) {
 
         # npmSourceId

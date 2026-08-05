@@ -6,7 +6,7 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 # ===== Variables =====
-$scriptVersion = '20260806-00'
+$scriptVersion = '20260808-00'
 $exitCode = 0
 $nugetSourceList = @(
     @{ id = 'nuget.org'; url = 'https://api.nuget.org/v3/index.json' }
@@ -39,7 +39,7 @@ do {
         }
     }
 
-    # 整併 nugetRepository 至 nugetSourceList (以 url 為 key，id 重複則重新命名)
+    # 整併 nugetRepository 至 nugetSourceList
     if (-not ($nugetSourceList | Where-Object { $_.url -eq $nugetRepository.url })) {
 
         # nugetSourceId
