@@ -228,14 +228,14 @@ do {
     }
 
     # 整理 package-all.txt (合併重複，移除有jar的pom)
-    $jarVersionSet = [System.Collections.Generic.HashSet[string]]::new()
+    $jarPackageList = [System.Collections.Generic.HashSet[string]]::new()
     foreach ($package in $allList) {
         if ($package.Packaging -eq 'jar') {
-            [void]$jarVersionSet.Add("$($package.GroupId):$($package.ArtifactId):$($package.Version)")
+            [void]$jarPackageList.Add("$($package.GroupId):$($package.ArtifactId):$($package.Version)")
         }
     }
     $allList = $allList | Where-Object {
-        -not ($_.Packaging -eq 'pom' -and $jarVersionSet.Contains("$($_.GroupId):$($_.ArtifactId):$($_.Version)"))
+        -not ($_.Packaging -eq 'pom' -and $jarPackageList.Contains("$($_.GroupId):$($_.ArtifactId):$($_.Version)"))
     }
 
     # 整理 package-all.txt (合併重複，保留第一筆)
