@@ -6,7 +6,7 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 # ===== Variables =====
-$scriptVersion = '20260808-00'
+$scriptVersion = '20260808-01'
 $exitCode = 0
 $nugetSourceList = @(
     @{ id = 'nuget.org'; url = 'https://api.nuget.org/v3/index.json' }
@@ -124,7 +124,7 @@ do {
             $name    = $packageProperty.Name
             $version = $packageProperty.Value.resolved
             if ($name -and $version) {
-                $nameVersion = "$name/$version"
+                $nameVersion = "$name $version"
                 if (-not $packageMap.ContainsKey($nameVersion)) {
                     $packageMap[$nameVersion] = @{
                         name    = $name
@@ -135,7 +135,7 @@ do {
         }
     }
     $allList        = @($packageMap.Values | Sort-Object { $_.name })
-    $packageContent = $allList | ForEach-Object { "$($_.name)/$($_.version)" }
+    $packageContent = $allList | ForEach-Object { "$($_.name) $($_.version)" }
     Set-Content 'package-all.txt' -Value $packageContent -Encoding UTF8
     Write-Host "[INFO] 已建立 package-all.txt"
 
@@ -182,7 +182,7 @@ do {
             $addingList.Add($package)
         }
     }
-    Set-Content 'package-adding.txt' -Value ($addingList | ForEach-Object { "$($_.name)/$($_.version)" }) -Encoding UTF8
+    Set-Content 'package-adding.txt' -Value ($addingList | ForEach-Object { "$($_.name) $($_.version)" }) -Encoding UTF8
     Write-Host "[INFO] 已建立 package-adding.txt"
 
     # 建立 package-updating.txt (已列在 package-adding.txt 的套件本來就不存在，不重複列入)
@@ -210,7 +210,7 @@ do {
         }
         $isAdding = $addingList | Where-Object { $_.name -eq $package.name }
         if ($isUpdating -and -not $isAdding) {
-            $updatingList.Add("$($package.name)/$($package.version)")
+            $updatingList.Add("$($package.name) $($package.version)")
         }
     }
     Set-Content 'package-updating.txt' -Value $updatingList -Encoding UTF8

@@ -6,7 +6,7 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 # ===== Variables =====
-$scriptVersion = '20260806-00'
+$scriptVersion = '20260806-01'
 $exitCode = 0
 $targetFramework = 'net8.0'
 $nugetSourceList = @(
@@ -91,7 +91,7 @@ do {
     $csprojContent.Add('    </PropertyGroup>')
     $csprojContent.Add('    <ItemGroup>')
     foreach ($package in $packageList) {
-        $packageParts = $package -split '/'
+        $packageParts = $package -split '\s+'
         if ($packageParts.Count -ge 2) {
             $csprojContent.Add("        <PackageReference Include=""$($packageParts[0])"" Version=""$($packageParts[1])"" />")
         }
@@ -134,7 +134,7 @@ do {
 
     # 刪除目標套件
     foreach ($package in $packageList) {
-        $packageParts = $package -split '/'
+        $packageParts = $package -split '\s+'
         if ($packageParts.Count -ge 2) {
             $packageIdLower = $packageParts[0].ToLower()
             $packageVersion = $packageParts[1]
@@ -162,7 +162,7 @@ do {
     # 複製目標套件
     $missingList = @()
     foreach ($package in $packageList) {
-        $packageParts = $package -split '/'
+        $packageParts = $package -split '\s+'
         if ($packageParts.Count -ge 2) {
             $packageIdLower = $packageParts[0].ToLower()
             $packageVersion = $packageParts[1]
