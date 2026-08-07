@@ -64,6 +64,11 @@ do {
         if ($npmSource.token) {
             $authUrl = $npmSource.url.TrimEnd('/') -replace '^https?:', ''
             $npmrcContent.Add("$authUrl/:_authToken=$($npmSource.token)")
+        } elseif ($npmSource.username -and $npmSource.password) {
+            $authUrl  = $npmSource.url.TrimEnd('/') -replace '^https?:', ''
+            $b64token = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes("$($npmSource.username):$($npmSource.password)"))
+            $npmrcContent.Add("$authUrl/:_auth=$b64token")
+            $npmrcContent.Add("$authUrl/:always-auth=true")
         }
     }
     [System.IO.File]::WriteAllLines("$PSScriptRoot\.npmrc", $npmrcContent, [System.Text.UTF8Encoding]::new($false))
