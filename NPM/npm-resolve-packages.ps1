@@ -64,7 +64,21 @@ do {
     Write-Host "-------------------------------------------------------------------------------"
     Write-Host
 
-    # 建立 .npmrc - npmSourceList
+    # 讀取 package.json
+    $packageJson = (Get-Content 'package.json' -Encoding UTF8 -Raw) | ConvertFrom-Json
+    if ($null -eq $packageJson) {
+        Write-Host "[ERROR] package.json 解析失敗"
+        $exitCode = 1
+        break
+    }
+    $dependencyList = [System.Collections.Generic.List[object]]::new()
+    foreach ($dependencyType in 'dependencies', 'devDependencies', 'optionalDependencies', 'peerDependencies') {
+        if ($packageJson.$dependencyType) {
+            $dependencyList.AddRange(@($packageJson.$dependencyType.PSObject.Properties))
+        }
+    }
+
+    # 建立 .npmrc (default-registry)
     $npmrcContent = [System.Collections.Generic.List[string]]::new()
     $npmrcContent.Add("registry=$($npmSourceList[0].url.TrimEnd('/'))/")
     $npmrcContent.Add("cache=./npm_caches")
@@ -77,6 +91,30 @@ do {
             $b64token = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes("$($npmSource.username):$($npmSource.password)"))
             $npmrcContent.Add("$authUrl/:_auth=$b64token")
             $npmrcContent.Add("$authUrl/:always-auth=true")
+        }
+    }
+
+    # 建立 .npmrc (scope-registry)
+    foreach ($dependency in $dependencyList) {
+        $scope = ($dependency.Name -split '/')[0]
+        $encodedName = $dependency.Name -replace '/', '%2F'
+        if ($dependency.Name -notmatch '^@[^/]+/') { continue }
+        if ($dependency.Value -notmatch '^\d+\.\d+\.\d+') { continue }        
+        if ($npmrcContent | Where-Object { $_ -like "$scope`:registry=*" }) { continue }        
+        foreach ($npmSource in $npmSourceList) {
+            $tarballUrl = "$($npmSource.url.TrimEnd('/'))/$encodedName/-/$($dependency.Name.Split('/')[-1])-$($dependency.Value).tgz"
+            $isExisting = $true
+            try {
+                $null = Invoke-WebRequest -Uri $tarballUrl -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
+            } catch {
+                if ($_.Exception.Response -and $_.Exception.Response.StatusCode.value__ -eq 404) {
+                    $isExisting = $false
+                }
+            }
+            if ($isExisting) {
+                $npmrcContent.Add("$scope`:registry=$($npmSource.url.TrimEnd('/'))/")
+                break
+            }
         }
     }
     [System.IO.File]::WriteAllLines("$PSScriptRoot\.npmrc", $npmrcContent, [System.Text.UTF8Encoding]::new($false))
