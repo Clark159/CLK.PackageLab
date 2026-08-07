@@ -56,7 +56,7 @@ do {
     Write-Host "-------------------------------------------------------------------------------"
     Write-Host
 
-    # 建立 .npmrc - npmSourceList
+    # 建立 .npmrc (default-registry)
     $npmrcContent = [System.Collections.Generic.List[string]]::new()
     $npmrcContent.Add("registry=$($npmSourceList[0].url.TrimEnd('/'))/")
     $npmrcContent.Add("cache=./npm_caches")
