@@ -157,6 +157,26 @@ do {
     $pomContent.Add("    <artifactId>$projectArtifactId</artifactId>")
     $pomContent.Add("    <version>$projectVersion</version>")
     $pomContent.Add('    <packaging>pom</packaging>')
+    $pomContent.Add('    <dependencyManagement>')
+    $pomContent.Add('        <dependencies>')
+    foreach ($package in $packageList) {
+        $pomContent.Add('            <dependency>')
+        $pomContent.Add("                <groupId>$($package.GroupId)</groupId>")
+        $pomContent.Add("                <artifactId>$($package.ArtifactId)</artifactId>")
+        $pomContent.Add("                <version>$($package.Version)</version>")
+        if ($package.Packaging -ne 'jar') {
+            $pomContent.Add("                <type>$($package.Packaging)</type>")
+        }
+        if ($package.Classifier) {
+            $pomContent.Add("                <classifier>$($package.Classifier)</classifier>")
+        }
+        if ($package.Scope -ne 'compile') {
+            $pomContent.Add("                <scope>$($package.Scope)</scope>")
+        }
+        $pomContent.Add('            </dependency>')
+    }
+    $pomContent.Add('        </dependencies>')
+    $pomContent.Add('    </dependencyManagement>')
     $pomContent.Add('    <dependencies>')
     foreach ($package in $packageList) {
         $pomContent.Add('        <dependency>')
