@@ -210,7 +210,7 @@ do {
     $pomContent.Add('</project>')
     Set-Content 'pom.xml' -Value $pomContent -Encoding UTF8
 
-    # 下載所有套件 (專案依賴)
+    # 下載所有套件
     & mvn dependency:list `
         "-Dsort=true" `
         "-Dstyle.color=never" `
@@ -219,19 +219,6 @@ do {
         "-gs" "settings.xml"
     if ($LASTEXITCODE -ne 0) {
         Write-Host "[ERROR] mvn dependency:list 執行失敗 (mavenSourceList)"
-        $exitCode = 1
-        break
-    }
-
-    # 下載所有套件 (編譯依賴)
-    & mvn dependency:resolve-plugins `
-        "-Dsort=true" `
-        "-Dstyle.color=never" `
-        "-DexcludeTransitive=false" `
-        "-s" "settings.xml" `
-        "-gs" "settings.xml"
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "[ERROR] mvn dependency:resolve-plugins 執行失敗 (mavenSourceList)"
         $exitCode = 1
         break
     }
@@ -292,7 +279,7 @@ do {
         }
     }
     
-    # 下載目標套件 (專案依賴)
+    # 下載目標套件
     & mvn dependency:list `
         "-Dsort=true" `
         "-Dstyle.color=never" `
@@ -301,19 +288,6 @@ do {
         "-gs" "settings.xml"
     if ($LASTEXITCODE -ne 0) {
         Write-Host "[ERROR] mvn dependency:list 執行失敗 (mavenRepository)"
-        $exitCode = 1
-        break
-    }
-
-    # 下載目標套件 (編譯依賴)
-    & mvn dependency:resolve-plugins `
-        "-Dsort=true" `
-        "-Dstyle.color=never" `
-        "-DexcludeTransitive=false" `
-        "-s" "settings.xml" `
-        "-gs" "settings.xml"
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "[ERROR] mvn dependency:resolve-plugins 執行失敗 (mavenRepository)"
         $exitCode = 1
         break
     }
