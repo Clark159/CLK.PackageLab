@@ -173,6 +173,12 @@ do {
         if ($package.Scope -ne 'compile') {
             $pomContent.Add("                <scope>$($package.Scope)</scope>")
         }
+        $pomContent.Add('                <exclusions>')
+        $pomContent.Add('                    <exclusion>')
+        $pomContent.Add('                        <groupId>*</groupId>')
+        $pomContent.Add('                        <artifactId>*</artifactId>')
+        $pomContent.Add('                    </exclusion>')
+        $pomContent.Add('                </exclusions>')
         $pomContent.Add('            </dependency>')
     }
     $pomContent.Add('        </dependencies>')
@@ -192,6 +198,12 @@ do {
         if ($package.Scope -ne 'compile') {
             $pomContent.Add("            <scope>$($package.Scope)</scope>")
         }
+        $pomContent.Add('            <exclusions>')
+        $pomContent.Add('                <exclusion>')
+        $pomContent.Add('                    <groupId>*</groupId>')
+        $pomContent.Add('                    <artifactId>*</artifactId>')
+        $pomContent.Add('                </exclusion>')
+        $pomContent.Add('            </exclusions>')
         $pomContent.Add('        </dependency>')
     }
     $pomContent.Add('    </dependencies>')

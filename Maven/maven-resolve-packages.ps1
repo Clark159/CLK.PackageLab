@@ -189,7 +189,7 @@ do {
     # 讀取 package-all.txt
     $mavenScopeList = 'compile', 'provided', 'runtime', 'test', 'system', 'import'
     $allList = Get-Content 'package-all.txt' -Encoding UTF8 | Where-Object { $_ -match '^\s+\S+:\S+:\S+:\S+' } | ForEach-Object {
-        $packageParts = ($_ -replace '\s*-- module.*', '').Trim() -split ':'
+        $packageParts = ($_ -replace '\s*-- module.*', '' -replace '\s*\(optional\)\s*', '').Trim() -split ':'
         if ($packageParts.Count -ge 6) {
             [PSCustomObject]@{
                 GroupId    = $packageParts[0]
