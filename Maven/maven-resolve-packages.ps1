@@ -97,7 +97,6 @@ do {
     $settingsContent.Add('    </profiles>')
     $settingsContent.Add('    <mirrors>')
     foreach ($mavenSource in $mavenSourceList) {
-        if ($mavenSource.url -notmatch '^http://') { continue }
         $settingsContent.Add('        <mirror>')
         $settingsContent.Add("            <id>$($mavenSource.id)</id>")
         $settingsContent.Add("            <mirrorOf>$($mavenSource.id)</mirrorOf>")

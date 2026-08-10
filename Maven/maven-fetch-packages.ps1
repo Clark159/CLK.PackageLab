@@ -87,7 +87,6 @@ do {
     $settingsContent.Add('    </profiles>')
     $settingsContent.Add('    <mirrors>')
     foreach ($mavenSource in $mavenSourceList) {
-        if ($mavenSource.url -notmatch '^http://') { continue }
         $settingsContent.Add('        <mirror>')
         $settingsContent.Add("            <id>$($mavenSource.id)</id>")
         $settingsContent.Add("            <mirrorOf>$($mavenSource.id)</mirrorOf>")
@@ -247,13 +246,11 @@ do {
     $settingsContent.Add('        </profile>')
     $settingsContent.Add('    </profiles>')
     $settingsContent.Add('    <mirrors>')
-    if ($mavenRepository.url -match '^http://') {
-        $settingsContent.Add('        <mirror>')
-        $settingsContent.Add("            <id>$($mavenRepository.id)</id>")
-        $settingsContent.Add("            <mirrorOf>$($mavenRepository.id)</mirrorOf>")
-        $settingsContent.Add("            <url>$($mavenRepository.url)</url>")
-        $settingsContent.Add('        </mirror>')
-    }
+    $settingsContent.Add('        <mirror>')
+    $settingsContent.Add("            <id>$($mavenRepository.id)</id>")
+    $settingsContent.Add('            <mirrorOf>*</mirrorOf>')
+    $settingsContent.Add("            <url>$($mavenRepository.url)</url>")
+    $settingsContent.Add('        </mirror>')
     $settingsContent.Add('    </mirrors>')
     $settingsContent.Add('    <servers>')
     if ($mavenRepository.username -and $mavenRepository.token) {
