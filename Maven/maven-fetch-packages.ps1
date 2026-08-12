@@ -112,28 +112,26 @@ do {
     $settingsContent.Add('</settings>')
     Set-Content 'settings.xml' -Value $settingsContent -Encoding UTF8
 
-    # 讀取 package.txt (groupId:artifactId:version 或 groupId:artifactId:packaging:version:scope 或 groupId:artifactId:packaging:classifier:version:scope)
+    # 讀取 package.txt (groupId:artifactId:version 或 groupId:artifactId:packaging:version 或 groupId:artifactId:packaging:classifier:version)
     $packageList = Get-Content 'package.txt' -Encoding UTF8 | Where-Object {
         $_.Trim() -ne ''
     } | ForEach-Object {
         $packageParts = $_.Trim() -split ':'
-        if ($packageParts.Count -ge 6) {
+        if ($packageParts.Count -ge 5) {
             [PSCustomObject]@{
                 GroupId    = $packageParts[0]
                 ArtifactId = $packageParts[1]
                 Packaging  = $packageParts[2]
                 Classifier = $packageParts[3]
                 Version    = $packageParts[4]
-                Scope      = $packageParts[5]
             }
-        } elseif ($packageParts.Count -eq 5) {
+        } elseif ($packageParts.Count -eq 4) {
             [PSCustomObject]@{
                 GroupId    = $packageParts[0]
                 ArtifactId = $packageParts[1]
                 Packaging  = $packageParts[2]
                 Classifier = ''
                 Version    = $packageParts[3]
-                Scope      = $packageParts[4]
             }
         } else {
             [PSCustomObject]@{
@@ -142,7 +140,6 @@ do {
                 Packaging  = 'jar'
                 Classifier = ''
                 Version    = $packageParts[2]
-                Scope      = 'compile'
             }
         }
     }
@@ -169,9 +166,6 @@ do {
         if ($package.Classifier) {
             $pomContent.Add("                <classifier>$($package.Classifier)</classifier>")
         }
-        if ($package.Scope -ne 'compile') {
-            $pomContent.Add("                <scope>$($package.Scope)</scope>")
-        }
         $pomContent.Add('                <exclusions>')
         $pomContent.Add('                    <exclusion>')
         $pomContent.Add('                        <groupId>*</groupId>')
@@ -193,9 +187,6 @@ do {
         }
         if ($package.Classifier) {
             $pomContent.Add("            <classifier>$($package.Classifier)</classifier>")
-        }
-        if ($package.Scope -ne 'compile') {
-            $pomContent.Add("            <scope>$($package.Scope)</scope>")
         }
         $pomContent.Add('            <exclusions>')
         $pomContent.Add('                <exclusion>')
@@ -308,12 +299,12 @@ do {
         Write-Host
         Write-Host
         Write-Host "[INFO] ------------------------------------------------------------------------"
-        # 依 mvn dependency:list 慣例組座標字串：無 classifier 為 5 欄，有 classifier 才補上該欄 (不輸出 ::)
+        # 依 mvn dependency:list 慣例組座標字串：無 classifier 為 4 欄，有 classifier 才補上該欄 (不輸出 ::)
         $packageList | ForEach-Object {
             $coordinate = if ($_.Classifier) {
-                "$($_.GroupId):$($_.ArtifactId):$($_.Packaging):$($_.Classifier):$($_.Version):$($_.Scope)"
+                "$($_.GroupId):$($_.ArtifactId):$($_.Packaging):$($_.Classifier):$($_.Version)"
             } else {
-                "$($_.GroupId):$($_.ArtifactId):$($_.Packaging):$($_.Version):$($_.Scope)"
+                "$($_.GroupId):$($_.ArtifactId):$($_.Packaging):$($_.Version)"
             }
             Write-Host "[INFO] $coordinate"
         }
@@ -325,9 +316,9 @@ do {
         Write-Host "[INFO] ------------------------------------------------------------------------"
         $missingList | ForEach-Object {
             $coordinate = if ($_.Classifier) {
-                "$($_.GroupId):$($_.ArtifactId):$($_.Packaging):$($_.Classifier):$($_.Version):$($_.Scope)"
+                "$($_.GroupId):$($_.ArtifactId):$($_.Packaging):$($_.Classifier):$($_.Version)"
             } else {
-                "$($_.GroupId):$($_.ArtifactId):$($_.Packaging):$($_.Version):$($_.Scope)"
+                "$($_.GroupId):$($_.ArtifactId):$($_.Packaging):$($_.Version)"
             }
             Write-Host "[ERROR] $coordinate"
         }

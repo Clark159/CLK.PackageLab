@@ -196,7 +196,6 @@ do {
                 Packaging  = $packageParts[2]
                 Classifier = $packageParts[3]
                 Version    = $packageParts[4]
-                Scope      = $packageParts[5]
             }
         } elseif ($packageParts.Count -eq 5 -and $packageParts[4] -notin $mavenScopeList) {
             [PSCustomObject]@{
@@ -205,7 +204,6 @@ do {
                 Packaging  = $packageParts[2]
                 Classifier = $packageParts[3]
                 Version    = $packageParts[4]
-                Scope      = 'compile'
             }
         } else {
             [PSCustomObject]@{
@@ -214,7 +212,6 @@ do {
                 Packaging  = $packageParts[2]
                 Classifier = ''
                 Version    = $packageParts[3]
-                Scope      = if ($packageParts.Count -ge 5) { $packageParts[4] } else { 'compile' }
             }
         }
     }
@@ -226,7 +223,7 @@ do {
         }
     }
 
-    # 整理 package-all.txt (合併重複，移除有jar的pom)
+    # 整理 package-all.txt (合併重複，移除有對應jar的pom)
     $jarPackageList = [System.Collections.Generic.HashSet[string]]::new()
     foreach ($package in $allList) {
         if ($package.Packaging -eq 'jar') {
@@ -238,16 +235,16 @@ do {
     }
 
     # 整理 package-all.txt (合併重複，保留第一筆)
-    $allList = $allList | Group-Object GroupId, ArtifactId, Packaging, Classifier, Version, Scope | ForEach-Object {
+    $allList = $allList | Group-Object GroupId, ArtifactId, Packaging, Classifier, Version | ForEach-Object {
         $_.Group[0]
     }
 
     # 整理 package-all.txt (輸出檔案)
-    $packageContent = $allList | Sort-Object GroupId, ArtifactId, Packaging, Classifier, Version, Scope | ForEach-Object {
+    $packageContent = $allList | Sort-Object GroupId, ArtifactId, Packaging, Classifier, Version | ForEach-Object {
         if ($_.Classifier) {
-            "$($_.GroupId):$($_.ArtifactId):$($_.Packaging):$($_.Classifier):$($_.Version):$($_.Scope)"
+            "$($_.GroupId):$($_.ArtifactId):$($_.Packaging):$($_.Classifier):$($_.Version)"
         } else {
-            "$($_.GroupId):$($_.ArtifactId):$($_.Packaging):$($_.Version):$($_.Scope)"
+            "$($_.GroupId):$($_.ArtifactId):$($_.Packaging):$($_.Version)"
         }
     }
     Set-Content 'package-all.txt' -Value $packageContent -Encoding UTF8
@@ -278,9 +275,6 @@ do {
         }
         if ($package.Classifier) {
             $lockContent.Add("                <classifier>$($package.Classifier)</classifier>")
-        }
-        if ($package.Scope -ne 'compile') {
-            $lockContent.Add("                <scope>$($package.Scope)</scope>")
         }
         $lockContent.Add('            </dependency>')
     }
@@ -313,9 +307,9 @@ do {
     }
     $addingContent = $addingList | ForEach-Object {
         if ($_.Classifier) {
-            "$($_.GroupId):$($_.ArtifactId):$($_.Packaging):$($_.Classifier):$($_.Version):$($_.Scope)"
+            "$($_.GroupId):$($_.ArtifactId):$($_.Packaging):$($_.Classifier):$($_.Version)"
         } else {
-            "$($_.GroupId):$($_.ArtifactId):$($_.Packaging):$($_.Version):$($_.Scope)"
+            "$($_.GroupId):$($_.ArtifactId):$($_.Packaging):$($_.Version)"
         }
     }
     Set-Content 'package-adding.txt' -Value $addingContent -Encoding UTF8
@@ -358,9 +352,9 @@ do {
         $isAdding = $addingList | Where-Object { $_.GroupId -eq $package.GroupId -and $_.ArtifactId -eq $package.ArtifactId }
         if ($isUpdating -and -not $isAdding) {
             $updatingList.Add($(if ($package.Classifier) {
-                "$($package.GroupId):$($package.ArtifactId):$($package.Packaging):$($package.Classifier):$($package.Version):$($package.Scope)"
+                "$($package.GroupId):$($package.ArtifactId):$($package.Packaging):$($package.Classifier):$($package.Version)"
             } else {
-                "$($package.GroupId):$($package.ArtifactId):$($package.Packaging):$($package.Version):$($package.Scope)"
+                "$($package.GroupId):$($package.ArtifactId):$($package.Packaging):$($package.Version)"
             }))
         }
     }
