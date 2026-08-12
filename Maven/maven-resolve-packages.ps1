@@ -238,7 +238,7 @@ do {
     }
 
     # 整理 package-all.txt (合併重複，保留第一筆)
-    $allList = $allList | Group-Object GroupId, ArtifactId, Packaging, Classifier | ForEach-Object {
+    $allList = $allList | Group-Object GroupId, ArtifactId, Packaging, Classifier, Version, Scope | ForEach-Object {
         $_.Group[0]
     }
 
