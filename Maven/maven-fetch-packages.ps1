@@ -191,13 +191,13 @@ do {
     $settingsContent.Add('</settings>')
     Set-Content 'settings.xml' -Value $settingsContent -Encoding UTF8
    
-    # 下載目標套件
+    # 下載目標套件 - mavenSourceList
     & mvn dependency:copy `
         "-Dstyle.color=never" `
         "-s" "settings.xml" `
         "-gs" "settings.xml"
     if ($LASTEXITCODE -ne 0) {
-        Write-Host "[ERROR] mvn dependency:copy 執行失敗 (mavenRepository)"
+        Write-Host "[ERROR] mvn dependency:copy 執行失敗 (mavenSourceList)"
         $exitCode = 1
         break
     }
@@ -256,7 +256,7 @@ do {
         }
     }
     
-    # 下載目標套件
+    # 下載目標套件 - mavenRepository
     & mvn dependency:copy `
         "-Dstyle.color=never" `
         "-s" "settings.xml" `
