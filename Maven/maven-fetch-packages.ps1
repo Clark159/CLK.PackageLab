@@ -58,6 +58,85 @@ do {
     Write-Host "-------------------------------------------------------------------------------"
     Write-Host
 
+    # 讀取 package.txt
+    $mavenScopeList = 'compile', 'provided', 'runtime', 'test', 'system', 'import'
+    $packageList = Get-Content 'package.txt' -Encoding UTF8 | Where-Object { $_ -match '\S+:\S+:\S+' } | ForEach-Object {
+        $packageParts = ($_ -replace '\s*-- module.*', '' -replace '\s*\(optional\)\s*', '').Trim() -split ':'
+        if ($packageParts.Count -ge 6) {
+            [PSCustomObject]@{
+                GroupId    = $packageParts[0]
+                ArtifactId = $packageParts[1]
+                Packaging  = $packageParts[2]
+                Classifier = $packageParts[3]
+                Version    = $packageParts[4]
+            }
+        } elseif ($packageParts.Count -eq 5 -and $packageParts[4] -notin $mavenScopeList) {
+            [PSCustomObject]@{
+                GroupId    = $packageParts[0]
+                ArtifactId = $packageParts[1]
+                Packaging  = $packageParts[2]
+                Classifier = $packageParts[3]
+                Version    = $packageParts[4]
+            }
+        } elseif ($packageParts.Count -eq 5 -or $packageParts.Count -eq 4) {
+            [PSCustomObject]@{
+                GroupId    = $packageParts[0]
+                ArtifactId = $packageParts[1]
+                Packaging  = $packageParts[2]
+                Classifier = ''
+                Version    = $packageParts[3]
+            }
+        } else {
+            [PSCustomObject]@{
+                GroupId    = $packageParts[0]
+                ArtifactId = $packageParts[1]
+                Packaging  = 'jar'
+                Classifier = ''
+                Version    = $packageParts[2]
+            }
+        }
+    }
+
+    # 產生 pom.xml
+    $pomContent = [System.Collections.Generic.List[string]]::new()
+    $pomContent.Add('<?xml version="1.0" encoding="UTF-8"?>')
+    $pomContent.Add('<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">')
+    $pomContent.Add('    <modelVersion>4.0.0</modelVersion>')
+    $pomContent.Add("    <groupId>$projectGroupId</groupId>")
+    $pomContent.Add("    <artifactId>$projectArtifactId</artifactId>")
+    $pomContent.Add("    <version>$projectVersion</version>")
+    $pomContent.Add('    <packaging>pom</packaging>')
+    $pomContent.Add('    <build>')
+    $pomContent.Add('        <plugins>')
+    $pomContent.Add('            <plugin>')
+    $pomContent.Add('                <groupId>org.apache.maven.plugins</groupId>')
+    $pomContent.Add('                <artifactId>maven-dependency-plugin</artifactId>')
+    $pomContent.Add('                <configuration>')
+    $pomContent.Add('                    <outputDirectory>./.m2</outputDirectory>')
+    $pomContent.Add('                    <useRepositoryLayout>true</useRepositoryLayout>')
+    $pomContent.Add('                    <copyPom>true</copyPom>')
+    $pomContent.Add('                    <artifactItems>')
+    foreach ($package in $packageList) {
+        $pomContent.Add('                        <artifactItem>')
+        $pomContent.Add("                            <groupId>$($package.GroupId)</groupId>")
+        $pomContent.Add("                            <artifactId>$($package.ArtifactId)</artifactId>")
+        $pomContent.Add("                            <version>$($package.Version)</version>")
+        if ($package.Packaging -ne 'jar') {
+            $pomContent.Add("                            <type>$($package.Packaging)</type>")
+        }
+        if ($package.Classifier) {
+            $pomContent.Add("                            <classifier>$($package.Classifier)</classifier>")
+        }
+        $pomContent.Add('                        </artifactItem>')
+    }
+    $pomContent.Add('                    </artifactItems>')
+    $pomContent.Add('                </configuration>')
+    $pomContent.Add('            </plugin>')
+    $pomContent.Add('        </plugins>')
+    $pomContent.Add('    </build>')
+    $pomContent.Add('</project>')
+    Set-Content 'pom.xml' -Value $pomContent -Encoding UTF8
+
     # 建立 settings.xml - mavenSourceList
     $settingsContent = [System.Collections.Generic.List[string]]::new()
     $settingsContent.Add('<?xml version="1.0" encoding="UTF-8"?>')
@@ -111,111 +190,14 @@ do {
     $settingsContent.Add('    <localRepository>./.m2</localRepository>')
     $settingsContent.Add('</settings>')
     Set-Content 'settings.xml' -Value $settingsContent -Encoding UTF8
-
-    # 讀取 package.txt
-    $mavenScopeList = 'compile', 'provided', 'runtime', 'test', 'system', 'import'
-    $packageList = Get-Content 'package.txt' -Encoding UTF8 | Where-Object { $_ -match '\S+:\S+:\S+' } | ForEach-Object {
-        $packageParts = ($_ -replace '\s*-- module.*', '' -replace '\s*\(optional\)\s*', '').Trim() -split ':'
-        if ($packageParts.Count -ge 6) {
-            [PSCustomObject]@{
-                GroupId    = $packageParts[0]
-                ArtifactId = $packageParts[1]
-                Packaging  = $packageParts[2]
-                Classifier = $packageParts[3]
-                Version    = $packageParts[4]
-            }
-        } elseif ($packageParts.Count -eq 5 -and $packageParts[4] -notin $mavenScopeList) {
-            [PSCustomObject]@{
-                GroupId    = $packageParts[0]
-                ArtifactId = $packageParts[1]
-                Packaging  = $packageParts[2]
-                Classifier = $packageParts[3]
-                Version    = $packageParts[4]
-            }
-        } elseif ($packageParts.Count -eq 5 -or $packageParts.Count -eq 4) {
-            [PSCustomObject]@{
-                GroupId    = $packageParts[0]
-                ArtifactId = $packageParts[1]
-                Packaging  = $packageParts[2]
-                Classifier = ''
-                Version    = $packageParts[3]
-            }
-        } else {
-            [PSCustomObject]@{
-                GroupId    = $packageParts[0]
-                ArtifactId = $packageParts[1]
-                Packaging  = 'jar'
-                Classifier = ''
-                Version    = $packageParts[2]
-            }
-        }
-    }
-
-    # 產生 pom.xml
-    $pomContent = [System.Collections.Generic.List[string]]::new()
-    $pomContent.Add('<?xml version="1.0" encoding="UTF-8"?>')
-    $pomContent.Add('<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">')
-    $pomContent.Add('    <modelVersion>4.0.0</modelVersion>')
-    $pomContent.Add("    <groupId>$projectGroupId</groupId>")
-    $pomContent.Add("    <artifactId>$projectArtifactId</artifactId>")
-    $pomContent.Add("    <version>$projectVersion</version>")
-    $pomContent.Add('    <packaging>pom</packaging>')
-    $pomContent.Add('    <dependencyManagement>')
-    $pomContent.Add('        <dependencies>')
-    foreach ($package in $packageList) {
-        $pomContent.Add('            <dependency>')
-        $pomContent.Add("                <groupId>$($package.GroupId)</groupId>")
-        $pomContent.Add("                <artifactId>$($package.ArtifactId)</artifactId>")
-        $pomContent.Add("                <version>$($package.Version)</version>")
-        if ($package.Packaging -ne 'jar') {
-            $pomContent.Add("                <type>$($package.Packaging)</type>")
-        }
-        if ($package.Classifier) {
-            $pomContent.Add("                <classifier>$($package.Classifier)</classifier>")
-        }
-        $pomContent.Add('                <exclusions>')
-        $pomContent.Add('                    <exclusion>')
-        $pomContent.Add('                        <groupId>*</groupId>')
-        $pomContent.Add('                        <artifactId>*</artifactId>')
-        $pomContent.Add('                    </exclusion>')
-        $pomContent.Add('                </exclusions>')
-        $pomContent.Add('            </dependency>')
-    }
-    $pomContent.Add('        </dependencies>')
-    $pomContent.Add('    </dependencyManagement>')
-    $pomContent.Add('    <dependencies>')
-    foreach ($package in $packageList) {
-        $pomContent.Add('        <dependency>')
-        $pomContent.Add("            <groupId>$($package.GroupId)</groupId>")
-        $pomContent.Add("            <artifactId>$($package.ArtifactId)</artifactId>")
-        $pomContent.Add("            <version>$($package.Version)</version>")
-        if ($package.Packaging -ne 'jar') {
-            $pomContent.Add("            <type>$($package.Packaging)</type>")
-        }
-        if ($package.Classifier) {
-            $pomContent.Add("            <classifier>$($package.Classifier)</classifier>")
-        }
-        $pomContent.Add('            <exclusions>')
-        $pomContent.Add('                <exclusion>')
-        $pomContent.Add('                    <groupId>*</groupId>')
-        $pomContent.Add('                    <artifactId>*</artifactId>')
-        $pomContent.Add('                </exclusion>')
-        $pomContent.Add('            </exclusions>')
-        $pomContent.Add('        </dependency>')
-    }
-    $pomContent.Add('    </dependencies>')
-    $pomContent.Add('</project>')
-    Set-Content 'pom.xml' -Value $pomContent -Encoding UTF8
-
-    # 下載所有套件
-    & mvn dependency:list `
-        "-Dsort=true" `
+   
+    # 下載目標套件
+    & mvn dependency:copy `
         "-Dstyle.color=never" `
-        "-DexcludeTransitive=false" `
         "-s" "settings.xml" `
         "-gs" "settings.xml"
     if ($LASTEXITCODE -ne 0) {
-        Write-Host "[ERROR] mvn dependency:list 執行失敗 (mavenSourceList)"
+        Write-Host "[ERROR] mvn dependency:copy 執行失敗 (mavenRepository)"
         $exitCode = 1
         break
     }
@@ -246,7 +228,7 @@ do {
     $settingsContent.Add('    <mirrors>')
     $settingsContent.Add('        <mirror>')
     $settingsContent.Add("            <id>$($mavenRepository.id)</id>")
-    $settingsContent.Add('            <mirrorOf>*</mirrorOf>')
+    $settingsContent.Add("            <mirrorOf>$($mavenRepository.id)</mirrorOf>")
     $settingsContent.Add("            <url>$($mavenRepository.url)</url>")
     $settingsContent.Add('        </mirror>')
     $settingsContent.Add('    </mirrors>')
@@ -275,14 +257,12 @@ do {
     }
     
     # 下載目標套件
-    & mvn dependency:list `
-        "-Dsort=true" `
+    & mvn dependency:copy `
         "-Dstyle.color=never" `
-        "-DexcludeTransitive=false" `
         "-s" "settings.xml" `
         "-gs" "settings.xml"
     if ($LASTEXITCODE -ne 0) {
-        Write-Host "[ERROR] mvn dependency:list 執行失敗 (mavenRepository)"
+        Write-Host "[ERROR] mvn dependency:copy 執行失敗 (mavenRepository)"
         $exitCode = 1
         break
     }
