@@ -112,12 +112,11 @@ do {
     $settingsContent.Add('</settings>')
     Set-Content 'settings.xml' -Value $settingsContent -Encoding UTF8
 
-    # 讀取 package.txt (groupId:artifactId:version 或 groupId:artifactId:packaging:version 或 groupId:artifactId:packaging:classifier:version)
-    $packageList = Get-Content 'package.txt' -Encoding UTF8 | Where-Object {
-        $_.Trim() -ne ''
-    } | ForEach-Object {
-        $packageParts = $_.Trim() -split ':'
-        if ($packageParts.Count -ge 5) {
+    # 讀取 package.txt
+    $mavenScopeList = 'compile', 'provided', 'runtime', 'test', 'system', 'import'
+    $packageList = Get-Content 'package.txt' -Encoding UTF8 | Where-Object { $_ -match '\S+:\S+:\S+' } | ForEach-Object {
+        $packageParts = ($_ -replace '\s*-- module.*', '' -replace '\s*\(optional\)\s*', '').Trim() -split ':'
+        if ($packageParts.Count -ge 6) {
             [PSCustomObject]@{
                 GroupId    = $packageParts[0]
                 ArtifactId = $packageParts[1]
@@ -125,7 +124,15 @@ do {
                 Classifier = $packageParts[3]
                 Version    = $packageParts[4]
             }
-        } elseif ($packageParts.Count -eq 4) {
+        } elseif ($packageParts.Count -eq 5 -and $packageParts[4] -notin $mavenScopeList) {
+            [PSCustomObject]@{
+                GroupId    = $packageParts[0]
+                ArtifactId = $packageParts[1]
+                Packaging  = $packageParts[2]
+                Classifier = $packageParts[3]
+                Version    = $packageParts[4]
+            }
+        } elseif ($packageParts.Count -eq 5 -or $packageParts.Count -eq 4) {
             [PSCustomObject]@{
                 GroupId    = $packageParts[0]
                 ArtifactId = $packageParts[1]
@@ -299,7 +306,6 @@ do {
         Write-Host
         Write-Host
         Write-Host "[INFO] ------------------------------------------------------------------------"
-        # 依 mvn dependency:list 慣例組座標字串：無 classifier 為 4 欄，有 classifier 才補上該欄 (不輸出 ::)
         $packageList | ForEach-Object {
             $coordinate = if ($_.Classifier) {
                 "$($_.GroupId):$($_.ArtifactId):$($_.Packaging):$($_.Classifier):$($_.Version)"

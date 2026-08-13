@@ -185,7 +185,7 @@ do {
     Write-Host
     Write-Host "[INFO] ------------------------------------------------------------------------"
 
-    # 讀取 package-all.txt (groupId:artifactId:version 或 groupId:artifactId:packaging:version 或 groupId:artifactId:packaging:classifier:version，亦相容 mvn 原始輸出的 scope 及 -- module/(optional) 註解)
+    # 讀取 package-all.txt
     $mavenScopeList = 'compile', 'provided', 'runtime', 'test', 'system', 'import'
     $allList = Get-Content 'package-all.txt' -Encoding UTF8 | Where-Object { $_ -match '\S+:\S+:\S+' } | ForEach-Object {
         $packageParts = ($_ -replace '\s*-- module.*', '' -replace '\s*\(optional\)\s*', '').Trim() -split ':'
