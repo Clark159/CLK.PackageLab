@@ -6,7 +6,7 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 # ===== Variables =====
-$scriptVersion = '20260810-00'
+$scriptVersion = '20260813-00'
 $exitCode = 0
 $projectGroupId    = 'com.example'
 $projectArtifactId = 'packages'
@@ -185,9 +185,9 @@ do {
     Write-Host
     Write-Host "[INFO] ------------------------------------------------------------------------"
 
-    # 讀取 package-all.txt
+    # 讀取 package-all.txt (groupId:artifactId:version 或 groupId:artifactId:packaging:version 或 groupId:artifactId:packaging:classifier:version，亦相容 mvn 原始輸出的 scope 及 -- module/(optional) 註解)
     $mavenScopeList = 'compile', 'provided', 'runtime', 'test', 'system', 'import'
-    $allList = Get-Content 'package-all.txt' -Encoding UTF8 | Where-Object { $_ -match '\S+:\S+:\S+:\S+' } | ForEach-Object {
+    $allList = Get-Content 'package-all.txt' -Encoding UTF8 | Where-Object { $_ -match '\S+:\S+:\S+' } | ForEach-Object {
         $packageParts = ($_ -replace '\s*-- module.*', '' -replace '\s*\(optional\)\s*', '').Trim() -split ':'
         if ($packageParts.Count -ge 6) {
             [PSCustomObject]@{
@@ -205,13 +205,21 @@ do {
                 Classifier = $packageParts[3]
                 Version    = $packageParts[4]
             }
-        } else {
+        } elseif ($packageParts.Count -eq 5 -or $packageParts.Count -eq 4) {
             [PSCustomObject]@{
                 GroupId    = $packageParts[0]
                 ArtifactId = $packageParts[1]
                 Packaging  = $packageParts[2]
                 Classifier = ''
                 Version    = $packageParts[3]
+            }
+        } else {
+            [PSCustomObject]@{
+                GroupId    = $packageParts[0]
+                ArtifactId = $packageParts[1]
+                Packaging  = 'jar'
+                Classifier = ''
+                Version    = $packageParts[2]
             }
         }
     }
