@@ -6,7 +6,7 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 # ===== Variables =====
-$scriptVersion = '20260815-01'
+$scriptVersion = '20260815-00'
 $exitCode = 0
 $npmSourceList  = @(
     @{ id = 'npmjs'; url = 'https://registry.npmjs.org/'; username = ''; token = '' }
@@ -41,7 +41,7 @@ do {
     }
 
     # 移除檔案
-    foreach ($fileName in '.npmrc', 'package.json', 'package-lock.json') {
+    foreach ($fileName in '.npmrc', 'package-lock.json') {
         if (Test-Path $fileName) {
             Remove-Item $fileName -Force
         }
