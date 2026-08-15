@@ -137,7 +137,7 @@ do {
     $pomContent.Add('</project>')
     Set-Content 'pom.xml' -Value $pomContent -Encoding UTF8
 
-    # 建立 settings.xml - mavenSourceList
+    # 建立 settings.xml (mavenSourceList)
     $settingsContent = [System.Collections.Generic.List[string]]::new()
     $settingsContent.Add('<?xml version="1.0" encoding="UTF-8"?>')
     $settingsContent.Add('<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"')
@@ -191,7 +191,7 @@ do {
     $settingsContent.Add('</settings>')
     Set-Content 'settings.xml' -Value $settingsContent -Encoding UTF8
    
-    # 下載目標套件 - mavenSourceList
+    # 下載目標套件 (mavenSourceList)
     & mvn dependency:copy `
         "-Dstyle.color=never" `
         "-s" "settings.xml" `
@@ -202,7 +202,7 @@ do {
         break
     }
 
-    # 建立 settings.xml - mavenRepository
+    # 建立 settings.xml (mavenRepository)
     $settingsContent = [System.Collections.Generic.List[string]]::new()
     $settingsContent.Add('<?xml version="1.0" encoding="UTF-8"?>')
     $settingsContent.Add('<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"')
@@ -256,7 +256,7 @@ do {
         }
     }
     
-    # 下載目標套件 - mavenRepository
+    # 下載目標套件 (mavenRepository)
     & mvn dependency:copy `
         "-Dstyle.color=never" `
         "-s" "settings.xml" `

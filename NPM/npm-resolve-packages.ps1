@@ -78,7 +78,7 @@ do {
         }
     }
 
-    # 建立 .npmrc (default-registry)
+    # 建立 .npmrc (npmSourceList:default-registry)
     $npmrcContent = [System.Collections.Generic.List[string]]::new()
     $npmrcContent.Add("registry=$($npmSourceList[0].url.TrimEnd('/'))/")
     $npmrcContent.Add("cache=./npm_caches")
@@ -94,7 +94,7 @@ do {
         }
     }
 
-    # 建立 .npmrc (scope-registry)
+    # 建立 .npmrc (npmSourceList:scope-registry)
     foreach ($npmSource in $npmSourceList) {
         foreach ($dependency in $dependencyList) {
             $scope = ($dependency.Name -split '/')[0]

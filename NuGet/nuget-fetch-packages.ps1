@@ -77,7 +77,7 @@ do {
     $csprojContent.Add('</Project>')
     Set-Content 'package.csproj' -Value $csprojContent -Encoding UTF8
     
-    # 建立 nuget.config - nugetSourceList
+    # 建立 nuget.config (nugetSourceList)
     $nugetConfigContent = [System.Collections.Generic.List[string]]::new()
     $nugetConfigContent.Add('<?xml version="1.0" encoding="utf-8"?>')
     $nugetConfigContent.Add('<configuration>')
@@ -100,7 +100,7 @@ do {
     $nugetConfigContent.Add('</configuration>')
     Set-Content 'nuget.config' -Value $nugetConfigContent -Encoding UTF8
    
-    # 下載目標套件
+    # 下載目標套件 (nugetSourceList)
     & nuget restore `
         "package.csproj" `
         "-ConfigFile" "nuget.config" `
@@ -113,7 +113,7 @@ do {
         break
     }
 
-    # 建立 nuget.config - nugetRepository
+    # 建立 nuget.config (nugetRepository)
     $nugetConfigContent = [System.Collections.Generic.List[string]]::new()
     $nugetConfigContent.Add('<?xml version="1.0" encoding="utf-8"?>')
     $nugetConfigContent.Add('<configuration>')
@@ -145,7 +145,7 @@ do {
         }
     }
 
-    # 下載目標套件
+    # 下載目標套件 (nugetRepository)
     & nuget restore `
         "package.csproj" `
         "-ConfigFile" "nuget.config" `

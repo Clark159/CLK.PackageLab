@@ -63,7 +63,7 @@ do {
     Write-Host "-------------------------------------------------------------------------------"
     Write-Host
 
-    # 建立 nuget.config - nugetSourceList
+    # 建立 nuget.config (nugetSourceList)
     $nugetConfigContent = [System.Collections.Generic.List[string]]::new()
     $nugetConfigContent.Add('<?xml version="1.0" encoding="utf-8"?>')
     $nugetConfigContent.Add('<configuration>')
