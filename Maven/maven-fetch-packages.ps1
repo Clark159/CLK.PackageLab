@@ -202,6 +202,14 @@ do {
         break
     }
 
+    # 刪除目標套件
+    foreach ($package in $packageList) {
+        $packagePath = "./.m2/$($package.GroupId -replace '\.', '/')/$($package.ArtifactId)/$($package.Version)"
+        if (Test-Path $packagePath) {
+            Remove-Item -Path $packagePath -Recurse -Force
+        }
+    }
+
     # 建立 settings.xml (mavenRepository)
     $settingsContent = [System.Collections.Generic.List[string]]::new()
     $settingsContent.Add('<?xml version="1.0" encoding="UTF-8"?>')
@@ -246,15 +254,7 @@ do {
     $settingsContent.Add('    </activeProfiles>')
     $settingsContent.Add('    <localRepository>./.m2</localRepository>')
     $settingsContent.Add('</settings>')
-    Set-Content 'settings.xml' -Value $settingsContent -Encoding UTF8
-
-    # 刪除目標套件
-    foreach ($package in $packageList) {
-        $packagePath = "./.m2/$($package.GroupId -replace '\.', '/')/$($package.ArtifactId)/$($package.Version)"
-        if (Test-Path $packagePath) {
-            Remove-Item -Path $packagePath -Recurse -Force
-        }
-    }
+    Set-Content 'settings.xml' -Value $settingsContent -Encoding UTF8    
     
     # 下載目標套件 (mavenRepository)
     & mvn dependency:copy `

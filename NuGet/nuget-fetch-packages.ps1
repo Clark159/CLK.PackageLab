@@ -113,6 +113,19 @@ do {
         break
     }
 
+    # 刪除目標套件
+    foreach ($package in $packageList) {
+        $packageParts = $package -split '\s+'
+        if ($packageParts.Count -ge 2) {
+            $packageIdLower = $packageParts[0].ToLower()
+            $packageVersion = $packageParts[1]
+            $packagePath    = "./nuget_caches/$packageIdLower/$packageVersion"
+            if (Test-Path $packagePath) {
+                Remove-Item -Path $packagePath -Recurse -Force
+            }
+        }
+    }
+
     # 建立 nuget.config (nugetRepository)
     $nugetConfigContent = [System.Collections.Generic.List[string]]::new()
     $nugetConfigContent.Add('<?xml version="1.0" encoding="utf-8"?>')
@@ -130,20 +143,7 @@ do {
     }
     $nugetConfigContent.Add('    </packageSourceCredentials>')
     $nugetConfigContent.Add('</configuration>')
-    Set-Content 'nuget.config' -Value $nugetConfigContent -Encoding UTF8
-
-    # 刪除目標套件
-    foreach ($package in $packageList) {
-        $packageParts = $package -split '\s+'
-        if ($packageParts.Count -ge 2) {
-            $packageIdLower = $packageParts[0].ToLower()
-            $packageVersion = $packageParts[1]
-            $packagePath    = "./nuget_caches/$packageIdLower/$packageVersion"
-            if (Test-Path $packagePath) {
-                Remove-Item -Path $packagePath -Recurse -Force
-            }
-        }
-    }
+    Set-Content 'nuget.config' -Value $nugetConfigContent -Encoding UTF8    
 
     # 下載目標套件 (nugetRepository)
     & nuget restore `
