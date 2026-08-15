@@ -6,7 +6,7 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 # ===== Variables =====
-$scriptVersion = '20260808-00'
+$scriptVersion = '20260815-00'
 $exitCode = 0
 $npmSourceList = @(
     @{ id = 'npmjs'; url = 'https://registry.npmjs.org/' }
@@ -142,13 +142,15 @@ do {
     # 建立 package-all.txt
     $packageMap = @{}
     foreach ($packageParts in $lockJson.packages.PSObject.Properties) {
-        $key = $packageParts.Name
-        if ($key -eq '') { continue }
+        if ($packageParts.Name -eq '') { continue }
         $package = $packageParts.Value
-        if ($key -match 'node_modules/(@[^/]+/[^/]+|[^/]+)$') {
+        if ($packageParts.Name -match 'node_modules/(@[^/]+/[^/]+|[^/]+)$') {
             $name = $Matches[1]
         } else {
             continue
+        }
+        if ($package.name) {
+            $name = $package.name
         }
         $nameVersion = "$name@$($package.version)"
         if (-not $packageMap.ContainsKey($nameVersion)) {
