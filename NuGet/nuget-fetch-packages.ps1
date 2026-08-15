@@ -55,6 +55,28 @@ do {
     Write-Host "-------------------------------------------------------------------------------"
     Write-Host
 
+    # 讀取 package.txt
+    $packageList = Get-Content 'package.txt' -Encoding UTF8 | Where-Object {
+        $_.Trim() -ne ''
+    }
+
+    # 產生 package.csproj
+    $csprojContent = [System.Collections.Generic.List[string]]::new()
+    $csprojContent.Add('<Project Sdk="Microsoft.NET.Sdk">')
+    $csprojContent.Add('    <PropertyGroup>')
+    $csprojContent.Add("        <TargetFramework>$targetFramework</TargetFramework>")
+    $csprojContent.Add('    </PropertyGroup>')
+    $csprojContent.Add('    <ItemGroup>')
+    foreach ($package in $packageList) {
+        $packageParts = $package -split '\s+'
+        if ($packageParts.Count -ge 2) {
+            $csprojContent.Add("        <PackageReference Include=""$($packageParts[0])"" Version=""$($packageParts[1])"" />")
+        }
+    }
+    $csprojContent.Add('    </ItemGroup>')
+    $csprojContent.Add('</Project>')
+    Set-Content 'package.csproj' -Value $csprojContent -Encoding UTF8
+    
     # 建立 nuget.config - nugetSourceList
     $nugetConfigContent = [System.Collections.Generic.List[string]]::new()
     $nugetConfigContent.Add('<?xml version="1.0" encoding="utf-8"?>')
@@ -77,30 +99,8 @@ do {
     $nugetConfigContent.Add('    </packageSourceCredentials>')
     $nugetConfigContent.Add('</configuration>')
     Set-Content 'nuget.config' -Value $nugetConfigContent -Encoding UTF8
-
-    # 讀取 package.txt
-    $packageList = Get-Content 'package.txt' -Encoding UTF8 | Where-Object {
-        $_.Trim() -ne ''
-    }
-
-    # 產生 package.csproj
-    $csprojContent = [System.Collections.Generic.List[string]]::new()
-    $csprojContent.Add('<Project Sdk="Microsoft.NET.Sdk">')
-    $csprojContent.Add('    <PropertyGroup>')
-    $csprojContent.Add("        <TargetFramework>$targetFramework</TargetFramework>")
-    $csprojContent.Add('    </PropertyGroup>')
-    $csprojContent.Add('    <ItemGroup>')
-    foreach ($package in $packageList) {
-        $packageParts = $package -split '\s+'
-        if ($packageParts.Count -ge 2) {
-            $csprojContent.Add("        <PackageReference Include=""$($packageParts[0])"" Version=""$($packageParts[1])"" />")
-        }
-    }
-    $csprojContent.Add('    </ItemGroup>')
-    $csprojContent.Add('</Project>')
-    Set-Content 'package.csproj' -Value $csprojContent -Encoding UTF8
-
-    # 下載所有套件
+   
+    # 下載目標套件
     & nuget restore `
         "package.csproj" `
         "-ConfigFile" "nuget.config" `

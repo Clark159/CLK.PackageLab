@@ -56,23 +56,6 @@ do {
     Write-Host "-------------------------------------------------------------------------------"
     Write-Host
 
-    # 建立 .npmrc (default-registry)
-    $npmrcContent = [System.Collections.Generic.List[string]]::new()
-    $npmrcContent.Add("registry=$($npmSourceList[0].url.TrimEnd('/'))/")
-    $npmrcContent.Add("cache=./npm_caches")
-    foreach ($npmSource in $npmSourceList) {
-        if ($npmSource.token) {
-            $authUrl = $npmSource.url.TrimEnd('/') -replace '^https?:', ''
-            $npmrcContent.Add("$authUrl/:_authToken=$($npmSource.token)")
-        } elseif ($npmSource.username -and $npmSource.password) {
-            $authUrl  = $npmSource.url.TrimEnd('/') -replace '^https?:', ''
-            $b64token = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes("$($npmSource.username):$($npmSource.password)"))
-            $npmrcContent.Add("$authUrl/:_auth=$b64token")
-            $npmrcContent.Add("$authUrl/:always-auth=true")
-        }
-    }
-    [System.IO.File]::WriteAllLines("$PSScriptRoot\.npmrc", $npmrcContent, [System.Text.UTF8Encoding]::new($false))
-
     # 讀取 package.txt
     $packageList = Get-Content 'package.txt' -Encoding UTF8 | Where-Object {
         $_.Trim() -ne ''
@@ -95,7 +78,24 @@ do {
     $packageJsonContent.Add('}')
     Set-Content './package.json' -Value $packageJsonContent -Encoding UTF8
 
-    # 下載所有套件
+    # 建立 .npmrc (default-registry)
+    $npmrcContent = [System.Collections.Generic.List[string]]::new()
+    $npmrcContent.Add("registry=$($npmSourceList[0].url.TrimEnd('/'))/")
+    $npmrcContent.Add("cache=./npm_caches")
+    foreach ($npmSource in $npmSourceList) {
+        if ($npmSource.token) {
+            $authUrl = $npmSource.url.TrimEnd('/') -replace '^https?:', ''
+            $npmrcContent.Add("$authUrl/:_authToken=$($npmSource.token)")
+        } elseif ($npmSource.username -and $npmSource.password) {
+            $authUrl  = $npmSource.url.TrimEnd('/') -replace '^https?:', ''
+            $b64token = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes("$($npmSource.username):$($npmSource.password)"))
+            $npmrcContent.Add("$authUrl/:_auth=$b64token")
+            $npmrcContent.Add("$authUrl/:always-auth=true")
+        }
+    }
+    [System.IO.File]::WriteAllLines("$PSScriptRoot\.npmrc", $npmrcContent, [System.Text.UTF8Encoding]::new($false))    
+
+    # 下載目標套件
     & npm install --ignore-scripts --no-audit --force --verbose
     if ($LASTEXITCODE -ne 0) {
         Write-Host "[ERROR] npm install 執行失敗 (npmSourceList)"
@@ -126,7 +126,7 @@ do {
         Remove-Item -Path './npm_caches' -Recurse -Force
     }
 
-    # 修改 package-lock.json 的 registry 來源
+    # 產生 package.json
     if (Test-Path './package-lock.json') {
         $lockContent = Get-Content './package-lock.json' -Encoding UTF8 -Raw
         foreach ($npmSource in $npmSourceList) {
