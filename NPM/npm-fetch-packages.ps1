@@ -43,7 +43,7 @@ do {
     }
 
     # 移除檔案
-    foreach ($fileName in '.npmrc') {
+    foreach ($fileName in '.npmrc', 'package-lock.json') {
         if (Test-Path $fileName) {
             Remove-Item $fileName -Force
         }
