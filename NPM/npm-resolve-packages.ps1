@@ -95,13 +95,13 @@ do {
     }
 
     # 建立 .npmrc (scope-registry)
-    foreach ($dependency in $dependencyList) {
-        $scope = ($dependency.Name -split '/')[0]
-        $encodedName = $dependency.Name -replace '/', '%2F'
-        if ($dependency.Name -notmatch '^@[^/]+/') { continue }
-        if ($dependency.Value -notmatch '^\d+\.\d+\.\d+') { continue }        
-        if ($npmrcContent | Where-Object { $_ -like "$scope`:registry=*" }) { continue }        
-        foreach ($npmSource in $npmSourceList) {
+    foreach ($npmSource in $npmSourceList) {
+        foreach ($dependency in $dependencyList) {
+            $scope = ($dependency.Name -split '/')[0]
+            $encodedName = $dependency.Name -replace '/', '%2F'
+            if ($dependency.Name -notmatch '^@[^/]+/') { continue }
+            if ($dependency.Value -notmatch '^\d+\.\d+\.\d+') { continue }
+            if ($npmrcContent | Where-Object { $_ -like "$scope`:registry=*" }) { continue }
             $tarballUrl = "$($npmSource.url.TrimEnd('/'))/$encodedName/-/$($dependency.Name.Split('/')[-1])-$($dependency.Value).tgz"
             $isExisting = $true
             try {
@@ -113,7 +113,6 @@ do {
             }
             if ($isExisting) {
                 $npmrcContent.Add("$scope`:registry=$($npmSource.url.TrimEnd('/'))/")
-                break
             }
         }
     }
