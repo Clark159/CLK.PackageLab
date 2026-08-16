@@ -6,7 +6,7 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 # ===== Variables =====
-$scriptVersion = '20260806-01'
+$scriptVersion = '20260816-00'
 $exitCode = 0
 $targetFramework = 'net8.0'
 $nugetSourceList = @(
