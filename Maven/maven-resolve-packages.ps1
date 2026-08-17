@@ -103,6 +103,12 @@ do {
         $settingsContent.Add("            <url>$($mavenSource.url)</url>")
         $settingsContent.Add('        </mirror>')
     }
+    $settingsContent.Add('        <mirror>')
+    $settingsContent.Add('            <id>default-other</id>')
+    $settingsContent.Add("            <mirrorOf>*$(($mavenSourceList | ForEach-Object { ",!$($_.id)" }) -join '')</mirrorOf>")
+    $settingsContent.Add("            <url>$($mavenSourceList[0].url)</url>")
+    $settingsContent.Add('            <blocked>true</blocked>')
+    $settingsContent.Add('        </mirror>')
     $settingsContent.Add('    </mirrors>')
     $settingsContent.Add('    <servers>')
     foreach ($mavenSource in $mavenSourceList) {
