@@ -6,7 +6,7 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 # ===== Variables =====
-$scriptVersion = '20260817-00'
+$scriptVersion = '20260819-00'
 $exitCode = 0
 $projectGroupId    = 'com.example'
 $projectArtifactId = 'packages'
@@ -128,6 +128,14 @@ do {
             $pomContent.Add("                            <classifier>$($package.Classifier)</classifier>")
         }
         $pomContent.Add('                        </artifactItem>')
+        if ($package.Packaging -ne 'pom') {
+            $pomContent.Add('                        <artifactItem>')
+            $pomContent.Add("                            <groupId>$($package.GroupId)</groupId>")
+            $pomContent.Add("                            <artifactId>$($package.ArtifactId)</artifactId>")
+            $pomContent.Add("                            <version>$($package.Version)</version>")
+            $pomContent.Add('                            <type>pom</type>')
+            $pomContent.Add('                        </artifactItem>')
+        }
     }
     $pomContent.Add('                    </artifactItems>')
     $pomContent.Add('                </configuration>')
