@@ -152,12 +152,11 @@ do {
     foreach ($package in $allList) {
         $encodedName = $package.name -replace '/', '%2F'
         $tarballUrl  = "$($npmRepository.url.TrimEnd('/'))/$encodedName/-/$($package.name.Split('/')[-1])-$($package.version).tgz"
-        $isUpdating  = $false
+        $isUpdating  = $true
         try {
             $null = Invoke-WebRequest -Uri $tarballUrl -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
-        } catch {
-            $isUpdating = $true
-        }
+            $isUpdating = $false
+        } catch {}
         $isAdding = $addingList | Where-Object { $_.name -eq $package.name }
         if ($isUpdating -and -not $isAdding) {
             $updatingList.Add("$($package.name)@$($package.version)")

@@ -308,13 +308,7 @@ do {
         try {
             $null = Invoke-WebRequest -Uri $packageUrl -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
             $isAdding = $false
-        } catch {
-            if ($_.Exception.Response -and $_.Exception.Response.StatusCode.value__ -eq 404) {
-                $isAdding = $true
-            } else {
-                $isAdding = $false
-            }
-        }
+        } catch { }
         if ($isAdding) {
             $addingList.Add($package)
         }
@@ -355,14 +349,11 @@ do {
         $ext        = if ($artifactSpecMap.ContainsKey($type)) { $artifactSpecMap[$type].ext } else { 'jar' }
         $classifier = if ($package.Classifier) { $package.Classifier } elseif ($artifactSpecMap.ContainsKey($type)) { $artifactSpecMap[$type].classifier } else { '' }
         $packageUrl = if ($classifier) { "$($mavenRepository.url.TrimEnd('/'))/$groupPath/$artifactId/$version/$artifactId-$version-$classifier.$ext" } else { "$($mavenRepository.url.TrimEnd('/'))/$groupPath/$artifactId/$version/$artifactId-$version.$ext" }
-        $isUpdating = $false
+        $isUpdating = $true
         try {
             $null = Invoke-WebRequest -Uri $packageUrl -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
-        } catch {
-            if ($_.Exception.Response -and $_.Exception.Response.StatusCode.value__ -eq 404) {
-                $isUpdating = $true
-            }
-        }
+            $isUpdating = $false
+        } catch { }
         $isAdding = $addingList | Where-Object { $_.GroupId -eq $package.GroupId -and $_.ArtifactId -eq $package.ArtifactId }
         if ($isUpdating -and -not $isAdding) {
             $updatingList.Add($(if ($package.Classifier) {
