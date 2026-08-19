@@ -115,16 +115,29 @@ do {
     $addingList = [System.Collections.Generic.List[object]]::new()
     foreach ($package in $allList) {
         $encodedName = $package.name -replace '/', '%2F'
-        $packageUrl  = "$($npmRepository.url.TrimEnd('/'))/-/package/$encodedName/dist-tags"
+        $distTagsUrl = "$($npmRepository.url.TrimEnd('/'))/-/package/$encodedName/dist-tags"
         $isAdding = $true
+
+        # 建立 versionList
+        $versionList = @()
         try {
-            $null = Invoke-WebRequest -Uri $packageUrl -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
-            $isAdding = $false
+            $response = Invoke-WebRequest -Uri $distTagsUrl -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
+            $distTags = $response.Content | ConvertFrom-Json
+            $versionList = @($distTags.PSObject.Properties.Value | Select-Object -Unique)
         } catch {
-            if ($_.Exception.Response -and $_.Exception.Response.StatusCode.value__ -eq 404) {
-                $isAdding = $true
-            } else {
+            $versionList = @()
+        }
+
+        # 檢查 versionList        
+        foreach ($version in $versionList) {
+            $shortName  = $package.name.Split('/')[-1]
+            $tarballUrl = "$($npmRepository.url.TrimEnd('/'))/$encodedName/-/$shortName-$version.tgz"
+            try {
+                $null = Invoke-WebRequest -Uri $tarballUrl -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
                 $isAdding = $false
+                break
+            } catch {
+                continue
             }
         }
         if ($isAdding) {
@@ -143,9 +156,7 @@ do {
         try {
             $null = Invoke-WebRequest -Uri $tarballUrl -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
         } catch {
-            if ($_.Exception.Response -and $_.Exception.Response.StatusCode.value__ -eq 404) {
-                $isUpdating = $true
-            }
+            $isUpdating = $true
         }
         $isAdding = $addingList | Where-Object { $_.name -eq $package.name }
         if ($isUpdating -and -not $isAdding) {
@@ -159,14 +170,14 @@ do {
     # 移除資料夾
     foreach ($directoryPath in './npm_caches', './node_modules') {
         if (Test-Path $directoryPath) {
-            #Remove-Item -Path $directoryPath -Recurse -Force
+            Remove-Item -Path $directoryPath -Recurse -Force
         }
     }
 
     # 移除檔案
     foreach ($fileName in '.npmrc') {
         if (Test-Path $fileName) {
-            #Remove-Item $fileName -Force
+            Remove-Item $fileName -Force
         }
     }
 
