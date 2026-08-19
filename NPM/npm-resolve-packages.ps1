@@ -65,7 +65,7 @@ do {
     [System.IO.File]::WriteAllLines("$PSScriptRoot\.npmrc", $npmrcContent, [System.Text.UTF8Encoding]::new($false))
 
     # 建立 package-lock.json
-    & npm install --package-lock-only --ignore-scripts --no-audit --legacy-peer-deps
+    & npm install --package-lock-only --ignore-scripts --no-audit
     if ($LASTEXITCODE -ne 0) {
         Write-Host "[ERROR] npm install 執行失敗 (npmSourceList)"
         $exitCode = 1
@@ -134,7 +134,7 @@ do {
     Set-Content 'package-adding.txt' -Value ($addingList | ForEach-Object { "$($_.name)@$($_.version)" }) -Encoding UTF8
     Write-Host "[INFO] 已建立 package-adding.txt"
 
-    # 建立 package-updating.txt (已列在 package-adding.txt 的套件本來就不存在，不重複列入)
+    # 建立 package-updating.txt
     $updatingList = [System.Collections.Generic.List[string]]::new()
     foreach ($package in $allList) {
         $encodedName = $package.name -replace '/', '%2F'
