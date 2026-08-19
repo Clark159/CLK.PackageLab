@@ -6,7 +6,7 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 # ===== Variables =====
-$scriptVersion = '20260816-00'
+$scriptVersion = '20260820-00'
 $exitCode = 0
 $npmSourceList = @(
     @{ id = 'npmjs'; url = 'https://registry.npmjs.org/' }
@@ -40,43 +40,12 @@ do {
         }
     }
 
-    # 整併 npmRepository 至 npmSourceList
-    if (-not ($npmSourceList | Where-Object { $_.url -eq $npmRepository.url })) {
-
-        # npmSourceId
-        $suffix = 2
-        $npmSourceId = $npmRepository.id
-        while ($npmSourceList | Where-Object { $_.id -eq $npmSourceId }) {
-            $npmSourceId = "$($npmRepository.id)$suffix"
-            $suffix++
-        }
-
-        # npmSource
-        $npmSource = $npmRepository.Clone()
-        $npmSource.id = $npmSourceId
-        $npmSourceList += $npmSource
-    }
-
 
     # ===== Execute =====
     Write-Host "-------------------------------------------------------------------------------"
     Write-Host "npm-resolve-packages"
     Write-Host "-------------------------------------------------------------------------------"
     Write-Host
-
-    # 讀取 package.json
-    $packageJson = (Get-Content 'package.json' -Encoding UTF8 -Raw) | ConvertFrom-Json
-    if ($null -eq $packageJson) {
-        Write-Host "[ERROR] package.json 解析失敗"
-        $exitCode = 1
-        break
-    }
-    $dependencyList = [System.Collections.Generic.List[object]]::new()
-    foreach ($dependencyType in 'dependencies', 'devDependencies', 'optionalDependencies', 'peerDependencies') {
-        if ($packageJson.$dependencyType) {
-            $dependencyList.AddRange(@($packageJson.$dependencyType.PSObject.Properties))
-        }
-    }
 
     # 建立 .npmrc (npmSourceList:default-registry)
     $npmrcContent = [System.Collections.Generic.List[string]]::new()
@@ -93,35 +62,10 @@ do {
             $npmrcContent.Add("$authUrl/:always-auth=true")
         }
     }
-
-    # 建立 .npmrc (npmSourceList:scope-registry)
-    if ($npmSourceList.Count -gt 1) {
-        foreach ($npmSource in $npmSourceList) {
-            foreach ($dependency in $dependencyList) {
-                $scope = ($dependency.Name -split '/')[0]
-                $encodedName = $dependency.Name -replace '/', '%2F'
-                if ($dependency.Name -notmatch '^@[^/]+/') { continue }
-                if ($dependency.Value -notmatch '^\d+\.\d+\.\d+') { continue }
-                if ($npmrcContent | Where-Object { $_ -like "$scope`:registry=*" }) { continue }
-                $tarballUrl = "$($npmSource.url.TrimEnd('/'))/$encodedName/-/$($dependency.Name.Split('/')[-1])-$($dependency.Value).tgz"
-                $isExisting = $true
-                try {
-                    $null = Invoke-WebRequest -Uri $tarballUrl -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
-                } catch {
-                    if ($_.Exception.Response -and $_.Exception.Response.StatusCode.value__ -eq 404) {
-                        $isExisting = $false
-                    }
-                }
-                if ($isExisting) {
-                    $npmrcContent.Add("$scope`:registry=$($npmSource.url.TrimEnd('/'))/")
-                }
-            }
-        }
-    }
     [System.IO.File]::WriteAllLines("$PSScriptRoot\.npmrc", $npmrcContent, [System.Text.UTF8Encoding]::new($false))
 
     # 建立 package-lock.json
-    & npm install --package-lock-only --ignore-scripts --no-audit --legacy-peer-deps
+    & npm install --ignore-scripts --no-audit
     if ($LASTEXITCODE -ne 0) {
         Write-Host "[ERROR] npm install 執行失敗 (npmSourceList)"
         $exitCode = 1
