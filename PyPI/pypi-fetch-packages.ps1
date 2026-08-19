@@ -6,7 +6,7 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 # ===== Variables =====
-$scriptVersion = '20260816-00'
+$scriptVersion = '20260820-00'
 $exitCode = 0
 $pypiSourceList = @(
     @{ id = 'pypi'; url = 'https://pypi.org/simple/'; username = ''; token = '' }
