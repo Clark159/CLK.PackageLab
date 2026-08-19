@@ -40,23 +40,6 @@ do {
         }
     }
 
-    # 整併 npmRepository 至 npmSourceList
-    if (-not ($npmSourceList | Where-Object { $_.url -eq $npmRepository.url })) {
-
-        # npmSourceId
-        $suffix = 2
-        $npmSourceId = $npmRepository.id
-        while ($npmSourceList | Where-Object { $_.id -eq $npmSourceId }) {
-            $npmSourceId = "$($npmRepository.id)$suffix"
-            $suffix++
-        }
-
-        # npmSource
-        $npmSource = $npmRepository.Clone()
-        $npmSource.id = $npmSourceId
-        $npmSourceList += $npmSource
-    }
-
 
     # ===== Execute =====
     Write-Host "-------------------------------------------------------------------------------"
@@ -64,21 +47,7 @@ do {
     Write-Host "-------------------------------------------------------------------------------"
     Write-Host
 
-    # 讀取 package.json
-    $packageJson = (Get-Content 'package.json' -Encoding UTF8 -Raw) | ConvertFrom-Json
-    if ($null -eq $packageJson) {
-        Write-Host "[ERROR] package.json 解析失敗"
-        $exitCode = 1
-        break
-    }
-    $dependencyList = [System.Collections.Generic.List[object]]::new()
-    foreach ($dependencyType in 'dependencies', 'devDependencies', 'optionalDependencies', 'peerDependencies') {
-        if ($packageJson.$dependencyType) {
-            $dependencyList.AddRange(@($packageJson.$dependencyType.PSObject.Properties))
-        }
-    }
-
-    # 建立 .npmrc (npmSourceList:default-registry)
+    # 建立 .npmrc
     $npmrcContent = [System.Collections.Generic.List[string]]::new()
     $npmrcContent.Add("registry=$($npmSourceList[0].url.TrimEnd('/'))/")
     $npmrcContent.Add("cache=./npm_caches")
@@ -91,31 +60,6 @@ do {
             $b64token = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes("$($npmSource.username):$($npmSource.password)"))
             $npmrcContent.Add("$authUrl/:_auth=$b64token")
             $npmrcContent.Add("$authUrl/:always-auth=true")
-        }
-    }
-
-    # 建立 .npmrc (npmSourceList:scope-registry)
-    if ($npmSourceList.Count -gt 1) {
-        foreach ($npmSource in $npmSourceList) {
-            foreach ($dependency in $dependencyList) {
-                $scope = ($dependency.Name -split '/')[0]
-                $encodedName = $dependency.Name -replace '/', '%2F'
-                if ($dependency.Name -notmatch '^@[^/]+/') { continue }
-                if ($dependency.Value -notmatch '^\d+\.\d+\.\d+') { continue }
-                if ($npmrcContent | Where-Object { $_ -like "$scope`:registry=*" }) { continue }
-                $tarballUrl = "$($npmSource.url.TrimEnd('/'))/$encodedName/-/$($dependency.Name.Split('/')[-1])-$($dependency.Value).tgz"
-                $isExisting = $true
-                try {
-                    $null = Invoke-WebRequest -Uri $tarballUrl -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
-                } catch {
-                    if ($_.Exception.Response -and $_.Exception.Response.StatusCode.value__ -eq 404) {
-                        $isExisting = $false
-                    }
-                }
-                if ($isExisting) {
-                    $npmrcContent.Add("$scope`:registry=$($npmSource.url.TrimEnd('/'))/")
-                }
-            }
         }
     }
     [System.IO.File]::WriteAllLines("$PSScriptRoot\.npmrc", $npmrcContent, [System.Text.UTF8Encoding]::new($false))
@@ -215,14 +159,14 @@ do {
     # 移除資料夾
     foreach ($directoryPath in './npm_caches', './node_modules') {
         if (Test-Path $directoryPath) {
-            Remove-Item -Path $directoryPath -Recurse -Force
+            #Remove-Item -Path $directoryPath -Recurse -Force
         }
     }
 
     # 移除檔案
     foreach ($fileName in '.npmrc') {
         if (Test-Path $fileName) {
-            Remove-Item $fileName -Force
+            #Remove-Item $fileName -Force
         }
     }
 
