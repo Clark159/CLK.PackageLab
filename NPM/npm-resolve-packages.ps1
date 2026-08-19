@@ -115,22 +115,25 @@ do {
     $addingList = [System.Collections.Generic.List[object]]::new()
     foreach ($package in $allList) {
         $encodedName = $package.name -replace '/', '%2F'
-        $distTagsUrl = "$($npmRepository.url.TrimEnd('/'))/-/package/$encodedName/dist-tags"
+        $metadataUrl = "$($npmRepository.url.TrimEnd('/'))/$encodedName"
         $isAdding = $true
 
         # 建立 versionList
         $versionList = @()
         try {
-            $response = Invoke-WebRequest -Uri $distTagsUrl -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
-            $distTags = $response.Content | ConvertFrom-Json
-            $versionList = @($distTags.PSObject.Properties.Value | Select-Object -Unique)
+            $response = Invoke-WebRequest -Uri $metadataUrl -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
+            $metadata = $response.Content | ConvertFrom-Json
+            if ($metadata.versions) {
+                $versionList = @($metadata.versions.PSObject.Properties.Name)
+                [array]::Reverse($versionList)
+            }
         } catch {
             $versionList = @()
         }
 
-        # 檢查 versionList        
+        # 檢查 versionList
+        $shortName = $package.name.Split('/')[-1]
         foreach ($version in $versionList) {
-            $shortName  = $package.name.Split('/')[-1]
             $tarballUrl = "$($npmRepository.url.TrimEnd('/'))/$encodedName/-/$shortName-$version.tgz"
             try {
                 $null = Invoke-WebRequest -Uri $tarballUrl -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
