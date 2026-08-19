@@ -6,7 +6,7 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 # ===== Variables =====
-$scriptVersion = '20260820-00'
+$scriptVersion = '20260820-01'
 $exitCode = 0
 $npmSourceList = @(
     @{ id = 'npmjs'; url = 'https://registry.npmjs.org/' }
@@ -47,7 +47,7 @@ do {
     Write-Host "-------------------------------------------------------------------------------"
     Write-Host
 
-    # 建立 .npmrc (npmSourceList:default-registry)
+    # 建立 .npmrc
     $npmrcContent = [System.Collections.Generic.List[string]]::new()
     $npmrcContent.Add("registry=$($npmSourceList[0].url.TrimEnd('/'))/")
     $npmrcContent.Add("cache=./npm_caches")
@@ -76,36 +76,25 @@ do {
     Write-Host "[INFO] ------------------------------------------------------------------------"
     Write-Host "[INFO] 已建立 package-lock.json"
 
-    # 讀取 package-lock.json
-    $lockJson = (Get-Content 'package-lock.json' -Encoding UTF8 -Raw) -replace '(?s)"packages"\s*:\s*\{\s*"":', '"packages":{"__root__":' | ConvertFrom-Json
-    if ($null -eq $lockJson) {
-        Write-Host "[ERROR] package-lock.json 解析失敗"
-        $exitCode = 1
-        break
-    }
-
     # 建立 package-all.txt
     $packageMap = @{}
-    foreach ($packageParts in $lockJson.packages.PSObject.Properties) {
-        if ($packageParts.Name -eq '') { continue }
-        $package = $packageParts.Value
-        if ($packageParts.Name -match 'node_modules/(@[^/]+/[^/]+|[^/]+)$') {
-            $name = $Matches[1]
-        } else {
-            continue
-        }
-        if ($package.name) {
-            $name = $package.name
-        }
-        $nameVersion = "$name@$($package.version)"
-        if (-not $packageMap.ContainsKey($nameVersion)) {
-            $packageMap[$nameVersion] = @{
-                name     = $name
-                version  = $package.version
-                resolved = $package.resolved
+    Get-ChildItem -Path './node_modules' -Recurse -Filter 'package.json' -File |
+        Where-Object { $_.FullName -match '[\\/]node_modules[\\/](@[^\\/]+[\\/][^\\/]+|[^\\/]+)[\\/]package\.json$' } |
+        ForEach-Object {
+            try {
+                $package = Get-Content $_.FullName -Encoding UTF8 -Raw | ConvertFrom-Json
+            } catch {
+                return
+            }
+            if (-not $package.name -or -not $package.version) { return }
+            $nameVersion = "$($package.name)@$($package.version)"
+            if (-not $packageMap.ContainsKey($nameVersion)) {
+                $packageMap[$nameVersion] = @{
+                    name    = $package.name
+                    version = $package.version
+                }
             }
         }
-    }
     $allList = @($packageMap.Values | Sort-Object { $_.name })
     $packageContent = $allList | ForEach-Object { "$($_.name)@$($_.version)" }
     Set-Content 'package-all.txt' -Value $packageContent -Encoding UTF8
