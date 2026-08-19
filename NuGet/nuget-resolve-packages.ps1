@@ -171,13 +171,7 @@ do {
         try {
             $null = Invoke-WebRequest -Uri $packageUrl -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
             $isAdding = $false
-        } catch {
-            if ($_.Exception.Response -and $_.Exception.Response.StatusCode.value__ -eq 404) {
-                $isAdding = $true
-            } else {
-                $isAdding = $false
-            }
-        }
+        } catch { }
         if ($isAdding) {
             $addingList.Add($package)
         }
@@ -185,13 +179,13 @@ do {
     Set-Content 'package-adding.txt' -Value ($addingList | ForEach-Object { "$($_.name) $($_.version)" }) -Encoding UTF8
     Write-Host "[INFO] 已建立 package-adding.txt"
 
-    # 建立 package-updating.txt (已列在 package-adding.txt 的套件本來就不存在，不重複列入)
+    # 建立 package-updating.txt 
     $updatingList = [System.Collections.Generic.List[string]]::new()
     foreach ($package in $allList) {
         $packageId      = $package.name.ToLower()
         $packageVersion = $package.version.ToLower()
         $packageUrl     = $null
-        $isUpdating     = $false
+        $isUpdating     = $true
         switch ($resourceMode) {
             'flat'         { $packageUrl = "$packageBaseUrl/$packageId/$packageVersion/$packageId.$packageVersion.nupkg" }
             'registration' { $packageUrl = "$packageBaseUrl/$packageId/$packageVersion.json" }
@@ -203,11 +197,8 @@ do {
         }
         try {
             $null = Invoke-WebRequest -Uri $packageUrl -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
-        } catch {
-            if ($_.Exception.Response -and $_.Exception.Response.StatusCode.value__ -eq 404) {
-                $isUpdating = $true
-            }
-        }
+            $isUpdating = $false
+        } catch { }
         $isAdding = $addingList | Where-Object { $_.name -eq $package.name }
         if ($isUpdating -and -not $isAdding) {
             $updatingList.Add("$($package.name) $($package.version)")
