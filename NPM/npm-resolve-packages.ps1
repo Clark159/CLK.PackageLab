@@ -6,7 +6,7 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 # ===== Variables =====
-$scriptVersion = '20260820-01'
+$scriptVersion = '20260816-00'
 $exitCode = 0
 $npmSourceList = @(
     @{ id = 'npmjs'; url = 'https://registry.npmjs.org/' }
@@ -40,6 +40,23 @@ do {
         }
     }
 
+    # 整併 npmRepository 至 npmSourceList
+    if (-not ($npmSourceList | Where-Object { $_.url -eq $npmRepository.url })) {
+
+        # npmSourceId
+        $suffix = 2
+        $npmSourceId = $npmRepository.id
+        while ($npmSourceList | Where-Object { $_.id -eq $npmSourceId }) {
+            $npmSourceId = "$($npmRepository.id)$suffix"
+            $suffix++
+        }
+
+        # npmSource
+        $npmSource = $npmRepository.Clone()
+        $npmSource.id = $npmSourceId
+        $npmSourceList += $npmSource
+    }
+
 
     # ===== Execute =====
     Write-Host "-------------------------------------------------------------------------------"
@@ -47,7 +64,21 @@ do {
     Write-Host "-------------------------------------------------------------------------------"
     Write-Host
 
-    # 建立 .npmrc
+    # 讀取 package.json
+    $packageJson = (Get-Content 'package.json' -Encoding UTF8 -Raw) | ConvertFrom-Json
+    if ($null -eq $packageJson) {
+        Write-Host "[ERROR] package.json 解析失敗"
+        $exitCode = 1
+        break
+    }
+    $dependencyList = [System.Collections.Generic.List[object]]::new()
+    foreach ($dependencyType in 'dependencies', 'devDependencies', 'optionalDependencies', 'peerDependencies') {
+        if ($packageJson.$dependencyType) {
+            $dependencyList.AddRange(@($packageJson.$dependencyType.PSObject.Properties))
+        }
+    }
+
+    # 建立 .npmrc (npmSourceList:default-registry)
     $npmrcContent = [System.Collections.Generic.List[string]]::new()
     $npmrcContent.Add("registry=$($npmSourceList[0].url.TrimEnd('/'))/")
     $npmrcContent.Add("cache=./npm_caches")
@@ -62,10 +93,35 @@ do {
             $npmrcContent.Add("$authUrl/:always-auth=true")
         }
     }
+
+    # 建立 .npmrc (npmSourceList:scope-registry)
+    if ($npmSourceList.Count -gt 1) {
+        foreach ($npmSource in $npmSourceList) {
+            foreach ($dependency in $dependencyList) {
+                $scope = ($dependency.Name -split '/')[0]
+                $encodedName = $dependency.Name -replace '/', '%2F'
+                if ($dependency.Name -notmatch '^@[^/]+/') { continue }
+                if ($dependency.Value -notmatch '^\d+\.\d+\.\d+') { continue }
+                if ($npmrcContent | Where-Object { $_ -like "$scope`:registry=*" }) { continue }
+                $tarballUrl = "$($npmSource.url.TrimEnd('/'))/$encodedName/-/$($dependency.Name.Split('/')[-1])-$($dependency.Value).tgz"
+                $isExisting = $true
+                try {
+                    $null = Invoke-WebRequest -Uri $tarballUrl -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
+                } catch {
+                    if ($_.Exception.Response -and $_.Exception.Response.StatusCode.value__ -eq 404) {
+                        $isExisting = $false
+                    }
+                }
+                if ($isExisting) {
+                    $npmrcContent.Add("$scope`:registry=$($npmSource.url.TrimEnd('/'))/")
+                }
+            }
+        }
+    }
     [System.IO.File]::WriteAllLines("$PSScriptRoot\.npmrc", $npmrcContent, [System.Text.UTF8Encoding]::new($false))
 
     # 建立 package-lock.json
-    & npm install --ignore-scripts --no-audit
+    & npm install --package-lock-only --ignore-scripts --no-audit --legacy-peer-deps
     if ($LASTEXITCODE -ne 0) {
         Write-Host "[ERROR] npm install 執行失敗 (npmSourceList)"
         $exitCode = 1
@@ -76,25 +132,36 @@ do {
     Write-Host "[INFO] ------------------------------------------------------------------------"
     Write-Host "[INFO] 已建立 package-lock.json"
 
+    # 讀取 package-lock.json
+    $lockJson = (Get-Content 'package-lock.json' -Encoding UTF8 -Raw) -replace '(?s)"packages"\s*:\s*\{\s*"":', '"packages":{"__root__":' | ConvertFrom-Json
+    if ($null -eq $lockJson) {
+        Write-Host "[ERROR] package-lock.json 解析失敗"
+        $exitCode = 1
+        break
+    }
+
     # 建立 package-all.txt
     $packageMap = @{}
-    Get-ChildItem -Path './node_modules' -Recurse -Filter 'package.json' -File |
-        Where-Object { $_.FullName -match '[\\/]node_modules[\\/](@[^\\/]+[\\/][^\\/]+|[^\\/]+)[\\/]package\.json$' } |
-        ForEach-Object {
-            try {
-                $package = Get-Content $_.FullName -Encoding UTF8 -Raw | ConvertFrom-Json
-            } catch {
-                return
-            }
-            if (-not $package.name -or -not $package.version) { return }
-            $nameVersion = "$($package.name)@$($package.version)"
-            if (-not $packageMap.ContainsKey($nameVersion)) {
-                $packageMap[$nameVersion] = @{
-                    name    = $package.name
-                    version = $package.version
-                }
+    foreach ($packageParts in $lockJson.packages.PSObject.Properties) {
+        if ($packageParts.Name -eq '') { continue }
+        $package = $packageParts.Value
+        if ($packageParts.Name -match 'node_modules/(@[^/]+/[^/]+|[^/]+)$') {
+            $name = $Matches[1]
+        } else {
+            continue
+        }
+        if ($package.name) {
+            $name = $package.name
+        }
+        $nameVersion = "$name@$($package.version)"
+        if (-not $packageMap.ContainsKey($nameVersion)) {
+            $packageMap[$nameVersion] = @{
+                name     = $name
+                version  = $package.version
+                resolved = $package.resolved
             }
         }
+    }
     $allList = @($packageMap.Values | Sort-Object { $_.name })
     $packageContent = $allList | ForEach-Object { "$($_.name)@$($_.version)" }
     Set-Content 'package-all.txt' -Value $packageContent -Encoding UTF8
