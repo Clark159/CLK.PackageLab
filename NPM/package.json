@@ -7,8 +7,7 @@
     "@isaacs/cliui": "8.0.2"
   },
   "devDependencies": {
-    "typescript": "7.0.2",
-    "react": "19.2.8"
+    "@module-federation/vite": "1.20.7"
   },
   "optionalDependencies": {
     "picocolors": "1.1.1"
