@@ -6,12 +6,13 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 # ===== Variables =====
-$scriptVersion = '20260820-00'
+$scriptVersion = '20260829-00'
 $exitCode = 0
 $nugetSourceList = @(
     @{ id = 'nuget.org'; url = 'https://api.nuget.org/v3/index.json' }
 )
 $nugetRepository = @{ id = 'nuget.org'; url = 'https://api.nuget.org/v3/index.json' }
+
 do {
 
 
@@ -108,9 +109,22 @@ do {
     }           
     $allList = @(Get-ChildItem -Path './nuget_caches' -Filter '*.nuspec' -File -Recurse -ErrorAction SilentlyContinue | ForEach-Object {
         [xml]$nuspecXml = Get-Content $_.FullName -Encoding UTF8
+        $versionParts   = $nuspecXml.package.metadata.version.Split('-', 2)
+        $versionLabel   = $versionParts[0]
+        $versionRelease = $versionParts[1]
+        $versionSegments = @($versionLabel.Split('.'))
+        if ($versionSegments.Count -lt 3) {
+            $versionSegments = $versionSegments + (@('0') * (3 - $versionSegments.Count))
+        } elseif ($versionSegments.Count -eq 4 -and $versionSegments[3] -eq '0') {
+            $versionSegments = $versionSegments[0..2]
+        }
+        $versionLabel = $versionSegments -join '.'
+        if ($versionRelease) {
+            $versionLabel = "$versionLabel-$versionRelease"
+        }
         [PSCustomObject]@{
             name    = $nuspecXml.package.metadata.id
-            version = $nuspecXml.package.metadata.version
+            version = $versionLabel
         }
     } | Where-Object { $_.name -and $_.version } | Sort-Object -Property name, version -Unique)
     Set-Content 'package-all.txt' -Value ($allList | ForEach-Object { "$($_.name) $($_.version)" }) -Encoding UTF8
