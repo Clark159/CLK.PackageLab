@@ -106,30 +106,18 @@ do {
         $exitCode = 1
         break
     }    
-    Write-Host
-    Write-Host
-    Write-Host "[INFO] ------------------------------------------------------------------------"
-    
-    $packageMap = @{}
-    $nuspecFileList = Get-ChildItem -Path './nuget_caches' -Filter '*.nuspec' -File -Recurse -ErrorAction SilentlyContinue
-    foreach ($nuspecFile in $nuspecFileList) {
-        [xml]$nuspecXml = Get-Content $nuspecFile.FullName -Encoding UTF8
-        $name    = $nuspecXml.package.metadata.id
-        $version = $nuspecXml.package.metadata.version
-        if ($name -and $version) {
-            $nameVersion = "$name $version"
-            if (-not $packageMap.ContainsKey($nameVersion)) {
-                $packageMap[$nameVersion] = @{
-                    name    = $name
-                    version = $version
-                }
-            }
+       
+    $allList = @(Get-ChildItem -Path './nuget_caches' -Filter '*.nuspec' -File -Recurse -ErrorAction SilentlyContinue | ForEach-Object {
+        [xml]$nuspecXml = Get-Content $_.FullName -Encoding UTF8
+        [PSCustomObject]@{
+            name    = $nuspecXml.package.metadata.id
+            version = $nuspecXml.package.metadata.version
         }
-    }
-    
-    $allList        = @($packageMap.Values | Sort-Object { $_.name })
-    $packageContent = $allList | ForEach-Object { "$($_.name) $($_.version)" }
-    Set-Content 'package-all.txt' -Value $packageContent -Encoding UTF8
+    } | Where-Object { $_.name -and $_.version } | Sort-Object -Property name, version -Unique)
+    Set-Content 'package-all.txt' -Value ($allList | ForEach-Object { "$($_.name) $($_.version)" }) -Encoding UTF8
+    Write-Host
+    Write-Host 
+    Write-Host "[INFO] ------------------------------------------------------------------------"
     Write-Host "[INFO] 已建立 package-all.txt"
 
     # 取得 packageBaseUrl 
