@@ -94,7 +94,7 @@ do {
     $nugetConfigContent.Add('</configuration>')
     Set-Content 'nuget.config' -Value $nugetConfigContent -Encoding UTF8
 
-    # 建立 package-all.txt (專案依賴)
+    # 建立 package-all.txt
     & nuget restore `
         $csprojFile.FullName `
         "-ConfigFile" "nuget.config" `
@@ -105,8 +105,7 @@ do {
         Write-Host "[ERROR] nuget restore 執行失敗 (nugetSourceList)"
         $exitCode = 1
         break
-    }    
-       
+    }           
     $allList = @(Get-ChildItem -Path './nuget_caches' -Filter '*.nuspec' -File -Recurse -ErrorAction SilentlyContinue | ForEach-Object {
         [xml]$nuspecXml = Get-Content $_.FullName -Encoding UTF8
         [PSCustomObject]@{
@@ -122,7 +121,7 @@ do {
 
     # 取得 packageBaseUrl 
     $packageBaseUrl = $null
-    $resourceMode    = $null
+    $resourceMode   = $null
     try {
         $serviceIndex = Invoke-RestMethod -Uri $nugetRepository.url -Method Get -TimeoutSec 15 -ErrorAction Stop
         if (-not $packageBaseUrl) {
