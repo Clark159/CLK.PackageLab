@@ -88,52 +88,45 @@ do {
         }
     }
     $nugetConfigContent.Add('    </packageSourceCredentials>')
+    $nugetConfigContent.Add('    <config>')
+    $nugetConfigContent.Add('        <add key="PackageSaveMode" value="nuspec;nupkg" />')
+    $nugetConfigContent.Add('    </config>')
     $nugetConfigContent.Add('</configuration>')
     Set-Content 'nuget.config' -Value $nugetConfigContent -Encoding UTF8
 
-    # 建立 package-lock.json
-    & dotnet restore `
+    # 建立 package-all.txt (專案依賴)
+    & nuget restore `
         $csprojFile.FullName `
-        "--use-lock-file" `
-        "--lock-file-path" "package-lock.json" `
-        "--configfile" "nuget.config" `
-        "--packages" "./nuget_caches" `
-        "--no-http-cache"
+        "-ConfigFile" "nuget.config" `
+        "-PackagesDirectory" "./nuget_caches" `
+        "-NoHttpCache" `
+        "-NonInteractive"
     if ($LASTEXITCODE -ne 0) {
-        Write-Host "[ERROR] dotnet restore 執行失敗 (nugetSourceList)"
+        Write-Host "[ERROR] nuget restore 執行失敗 (nugetSourceList)"
         $exitCode = 1
         break
-    }
+    }    
     Write-Host
     Write-Host
     Write-Host "[INFO] ------------------------------------------------------------------------"
-    Write-Host "[INFO] 已建立 package-lock.json"
-
-    # 讀取 package-lock.json
-    $lockJson = Get-Content 'package-lock.json' -Encoding UTF8 -Raw | ConvertFrom-Json
-    if ($null -eq $lockJson) {
-        Write-Host "[ERROR] package-lock.json 解析失敗"
-        $exitCode = 1
-        break
-    }
-
-    # 建立 package-all.txt
+    
     $packageMap = @{}
-    foreach ($frameworkProperty in $lockJson.dependencies.PSObject.Properties) {
-        foreach ($packageProperty in $frameworkProperty.Value.PSObject.Properties) {
-            $name    = $packageProperty.Name
-            $version = $packageProperty.Value.resolved
-            if ($name -and $version) {
-                $nameVersion = "$name $version"
-                if (-not $packageMap.ContainsKey($nameVersion)) {
-                    $packageMap[$nameVersion] = @{
-                        name    = $name
-                        version = $version
-                    }
+    $nuspecFileList = Get-ChildItem -Path './nuget_caches' -Filter '*.nuspec' -File -Recurse -ErrorAction SilentlyContinue
+    foreach ($nuspecFile in $nuspecFileList) {
+        [xml]$nuspecXml = Get-Content $nuspecFile.FullName -Encoding UTF8
+        $name    = $nuspecXml.package.metadata.id
+        $version = $nuspecXml.package.metadata.version
+        if ($name -and $version) {
+            $nameVersion = "$name $version"
+            if (-not $packageMap.ContainsKey($nameVersion)) {
+                $packageMap[$nameVersion] = @{
+                    name    = $name
+                    version = $version
                 }
             }
         }
     }
+    
     $allList        = @($packageMap.Values | Sort-Object { $_.name })
     $packageContent = $allList | ForEach-Object { "$($_.name) $($_.version)" }
     Set-Content 'package-all.txt' -Value $packageContent -Encoding UTF8
