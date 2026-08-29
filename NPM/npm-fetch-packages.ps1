@@ -6,7 +6,7 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 # ===== Variables =====
-$scriptVersion = '20260820-00'
+$scriptVersion = '20260829-00'
 $exitCode = 0
 $npmSourceList  = @(
     @{ id = 'npmjs'; url = 'https://registry.npmjs.org/'; username = ''; token = '' }
