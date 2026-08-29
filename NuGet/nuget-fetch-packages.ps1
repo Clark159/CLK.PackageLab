@@ -34,16 +34,9 @@ do {
     }
 
     # 移除資料夾
-    foreach ($directoryPath in './nuget_caches', './obj', './packages') {
+    foreach ($directoryPath in './packages', './obj') {
         if (Test-Path $directoryPath) {
             Remove-Item -Path $directoryPath -Recurse -Force
-        }
-    }
-
-    # 移除檔案
-    foreach ($fileName in 'nuget.config') {
-        if (Test-Path $fileName) {
-            Remove-Item $fileName -Force
         }
     }
 
@@ -59,31 +52,32 @@ do {
         $_.Trim() -ne ''
     }
 
-    # 下載目標套件 (nugetRepository)
-    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    # 下載目標套件 (nugetRepository)    
     $nugetRepository.headers = @{}
     if ($nugetRepository.token) {
         $username  = if ($nugetRepository.username) { $nugetRepository.username } else { 'PAT' }
         $authBytes = [System.Text.Encoding]::ASCII.GetBytes("$username`:$($nugetRepository.token)")
         $nugetRepository.headers = @{ Authorization = "Basic $([Convert]::ToBase64String($authBytes))" }
     }
+
     $nugetRepository.packageBaseUrl = $null
     try {
         $serviceIndex = Invoke-RestMethod -Uri $nugetRepository.url -Method Get -Headers $nugetRepository.headers -TimeoutSec 15 -ErrorAction Stop
         $nugetRepository.packageBaseUrl = (($serviceIndex.resources | Where-Object { $_.'@type' -like 'PackageBaseAddress/*' } | Select-Object -First 1).'@id') -replace '/$', ''
     } catch { }
-    New-Item -ItemType Directory -Force './nuget_caches' | Out-Null
+
+    $missingList = @()
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    New-Item -ItemType Directory -Force './packages' | Out-Null
     foreach ($package in $packageList) {
         $packageParts = $package -split '\s+'
         if ($packageParts.Count -ge 2) {
             $packageId           = $packageParts[0]
-            $packageIdLower      = $packageId.ToLower()
             $packageVersion      = $packageParts[1]
-            $packageVersionLower = $packageVersion.ToLower()
-            $packagePath         = "./nuget_caches/$packageId.$packageVersion"
-            $packageFile         = "./nuget_caches/$packageId.$packageVersion.nupkg"
+            $packagePath         = "./packages/$packageId.$packageVersion"
+            $packageFile         = "./packages/$packageId.$packageVersion.nupkg"
             if ($nugetRepository.packageBaseUrl) {
-                $packageUrl = "$($nugetRepository.packageBaseUrl)/$packageIdLower/$packageVersionLower/$packageIdLower.$packageVersionLower.nupkg"
+                $packageUrl = "$($nugetRepository.packageBaseUrl)/$($packageId.ToLower())/$($packageVersion.ToLower())/$($packageId.ToLower()).$($packageVersion.ToLower()).nupkg"
                 try {
                     Invoke-WebRequest -Uri $packageUrl -Headers $nugetRepository.headers -OutFile $packageFile -UseBasicParsing -TimeoutSec 60 -ErrorAction Stop
                     if (Test-Path $packagePath) {
@@ -94,21 +88,7 @@ do {
                     Remove-Item $packageFile -Force
                 } catch { }
             }
-        }
-    }
-
-    # 複製目標套件
-    $missingList = @()
-    New-Item -ItemType Directory -Force './packages' | Out-Null
-    foreach ($package in $packageList) {
-        $packageParts = $package -split '\s+'
-        if ($packageParts.Count -ge 2) {
-            $packageId      = $packageParts[0]
-            $packageVersion = $packageParts[1]
-            $packagePath    = "./nuget_caches/$packageId.$packageVersion"
-            if (Test-Path $packagePath) {
-                Copy-Item -Path $packagePath -Destination "./packages/$packageId.$packageVersion" -Recurse -Force
-            } else {
+            if (-not (Test-Path $packagePath)) {
                 $missingList += $package
             }
         }
@@ -134,16 +114,9 @@ do {
     }
 
     # 移除資料夾
-    foreach ($directoryPath in './nuget_caches', './obj') {
+    foreach ($directoryPath in './obj') {
         if (Test-Path $directoryPath) {
             Remove-Item -Path $directoryPath -Recurse -Force
-        }
-    }
-
-    # 移除檔案
-    foreach ($fileName in 'nuget.config') {
-        if (Test-Path $fileName) {
-            Remove-Item $fileName -Force
         }
     }
 
