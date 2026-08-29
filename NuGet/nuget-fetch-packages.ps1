@@ -76,11 +76,12 @@ do {
     foreach ($package in $packageList) {
         $packageParts = $package -split '\s+'
         if ($packageParts.Count -ge 2) {
-            $packageIdLower      = $packageParts[0].ToLower()
+            $packageId           = $packageParts[0]
+            $packageIdLower      = $packageId.ToLower()
             $packageVersion      = $packageParts[1]
             $packageVersionLower = $packageVersion.ToLower()
-            $packagePath         = "./nuget_caches/$packageIdLower/$packageVersion"
-            $packageFile         = "./nuget_caches/$packageIdLower.$packageVersion.nupkg"
+            $packagePath         = "./nuget_caches/$packageId.$packageVersion"
+            $packageFile         = "./nuget_caches/$packageId.$packageVersion.nupkg"
             if ($nugetRepository.packageBaseUrl) {
                 $packageUrl = "$($nugetRepository.packageBaseUrl)/$packageIdLower/$packageVersionLower/$packageIdLower.$packageVersionLower.nupkg"
                 try {
@@ -98,16 +99,15 @@ do {
 
     # 複製目標套件
     $missingList = @()
+    New-Item -ItemType Directory -Force './packages' | Out-Null
     foreach ($package in $packageList) {
         $packageParts = $package -split '\s+'
         if ($packageParts.Count -ge 2) {
-            $packageIdLower = $packageParts[0].ToLower()
+            $packageId      = $packageParts[0]
             $packageVersion = $packageParts[1]
-            $packagePath    = "./nuget_caches/$packageIdLower/$packageVersion"
+            $packagePath    = "./nuget_caches/$packageId.$packageVersion"
             if (Test-Path $packagePath) {
-                $destinationDirectory = "./packages/$packageIdLower"
-                New-Item -ItemType Directory -Force $destinationDirectory | Out-Null
-                Copy-Item -Path $packagePath -Destination $destinationDirectory -Recurse -Force
+                Copy-Item -Path $packagePath -Destination "./packages/$packageId.$packageVersion" -Recurse -Force
             } else {
                 $missingList += $package
             }
