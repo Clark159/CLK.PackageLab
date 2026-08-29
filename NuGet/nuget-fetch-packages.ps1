@@ -72,6 +72,7 @@ do {
         $serviceIndex = Invoke-RestMethod -Uri $nugetRepository.url -Method Get -Headers $nugetRepository.headers -TimeoutSec 15 -ErrorAction Stop
         $nugetRepository.packageBaseUrl = (($serviceIndex.resources | Where-Object { $_.'@type' -like 'PackageBaseAddress/*' } | Select-Object -First 1).'@id') -replace '/$', ''
     } catch { }
+    New-Item -ItemType Directory -Force './nuget_caches' | Out-Null
     foreach ($package in $packageList) {
         $packageParts = $package -split '\s+'
         if ($packageParts.Count -ge 2) {
