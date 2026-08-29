@@ -6,9 +6,8 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 # ===== Variables =====
-$scriptVersion = '20260820-00'
+$scriptVersion = '20260829-00'
 $exitCode = 0
-$targetFramework = 'net8.0'
 $nugetSourceList = @(
     @{ id = 'nuget.org'; url = 'https://api.nuget.org/v3/index.json'; username = ''; token = '' }
 )
@@ -60,103 +59,40 @@ do {
         $_.Trim() -ne ''
     }
 
-    # 產生 package.csproj
-    $csprojContent = [System.Collections.Generic.List[string]]::new()
-    $csprojContent.Add('<Project Sdk="Microsoft.NET.Sdk">')
-    $csprojContent.Add('    <PropertyGroup>')
-    $csprojContent.Add("        <TargetFramework>$targetFramework</TargetFramework>")
-    $csprojContent.Add('    </PropertyGroup>')
-    $csprojContent.Add('    <ItemGroup>')
+    # 下載目標套件 (nugetRepository)
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    $nugetRepository.headers = @{}
+    if ($nugetRepository.token) {
+        $username  = if ($nugetRepository.username) { $nugetRepository.username } else { 'PAT' }
+        $authBytes = [System.Text.Encoding]::ASCII.GetBytes("$username`:$($nugetRepository.token)")
+        $nugetRepository.headers = @{ Authorization = "Basic $([Convert]::ToBase64String($authBytes))" }
+    }
+    $nugetRepository.packageBaseUrl = $null
+    try {
+        $serviceIndex = Invoke-RestMethod -Uri $nugetRepository.url -Method Get -Headers $nugetRepository.headers -TimeoutSec 15 -ErrorAction Stop
+        $nugetRepository.packageBaseUrl = (($serviceIndex.resources | Where-Object { $_.'@type' -like 'PackageBaseAddress/*' } | Select-Object -First 1).'@id') -replace '/$', ''
+    } catch { }
     foreach ($package in $packageList) {
         $packageParts = $package -split '\s+'
         if ($packageParts.Count -ge 2) {
-            $csprojContent.Add("        <PackageReference Include=""$($packageParts[0])"" Version=""$($packageParts[1])"" />")
-        }
-    }
-    $csprojContent.Add('    </ItemGroup>')
-    $csprojContent.Add('</Project>')
-    Set-Content 'package.csproj' -Value $csprojContent -Encoding UTF8
-    
-    # 建立 nuget.config (nugetSourceList)
-    $nugetConfigContent = [System.Collections.Generic.List[string]]::new()
-    $nugetConfigContent.Add('<?xml version="1.0" encoding="utf-8"?>')
-    $nugetConfigContent.Add('<configuration>')
-    $nugetConfigContent.Add('    <packageSources>')
-    $nugetConfigContent.Add('        <clear />')
-    foreach ($nugetSource in $nugetSourceList) {
-        $nugetConfigContent.Add("        <add key=""$($nugetSource.id)"" value=""$($nugetSource.url)"" />")
-    }
-    $nugetConfigContent.Add('    </packageSources>')
-    $nugetConfigContent.Add('    <packageSourceCredentials>')
-    foreach ($nugetSource in $nugetSourceList) {
-        if ($nugetSource.token) {
-            $nugetConfigContent.Add("        <$($nugetSource.id)>")
-            $nugetConfigContent.Add("            <add key=""Username"" value=""PAT"" />")
-            $nugetConfigContent.Add("            <add key=""ClearTextPassword"" value=""$($nugetSource.token)"" />")
-            $nugetConfigContent.Add("        </$($nugetSource.id)>")
-        }
-    }
-    $nugetConfigContent.Add('    </packageSourceCredentials>')
-    $nugetConfigContent.Add('</configuration>')
-    Set-Content 'nuget.config' -Value $nugetConfigContent -Encoding UTF8
-   
-    # 下載目標套件 (nugetSourceList)
-    & nuget restore `
-        "package.csproj" `
-        "-ConfigFile" "nuget.config" `
-        "-PackagesDirectory" "./nuget_caches" `
-        "-NoHttpCache" `
-        "-NonInteractive"
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "[ERROR] nuget restore 執行失敗 (nugetSourceList)"
-        $exitCode = 1
-        break
-    }
-
-    # 刪除目標套件
-    foreach ($package in $packageList) {
-        $packageParts = $package -split '\s+'
-        if ($packageParts.Count -ge 2) {
-            $packageIdLower = $packageParts[0].ToLower()
-            $packageVersion = $packageParts[1]
-            $packagePath    = "./nuget_caches/$packageIdLower/$packageVersion"
-            if (Test-Path $packagePath) {
-                Remove-Item -Path $packagePath -Recurse -Force
+            $packageIdLower      = $packageParts[0].ToLower()
+            $packageVersion      = $packageParts[1]
+            $packageVersionLower = $packageVersion.ToLower()
+            $packagePath         = "./nuget_caches/$packageIdLower/$packageVersion"
+            $packageFile         = "./nuget_caches/$packageIdLower.$packageVersion.nupkg"
+            if ($nugetRepository.packageBaseUrl) {
+                $packageUrl = "$($nugetRepository.packageBaseUrl)/$packageIdLower/$packageVersionLower/$packageIdLower.$packageVersionLower.nupkg"
+                try {
+                    Invoke-WebRequest -Uri $packageUrl -Headers $nugetRepository.headers -OutFile $packageFile -UseBasicParsing -TimeoutSec 60 -ErrorAction Stop
+                    if (Test-Path $packagePath) {
+                        Remove-Item -Path $packagePath -Recurse -Force
+                    }
+                    New-Item -ItemType Directory -Force $packagePath | Out-Null
+                    [System.IO.Compression.ZipFile]::ExtractToDirectory($packageFile, $packagePath)
+                    Remove-Item $packageFile -Force
+                } catch { }
             }
         }
-    }
-
-    # 建立 nuget.config (nugetRepository)
-    $nugetConfigContent = [System.Collections.Generic.List[string]]::new()
-    $nugetConfigContent.Add('<?xml version="1.0" encoding="utf-8"?>')
-    $nugetConfigContent.Add('<configuration>')
-    $nugetConfigContent.Add('    <packageSources>')
-    $nugetConfigContent.Add('        <clear />')
-    $nugetConfigContent.Add("        <add key=""$($nugetRepository.id)"" value=""$($nugetRepository.url)"" />")
-    $nugetConfigContent.Add('    </packageSources>')
-    $nugetConfigContent.Add('    <packageSourceCredentials>')
-    if ($nugetRepository.token) {
-        $nugetConfigContent.Add("        <$($nugetRepository.id)>")
-        $nugetConfigContent.Add("            <add key=""Username"" value=""PAT"" />")
-        $nugetConfigContent.Add("            <add key=""ClearTextPassword"" value=""$($nugetRepository.token)"" />")
-        $nugetConfigContent.Add("        </$($nugetRepository.id)>")
-    }
-    $nugetConfigContent.Add('    </packageSourceCredentials>')
-    $nugetConfigContent.Add('</configuration>')
-    Set-Content 'nuget.config' -Value $nugetConfigContent -Encoding UTF8    
-
-    # 下載目標套件 (nugetRepository)
-    & nuget restore `
-        "package.csproj" `
-        "-ConfigFile" "nuget.config" `
-        "-PackagesDirectory" "./nuget_caches" `
-        "-Force" `
-        "-NoHttpCache" `
-        "-NonInteractive"
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "[ERROR] nuget restore 執行失敗 (nugetRepository)"
-        $exitCode = 1
-        break
     }
 
     # 複製目標套件
