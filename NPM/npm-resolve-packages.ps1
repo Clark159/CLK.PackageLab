@@ -121,8 +121,8 @@ do {
         # 建立 versionList
         $versionList = @()
         try {
-            $response = Invoke-WebRequest -Uri $metadataUrl -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
-            $metadata = $response.Content | ConvertFrom-Json
+            $response = Invoke-WebRequest -Uri $metadataUrl -Headers @{ Accept = 'application/vnd.npm.install-v1+json' } -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
+            $metadata = $(if ($response.Content -is [byte[]]) { [System.Text.Encoding]::UTF8.GetString($response.Content) } else { $response.Content }) | ConvertFrom-Json
             if ($metadata.versions) {
                 $versionList = @($metadata.versions.PSObject.Properties.Name)
                 [array]::Reverse($versionList)
