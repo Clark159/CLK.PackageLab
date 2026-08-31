@@ -6,7 +6,7 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 # ===== Variables =====
-$scriptVersion = '20260829-00'
+$scriptVersion = '20260831-00'
 $exitCode = 0
 $nugetSourceList = @(
     @{ id = 'nuget.org'; url = 'https://api.nuget.org/v3/index.json'; username = ''; token = '' }
@@ -30,7 +30,7 @@ do {
     # 檢查資料夾
     $folderName = Split-Path $PSScriptRoot -Leaf
     if ($folderName -match '^\d{12}-\d{2}$') {
-        $nugetRepository.url = $nugetRepository.url -replace '(?<=/)(index\.json)$', "$folderName/`$1"
+        $nugetRepository.url = $nugetRepository.url -replace '[^/]+/index\.json$', "$folderName/index.json"
     }
 
     # 移除資料夾
