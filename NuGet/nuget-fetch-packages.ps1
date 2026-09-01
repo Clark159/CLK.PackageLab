@@ -6,7 +6,7 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 # ===== Variables =====
-$scriptVersion = '20260831-00'
+$scriptVersion = '20260831-01'
 $exitCode = 0
 $nugetSourceList = @(
     @{ id = 'nuget.org'; url = 'https://api.nuget.org/v3/index.json'; username = ''; token = '' }
@@ -61,9 +61,11 @@ do {
     }
 
     $nugetRepository.packageBaseUrl = $null
+    $nugetRepository.registrationBaseUrl = $null
     try {
         $serviceIndex = Invoke-RestMethod -Uri $nugetRepository.url -Method Get -Headers $nugetRepository.headers -TimeoutSec 15 -ErrorAction Stop
         $nugetRepository.packageBaseUrl = (($serviceIndex.resources | Where-Object { $_.'@type' -like 'PackageBaseAddress/*' } | Select-Object -First 1).'@id') -replace '/$', ''
+        $nugetRepository.registrationBaseUrl = (($serviceIndex.resources | Where-Object { $_.'@type' -like 'RegistrationsBaseUrl*' } | Select-Object -First 1).'@id') -replace '/$', ''
     } catch { }
 
     $missingList = @()
@@ -76,18 +78,37 @@ do {
             $packageVersion      = $packageParts[1]
             $packagePath         = "./packages/$packageId.$packageVersion"
             $packageFile         = "./packages/$packageId.$packageVersion.nupkg"
-            if ($nugetRepository.packageBaseUrl) {
-                $packageUrl = "$($nugetRepository.packageBaseUrl)/$($packageId.ToLower())/$($packageVersion.ToLower())/$($packageId.ToLower()).$($packageVersion.ToLower()).nupkg"
+
+            $packageUrl = $null
+            if (-not $packageUrl -and $nugetRepository.registrationBaseUrl) {
                 try {
-                    Invoke-WebRequest -Uri $packageUrl -Headers $nugetRepository.headers -OutFile $packageFile -UseBasicParsing -TimeoutSec 60 -ErrorAction Stop
-                    if (Test-Path $packagePath) {
-                        Remove-Item -Path $packagePath -Recurse -Force
+                    $registrationIndex = Invoke-RestMethod -Uri "$($nugetRepository.registrationBaseUrl)/$($packageId.ToLower())/index.json" -Headers $nugetRepository.headers -TimeoutSec 15 -ErrorAction Stop
+                    foreach ($page in $registrationIndex.items) {
+                        $items = $page.items
+                        if (-not $items -and $page.'@id') {
+                            $items = (Invoke-RestMethod -Uri $page.'@id' -Headers $nugetRepository.headers -TimeoutSec 15 -ErrorAction Stop).items
+                        }
+                        $match = $items | Where-Object { $_.catalogEntry.version -eq $packageVersion } | Select-Object -First 1
+                        if ($match) {
+                            $packageUrl = $match.catalogEntry.packageContent
+                            break
+                        }
                     }
-                    New-Item -ItemType Directory -Force $packagePath | Out-Null
-                    [System.IO.Compression.ZipFile]::ExtractToDirectory($packageFile, $packagePath)
-                    Remove-Item $packageFile -Force
                 } catch { }
             }
+            if (-not $packageUrl -and $nugetRepository.packageBaseUrl) {
+                $packageUrl = "$($nugetRepository.packageBaseUrl)/$($packageId.ToLower())/$($packageVersion.ToLower())/$($packageId.ToLower()).$($packageVersion.ToLower()).nupkg"
+            }
+
+            try {
+                Invoke-WebRequest -Uri $packageUrl -Headers $nugetRepository.headers -OutFile $packageFile -UseBasicParsing -TimeoutSec 60 -ErrorAction Stop
+                if (Test-Path $packagePath) {
+                    Remove-Item -Path $packagePath -Recurse -Force
+                }
+                New-Item -ItemType Directory -Force $packagePath | Out-Null
+                [System.IO.Compression.ZipFile]::ExtractToDirectory($packageFile, $packagePath)
+                Remove-Item $packageFile -Force
+            } catch { }
             if (-not (Test-Path $packagePath)) {
                 $missingList += $package
             }
