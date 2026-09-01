@@ -6,7 +6,7 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 # ===== Variables =====
-$scriptVersion = '20260829-00'
+$scriptVersion = '20260901-00'
 $exitCode = 0
 $nugetSourceList = @(
     @{ id = 'nuget.org'; url = 'https://api.nuget.org/v3/index.json' }
